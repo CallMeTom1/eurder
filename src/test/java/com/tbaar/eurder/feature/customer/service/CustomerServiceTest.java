@@ -8,6 +8,7 @@ import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
+import com.tbaar.eurder.feature.customer.exception.CustomerNotFoundException;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
 import com.tbaar.eurder.feature.security.exception.EmailAlreadyUsedException;
@@ -19,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -98,6 +101,29 @@ class CustomerServiceTest {
         List<CustomerDto> customers = customerService.findAll();
 
         assertThat(customers).isEmpty();
+    }
+
+    @Test
+    void givenExistingCustomerId_whenFindingById_thenReturnsItsDto() {
+        UUID id = UUID.randomUUID();
+        when(customerRepository.findById(id)).thenReturn(Optional.of(customer("jane@doe.be", "Jane", "Doe")));
+
+        CustomerDto found = customerService.findById(id);
+
+        assertThat(found.email()).isEqualTo("jane@doe.be");
+        assertThat(found.lastName()).isEqualTo("Doe");
+    }
+
+    @Test
+    void givenUnknownCustomerId_whenFindingById_thenThrowsCustomerNotFoundWithTheId() {
+        UUID unknownId = UUID.randomUUID();
+        when(customerRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> customerService.findById(unknownId));
+
+        assertThat(thrown)
+                .isInstanceOf(CustomerNotFoundException.class)
+                .hasMessage("No customer found for id " + unknownId);
     }
 
     private static Customer customer(String email, String firstName, String lastName) {
