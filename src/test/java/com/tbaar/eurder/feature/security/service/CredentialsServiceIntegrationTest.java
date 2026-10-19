@@ -43,10 +43,11 @@ class CredentialsServiceIntegrationTest {
     @Test
     void givenExistingCredentials_whenCreatingWithTheSameEmailInAnotherCase_thenThrowsEmailAlreadyUsed() {
         credentialsService.create("jane@doe.be", "secret123", Role.CUSTOMER);
+        long credentialsBefore = credentialsRepository.count();
 
         Throwable thrown = catchThrowable(() -> credentialsService.create("JANE@DOE.BE", "other-password", Role.CUSTOMER));
 
         assertThat(thrown).isInstanceOf(EmailAlreadyUsedException.class);
-        assertThat(credentialsRepository.count()).isEqualTo(1);
+        assertThat(credentialsRepository.count()).isEqualTo(credentialsBefore);
     }
 }
