@@ -3,6 +3,7 @@ package com.tbaar.eurder.common.api;
 import com.tbaar.eurder.common.exception.ConflictException;
 import com.tbaar.eurder.common.exception.ForbiddenException;
 import com.tbaar.eurder.common.exception.NotFoundException;
+import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+
+    @Test
+    void givenUnauthorizedException_whenHandled_thenReturns401WithItsMessage() {
+        UnauthorizedException exception = new UnauthorizedException();
+
+        ResponseEntity<ProblemDetail> response = handler.handleUnauthorized(exception);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDetail()).isEqualTo("Invalid credentials");
+    }
+
+    @Test
+    void givenUnauthorizedException_whenHandled_thenTellsTheClientToUseBasicAuthentication() {
+        UnauthorizedException exception = new UnauthorizedException();
+
+        ResponseEntity<ProblemDetail> response = handler.handleUnauthorized(exception);
+
+        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Basic realm=\"Eurder\"");
+    }
 
     @Test
     void givenNotFoundException_whenHandled_thenReturns404WithItsMessage() {
