@@ -8,8 +8,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Locale;
-
 @Service
 @Transactional
 public class CredentialsService {
@@ -23,7 +21,7 @@ public class CredentialsService {
     }
 
     public Credentials create(String email, String rawPassword, Role role) {
-        String normalizedEmail = normalize(email);
+        String normalizedEmail = Credentials.normalizeEmail(email);
         if (credentialsRepository.existsByEmail(normalizedEmail)) {
             throw new EmailAlreadyUsedException(normalizedEmail);
         }
@@ -34,8 +32,5 @@ public class CredentialsService {
             throw new EmailAlreadyUsedException(normalizedEmail, e);
         }
     }
-
-    private static String normalize(String email) {
-        return email.trim().toLowerCase(Locale.ROOT);
-    }
 }
+
