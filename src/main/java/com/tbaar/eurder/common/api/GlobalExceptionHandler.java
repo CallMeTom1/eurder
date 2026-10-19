@@ -18,8 +18,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -67,10 +70,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
-        Map<String, String> errors = new TreeMap<>();
-        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
-        }
+        Map<String, List<String>> errors = e.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.groupingBy(FieldError::getField, TreeMap::new,
+                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
+        errors.values().forEach(Collections::sort);
         ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "Validation failed");
         body.setProperty("errors", errors);
         return handleExceptionInternal(e, body, headers, status, request);

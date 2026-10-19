@@ -16,6 +16,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,20 +96,47 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void givenTwoInvalidFields_whenValidationFails_thenReturns400ListingEachField() throws NoSuchMethodException {
+    void givenTwoInvalidFields_whenValidationFails_thenReturns400ListingTheErrorsOfEachField() throws NoSuchMethodException {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "createCustomerDto");
-        bindingResult.addError(new FieldError("createCustomerDto", "email", "must not be blank"));
-        bindingResult.addError(new FieldError("createCustomerDto", "firstName", "must not be blank"));
-        MethodParameter parameter = new MethodParameter(getClass().getDeclaredMethod("someEndpoint", Object.class), 0);
-        MethodArgumentNotValidException exception = new MethodArgumentNotValidException(parameter, bindingResult);
+        bindingResult.addError(fieldError("email", "Email is required"));
+        bindingResult.addError(fieldError("firstName", "First name is required"));
 
-        ResponseEntity<Object> response = handler.handleMethodArgumentNotValid(exception, new HttpHeaders(),
+        ResponseEntity<Object> response = handler.handleMethodArgumentNotValid(validationException(bindingResult), new HttpHeaders(),
                 HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isInstanceOfSatisfying(ProblemDetail.class, body ->
-                assertThat(body.getProperties()).containsEntry("errors",
-                        Map.of("email", "must not be blank", "firstName", "must not be blank")));
+        assertThat(errorsOf(response)).isEqualTo(Map.of(
+                "email", List.of("Email is required"),
+                "firstName", List.of("First name is required")));
+    }
+
+    @Test
+    void givenTwoViolationsOnTheSameField_whenValidationFails_thenListsBothMessagesInAlphabeticalOrder() throws NoSuchMethodException {
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "createCustomerDto");
+        bindingResult.addError(fieldError("password", "Password must be between 8 and 72 characters"));
+        bindingResult.addError(fieldError("password", "Password is required"));
+
+        ResponseEntity<Object> response = handler.handleMethodArgumentNotValid(validationException(bindingResult), new HttpHeaders(),
+                HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
+
+        assertThat(errorsOf(response)).isEqualTo(Map.of(
+                "password", List.of("Password is required", "Password must be between 8 and 72 characters")));
+    }
+
+    private static FieldError fieldError(String field, String message) {
+        return new FieldError("createCustomerDto", field, message);
+    }
+
+    private MethodArgumentNotValidException validationException(BeanPropertyBindingResult bindingResult) throws NoSuchMethodException {
+        MethodParameter parameter = new MethodParameter(getClass().getDeclaredMethod("someEndpoint", Object.class), 0);
+        return new MethodArgumentNotValidException(parameter, bindingResult);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, List<String>> errorsOf(ResponseEntity<Object> response) {
+        ProblemDetail body = (ProblemDetail) response.getBody();
+        assertThat(body).isNotNull();
+        return (Map<String, List<String>>) body.getProperties().get("errors");
     }
 
     @SuppressWarnings("unused")
