@@ -272,6 +272,17 @@ class CustomerEndToEndTest {
     }
 
     @Test
+    void givenAnIdThatIsNotAUuid_whenTheAdminGetsACustomer_thenReturns400NamingTheParameter() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers/abc");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Failed to convert 'id' with value: 'abc'"));
+    }
+
+    @Test
     void givenACustomer_whenGettingACustomerById_thenReturns403() {
         String id = jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers").path("id");
         RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");

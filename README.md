@@ -58,7 +58,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 2 | Add an item | To do |
 | 3 | Order items | To do |
 | 7 | View all customers | Done |
-| 8 | View a single customer | To do |
+| 8 | View a single customer | Done |
 | 4 | Update an item | Nice to have |
 | 5 | View report of orders | Nice to have |
 | 6 | Reorder an existing order | Nice to have |
