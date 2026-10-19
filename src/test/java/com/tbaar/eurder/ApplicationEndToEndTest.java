@@ -28,6 +28,18 @@ class ApplicationEndToEndTest {
     }
 
     @Test
+    void givenRunningApplication_whenRequestingOpenApiDocs_thenDeclaresBasicAuthentication() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/v3/api-docs");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("components.securitySchemes.basicAuth.type", equalTo("http"))
+                .body("components.securitySchemes.basicAuth.scheme", equalTo("basic"));
+    }
+
+    @Test
     void givenRunningApplication_whenRequestingSwaggerUi_thenReturns200() {
         RequestSpecification request = RestAssured.given().port(port);
 

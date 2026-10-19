@@ -28,6 +28,17 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 3. `./mvnw spring-boot:run`
 4. Open the API documentation: http://localhost:8080/docs
 
+## Default admin
+
+The Flyway migration `V2__insert_default_admin.sql` creates an administrator account:
+
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@eurder.be` | `admin` | `ADMIN` |
+
+The API uses HTTP Basic authentication: send `Authorization: Basic base64(email:password)` with every request,
+or use the **Authorize** button in Swagger UI. Change this password before any real deployment.
+
 ## Test it
 
 ```
@@ -42,7 +53,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | --- | --- | --- |
 | 0 | Project setup | Done |
 | T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | In progress |
-| S | Security: roles, features, Basic authentication (technical) | To do |
+| S | Security: roles, features, Basic authentication (technical) | Done |
 | 1 | Create a customer account | To do |
 | 2 | Add an item | To do |
 | 3 | Order items | To do |
