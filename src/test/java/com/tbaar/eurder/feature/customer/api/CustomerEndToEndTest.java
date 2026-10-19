@@ -174,6 +174,80 @@ class CustomerEndToEndTest {
                 .body("detail", equalTo("Invalid value for field 'address.houseNumber'"));
     }
 
+    @Test
+    void givenTwoRegisteredCustomers_whenTheAdminListsCustomers_thenReturnsThemSortedWithoutPassword() {
+        jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers");
+        jsonRequest(registrationOf("zoe@adams.be", "Zoe", "Adams")).post("/customers");
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("lastName", contains("Adams", "Doe"))
+                .body("email", contains("zoe@adams.be", "jane@doe.be"))
+                .body("[0].keySet()", containsInAnyOrder("id", "firstName", "lastName", "email", "address", "phoneNumber"));
+    }
+
+    @Test
+    void givenNoRegisteredCustomer_whenTheAdminListsCustomers_thenReturnsAnEmptyListWithoutTheAdmin() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", equalTo(0));
+    }
+
+    @Test
+    void givenACustomer_whenListingCustomers_thenReturns403() {
+        jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers");
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User jane@doe.be has no access to VIEW_CUSTOMERS"));
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenListingCustomers_thenReturns401WithABasicChallenge() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+    }
+
+    @Test
+    void givenWrongAdminPassword_whenListingCustomers_thenReturns401() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "not-admin");
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("detail", equalTo("Invalid credentials"));
+    }
+
+    private RequestSpecification authenticatedAs(String email, String password) {
+        return RestAssured.given()
+                .port(port)
+                .auth().preemptive().basic(email, password);
+    }
+
+    private static String registrationOf(String email, String firstName, String lastName) {
+        return """
+                {"firstName": "%s", "lastName": "%s", "email": "%s", "password": "secret123",
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "phoneNumber": "0470123456"}
+                """.formatted(firstName, lastName, email);
+    }
+
     private RequestSpecification jsonRequest(String body) {
         return RestAssured.given()
                 .port(port)
