@@ -11,6 +11,8 @@ import com.tbaar.eurder.feature.security.service.CredentialsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class CustomerService {
@@ -29,5 +31,12 @@ public class CustomerService {
         Credentials credentials = credentialsService.create(request.email(), request.password(), Role.CUSTOMER);
         Customer customer = customerRepository.save(customerMapper.toEntity(request, credentials));
         return customerMapper.toDto(customer);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerDto> findAll() {
+        return customerRepository.findAllByOrderByLastNameAscFirstNameAsc().stream()
+                .map(customerMapper::toDto)
+                .toList();
     }
 }
