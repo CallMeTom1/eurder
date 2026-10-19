@@ -234,6 +234,62 @@ class CustomerEndToEndTest {
                 .body("detail", equalTo("Invalid credentials"));
     }
 
+    @Test
+    void givenRegisteredCustomer_whenTheAdminGetsItById_thenReturnsItsDetailsWithoutPassword() {
+        String id = jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers").path("id");
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", equalTo(id))
+                .body("email", equalTo("jane@doe.be"))
+                .body("address.city", equalTo("Bruxelles"))
+                .body("keySet()", containsInAnyOrder("id", "firstName", "lastName", "email", "address", "phoneNumber"));
+    }
+
+    @Test
+    void givenUnknownId_whenTheAdminGetsACustomer_thenReturns404WithTheId() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No customer found for id 3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90"));
+    }
+
+    @Test
+    void givenTheIdOfTheAdminCredentials_whenTheAdminGetsACustomer_thenReturns404() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/customers/9d92d67e-6ef3-450d-85ac-11180c8826d2");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No customer found for id 9d92d67e-6ef3-450d-85ac-11180c8826d2"));
+    }
+
+    @Test
+    void givenACustomer_whenGettingACustomerById_thenReturns403() {
+        String id = jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers").path("id");
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/customers/" + id);
+
+        response.then().statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenGettingACustomerById_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/customers/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
     private RequestSpecification authenticatedAs(String email, String password) {
         return RestAssured.given()
                 .port(port)
