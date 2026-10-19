@@ -1,0 +1,33 @@
+package com.tbaar.eurder.feature.customer.service;
+
+import com.tbaar.eurder.feature.customer.api.CustomerMapper;
+import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
+import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Customer;
+import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
+import com.tbaar.eurder.feature.security.domain.Credentials;
+import com.tbaar.eurder.feature.security.domain.Role;
+import com.tbaar.eurder.feature.security.service.CredentialsService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class CustomerService {
+
+    private final CustomerRepository customerRepository;
+    private final CredentialsService credentialsService;
+    private final CustomerMapper customerMapper;
+
+    public CustomerService(CustomerRepository customerRepository, CredentialsService credentialsService, CustomerMapper customerMapper) {
+        this.customerRepository = customerRepository;
+        this.credentialsService = credentialsService;
+        this.customerMapper = customerMapper;
+    }
+
+    public CustomerDto register(CreateCustomerDto request) {
+        Credentials credentials = credentialsService.create(request.email(), request.password(), Role.CUSTOMER);
+        Customer customer = customerRepository.save(customerMapper.toEntity(request, credentials));
+        return customerMapper.toDto(customer);
+    }
+}
