@@ -11,15 +11,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.MismatchedInputException;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -67,13 +73,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
-        Map<String, String> errors = new TreeMap<>();
-        for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
-            errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
-        }
+        Map<String, List<String>> errors = e.getBindingResult().getFieldErrors().stream()
+                .collect(Collectors.groupingBy(FieldError::getField, TreeMap::new,
+                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
+        errors.values().forEach(Collections::sort);
         ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "Validation failed");
         body.setProperty("errors", errors);
         return handleExceptionInternal(e, body, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException e, HttpHeaders headers,
+                                                                  HttpStatusCode status, WebRequest request) {
+        String detail = e.getCause() instanceof MismatchedInputException mismatch
+                ? "Invalid value for field '" + fieldPath(mismatch.getPath()) + "'"
+                : "Request body is missing or malformed";
+        return handleExceptionInternal(e, ProblemDetail.forStatusAndDetail(status, detail), headers, status, request);
+    }
+
+    private static String fieldPath(List<JacksonException.Reference> path) {
+        return path.stream()
+                .map(JacksonException.Reference::getPropertyName)
+                .collect(Collectors.joining("."));
     }
 
     @Override
