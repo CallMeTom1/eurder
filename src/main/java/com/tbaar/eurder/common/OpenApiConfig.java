@@ -1,4 +1,4 @@
-package com.thonobraje.eurder.common;
+package com.tbaar.eurder.common;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;

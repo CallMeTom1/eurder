@@ -1,4 +1,4 @@
-package com.thonobraje.eurder;
+package com.tbaar.eurder;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;

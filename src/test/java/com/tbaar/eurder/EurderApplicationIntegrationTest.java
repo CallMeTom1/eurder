@@ -1,4 +1,4 @@
-package com.thonobraje.eurder;
+package com.tbaar.eurder;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

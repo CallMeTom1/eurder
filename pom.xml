@@ -8,7 +8,7 @@
         <version>4.1.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.thonobraje</groupId>
+    <groupId>com.tbaar</groupId>
     <artifactId>eurder</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>eurder</name>
@@ -116,7 +116,7 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>com/thonobraje/eurder/EurderApplication.class</exclude>
+                                <exclude>com/tbaar/eurder/EurderApplication.class</exclude>
                             </excludes>
                             <rules>
                                 <rule>
