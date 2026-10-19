@@ -123,6 +123,57 @@ class CustomerEndToEndTest {
         assertThat(credentials).hasValueSatisfying(created -> assertThat(created.getRole()).isEqualTo(Role.CUSTOMER));
     }
 
+    @Test
+    void givenMalformedJson_whenPostingCustomer_thenReturns400WithAGenericMessage() {
+        RequestSpecification request = jsonRequest("{\"firstName\": \"Jane\",");
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Request body is missing or malformed"));
+    }
+
+    @Test
+    void givenNoBody_whenPostingCustomer_thenReturns400WithAGenericMessage() {
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON);
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Request body is missing or malformed"));
+    }
+
+    @Test
+    void givenAddressSentAsText_whenPostingCustomer_thenReturns400NamingTheField() {
+        RequestSpecification request = jsonRequest("""
+                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
+                 "address": "Bruxelles", "phoneNumber": "0470123456"}
+                """);
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Invalid value for field 'address'"));
+    }
+
+    @Test
+    void givenNestedFieldWithTheWrongType_whenPostingCustomer_thenReturns400NamingTheFullPath() {
+        RequestSpecification request = jsonRequest("""
+                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
+                 "address": {"street": "Rue Haute", "houseNumber": ["1", "2"], "postalCode": "1000", "city": "Bruxelles"},
+                 "phoneNumber": "0470123456"}
+                """);
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Invalid value for field 'address.houseNumber'"));
+    }
+
     private RequestSpecification jsonRequest(String body) {
         return RestAssured.given()
                 .port(port)
