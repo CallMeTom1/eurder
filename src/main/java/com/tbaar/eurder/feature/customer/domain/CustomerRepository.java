@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.customer.domain;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,5 +11,6 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
     Optional<Customer> findByCredentialsId(UUID credentialsId);
 
+    @EntityGraph(attributePaths = "credentials")
     List<Customer> findAllByOrderByLastNameAscFirstNameAsc();
 }
