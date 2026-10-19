@@ -5,6 +5,7 @@ import com.tbaar.eurder.feature.customer.api.CustomerMapper;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.security.domain.Credentials;
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -73,6 +76,33 @@ class CustomerServiceTest {
 
         assertThat(thrown).isInstanceOf(EmailAlreadyUsedException.class);
         verify(customerRepository, never()).save(any(Customer.class));
+    }
+
+    @Test
+    void givenSortedCustomersInTheRepository_whenFindingAll_thenReturnsTheirDtosInTheSameOrder() {
+        when(customerRepository.findAllByOrderByLastNameAscFirstNameAsc()).thenReturn(List.of(
+                customer("zoe@adams.be", "Zoe", "Adams"),
+                customer("jane@doe.be", "Jane", "Doe")));
+
+        List<CustomerDto> customers = customerService.findAll();
+
+        assertThat(customers)
+                .extracting(CustomerDto::email)
+                .containsExactly("zoe@adams.be", "jane@doe.be");
+    }
+
+    @Test
+    void givenNoCustomer_whenFindingAll_thenReturnsAnEmptyList() {
+        when(customerRepository.findAllByOrderByLastNameAscFirstNameAsc()).thenReturn(List.of());
+
+        List<CustomerDto> customers = customerService.findAll();
+
+        assertThat(customers).isEmpty();
+    }
+
+    private static Customer customer(String email, String firstName, String lastName) {
+        return new Customer(new Credentials(email, "hash", Role.CUSTOMER), firstName, lastName,
+                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
     }
 
     private static CreateCustomerDto registration(String email) {
