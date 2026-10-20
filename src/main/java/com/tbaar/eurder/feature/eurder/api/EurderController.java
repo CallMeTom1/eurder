@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.eurder.api;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
 import com.tbaar.eurder.feature.eurder.service.EurderService;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Feature;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/eurders")
@@ -57,5 +59,13 @@ public class EurderController {
     public ReportDto findReport(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         Credentials customer = securityService.validateAuthorization(authorization, Feature.VIEW_OWN_EURDERS);
         return eurderService.findReport(customer.getId());
+    }
+
+    @GetMapping(path = "/shipping-today", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Eurders with item groups to ship today, with the customer's address")
+    @SecurityRequirement(name = "basicAuth")
+    public List<ShippingEurderDto> findShippingToday(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        securityService.validateAuthorization(authorization, Feature.VIEW_SHIPPING_TODAY);
+        return eurderService.findShippingToday();
     }
 }

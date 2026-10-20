@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.eurder.api;
 
+import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -24,7 +25,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -38,19 +38,23 @@ import static org.hamcrest.Matchers.equalTo;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class EurderEndToEndTest {
 
+    private static final ZonedDateTime NEW_YEARS_EVE = ZonedDateTime.of(2026, 12, 31, 10, 0, 0, 0, ZoneId.of("Europe/Brussels"));
+
     @TestConfiguration
-    static class FixedClockConfig {
+    static class MutableClockConfig {
 
         @Bean
         @Primary
-        Clock newYearsEveClock() {
-            ZoneId brussels = ZoneId.of("Europe/Brussels");
-            return Clock.fixed(ZonedDateTime.of(2026, 12, 31, 10, 0, 0, 0, brussels).toInstant(), brussels);
+        MutableClock testClock() {
+            return new MutableClock(NEW_YEARS_EVE);
         }
     }
 
     @LocalServerPort
     private int port;
+
+    @Autowired
+    private MutableClock clock;
 
     @Autowired
     private EurderRepository eurderRepository;
@@ -66,6 +70,7 @@ class EurderEndToEndTest {
 
     @BeforeEach
     void registerJane() {
+        clock.setTo(NEW_YEARS_EVE);
         registerCustomer("jane@doe.be");
     }
 
@@ -256,6 +261,60 @@ class EurderEndToEndTest {
         RequestSpecification request = RestAssured.given().port(port);
 
         Response response = request.get("/eurders/report");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenAnEurderPlacedYesterday_whenTheAdminGetsWhatShipsToday_thenListsItsItemGroupInStockWithTheAddress() {
+        String chairId = createItem("Chair", "49.99", 10);
+        String tableId = createItem("Table", "199.00", 0);
+        order("jane@doe.be", chairId, 3, tableId, 1);
+        clock.setTo(NEW_YEARS_EVE.plusDays(1));
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/eurders/shipping-today");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", equalTo(1))
+                .body("[0].keySet()", containsInAnyOrder("eurderId", "customerName", "address", "itemGroups"))
+                .body("[0].customerName", equalTo("Jane Doe"))
+                .body("[0].address.street", equalTo("Rue Haute"))
+                .body("[0].address.city", equalTo("Bruxelles"))
+                .body("[0].itemGroups.itemName", contains("Chair"))
+                .body("[0].itemGroups.amount", contains(3));
+    }
+
+    @Test
+    void givenNothingShippingToday_whenTheAdminGetsWhatShipsToday_thenReturnsAnEmptyList() {
+        String chairId = createItem("Chair", "49.99", 10);
+        order("jane@doe.be", chairId, 1);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/eurders/shipping-today");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", equalTo(0));
+    }
+
+    @Test
+    void givenACustomer_whenGettingWhatShipsToday_thenReturns403() {
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/eurders/shipping-today");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User jane@doe.be has no access to VIEW_SHIPPING_TODAY"));
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenGettingWhatShipsToday_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/eurders/shipping-today");
 
         response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
