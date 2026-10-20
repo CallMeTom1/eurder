@@ -70,4 +70,44 @@ class OpenApiEndToEndTest {
 
         assertThat(codes).containsKeys("200", "401", "403").doesNotContainKeys("400", "404");
     }
+
+    @Test
+    void givenACreationEndpoint_whenReadingItsResponses_thenDocuments201WithTheCreatedResourceInsteadOf200() {
+        String responses = "paths.'/items'.post.responses";
+
+        Map<String, Object> codes = apiDocs.getMap(responses);
+
+        assertThat(codes).containsKey("201").doesNotContainKey("200");
+        assertThat(apiDocs.getString(responses + ".'201'.content.'application/json'.schema.'$ref'"))
+                .isEqualTo("#/components/schemas/ItemDto");
+    }
+
+    @Test
+    void givenTheRegistrationEndpoint_whenReadingItsResponses_thenDocumentsTheConflictOfAnEmailAlreadyInUse() {
+        String responses = "paths.'/customers'.post.responses";
+
+        Map<String, Object> codes = apiDocs.getMap(responses);
+
+        assertThat(codes).containsKeys("201", "409").doesNotContainKey("200");
+        assertThat(apiDocs.getString(responses + ".'409'.content.'application/problem+json'.schema.'$ref'"))
+                .isEqualTo("#/components/schemas/ProblemDetail");
+    }
+
+    @Test
+    void givenTheOrderEndpoints_whenReadingTheirResponses_thenDocumentTheUnknownItemAndTheConcurrentChange() {
+        Map<String, Object> order = apiDocs.getMap("paths.'/eurders'.post.responses");
+        Map<String, Object> reorder = apiDocs.getMap("paths.'/eurders/{id}/reorder'.post.responses");
+
+        assertThat(order).containsKeys("201", "404", "409").doesNotContainKey("200");
+        assertThat(reorder).containsKeys("201", "404", "409").doesNotContainKey("200");
+    }
+
+    @Test
+    void givenEndpointsThatCanConflict_whenReadingTheirResponses_thenKeep200AndAdd409() {
+        Map<String, Object> update = apiDocs.getMap("paths.'/items/{id}'.put.responses");
+        Map<String, Object> changeState = apiDocs.getMap("paths.'/items/{id}/units/{unitId}'.patch.responses");
+
+        assertThat(update).containsKeys("200", "409");
+        assertThat(changeState).containsKeys("200", "409");
+    }
 }

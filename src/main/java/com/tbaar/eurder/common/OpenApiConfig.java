@@ -65,6 +65,11 @@ public class OpenApiConfig {
             if (hasParameterAnnotatedWith(handlerMethod, PathVariable.class)) {
                 addIfAbsent(responses, "404", "No resource found for the given id");
             }
+            responses.forEach((code, response) -> {
+                if (code.startsWith("4")) {
+                    response.content(problemContent());
+                }
+            });
             return operation;
         };
     }
@@ -77,14 +82,12 @@ public class OpenApiConfig {
 
     private static void addIfAbsent(ApiResponses responses, String code, String description) {
         if (!responses.containsKey(code)) {
-            responses.addApiResponse(code, problem(description));
+            responses.addApiResponse(code, new ApiResponse().description(description));
         }
     }
 
-    private static ApiResponse problem(String description) {
-        return new ApiResponse()
-                .description(description)
-                .content(new Content().addMediaType("application/problem+json",
-                        new MediaType().schema(new Schema<>().$ref("#/components/schemas/" + PROBLEM_DETAIL))));
+    private static Content problemContent() {
+        return new Content().addMediaType("application/problem+json",
+                new MediaType().schema(new Schema<>().$ref("#/components/schemas/" + PROBLEM_DETAIL)));
     }
 }

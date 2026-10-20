@@ -10,6 +10,7 @@ import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,6 +45,7 @@ public class ItemController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an item to the catalog")
+    @ApiResponse(responseCode = "201", description = "Item created with its units", useReturnTypeSchema = true)
     @SecurityRequirement(name = "basicAuth")
     @Secured("MANAGE_ITEMS")
     public ResponseEntity<ItemDto> create(@Valid @RequestBody CreateItemDto request) {
@@ -57,6 +59,8 @@ public class ItemController {
 
     @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Replace the name, description and price of an item")
+    @ApiResponse(responseCode = "200", description = "Item updated", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "409", description = "The item was changed by another request meanwhile: retry")
     @SecurityRequirement(name = "basicAuth")
     @Secured("MANAGE_ITEMS")
     public ItemDto update(@PathVariable UUID id, @Valid @RequestBody UpdateItemDto request) {
@@ -89,6 +93,8 @@ public class ItemController {
 
     @PatchMapping(path = "/{id}/units/{unitId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Change the state of an available unit of an item")
+    @ApiResponse(responseCode = "200", description = "Unit in its new state", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "409", description = "The unit is already sold, or the item was changed by another request meanwhile")
     @SecurityRequirement(name = "basicAuth")
     @Secured("MANAGE_ITEMS")
     public ItemUnitDto changeUnitState(@PathVariable UUID id, @PathVariable UUID unitId, @Valid @RequestBody ChangeUnitStateDto request) {
