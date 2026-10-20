@@ -6,8 +6,10 @@ import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
@@ -158,5 +160,26 @@ class EurderServiceIntegrationTest {
         assertThat(storedItemGroups)
                 .extracting(ItemGroup::getItemName, ItemGroup::getItemPrice, ItemGroup::subtotal)
                 .containsExactly(tuple("Chair", new BigDecimal("49.99"), new BigDecimal("99.98")));
+    }
+
+    @Test
+    void givenEurdersOfTwoCustomersAndALaterPriceChange_whenFindingTheReport_thenListsOnlyOwnEurdersAtTheCopiedPrices() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
+        eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 1))));
+        eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 5))));
+        itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("99.00"), 10));
+
+        ReportDto report = eurderService.findReport(janeCredentialsId);
+
+        assertThat(report.eurders()).extracting(EurderReportDto::totalPrice)
+                .containsExactlyInAnyOrder(new BigDecimal("99.98"), new BigDecimal("49.99"));
+        assertThat(report.totalPrice()).isEqualTo(new BigDecimal("149.97"));
+    }
+
+    private UUID registerCustomer(String email) {
+        customerService.register(new CreateCustomerDto("Zoe", "Adams", email, "secret123",
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
+        return credentialsRepository.findByEmail(email).orElseThrow().getId();
     }
 }

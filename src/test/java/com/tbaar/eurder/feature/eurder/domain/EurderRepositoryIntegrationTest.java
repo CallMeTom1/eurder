@@ -94,7 +94,7 @@ class EurderRepositoryIntegrationTest {
         Eurder janesFirst = eurderRepository.saveAndFlush(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
         entityManager.clear();
 
-        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAsc(jane.getCredentials().getId());
+        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(jane.getCredentials().getId());
 
         assertThat(eurders).extracting(Eurder::getId).containsExactly(janesFirst.getId(), janesLatest.getId());
     }
@@ -110,7 +110,7 @@ class EurderRepositoryIntegrationTest {
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
-        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAsc(jane.getCredentials().getId());
+        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(jane.getCredentials().getId());
 
         assertThat(eurders).flatExtracting(Eurder::getItemGroups).extracting(ItemGroup::getAmount).containsExactly(1, 2, 3);
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);

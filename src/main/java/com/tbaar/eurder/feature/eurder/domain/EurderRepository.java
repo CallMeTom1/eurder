@@ -9,5 +9,5 @@ import java.util.UUID;
 public interface EurderRepository extends JpaRepository<Eurder, UUID> {
 
     @EntityGraph(attributePaths = "itemGroups")
-    List<Eurder> findAllByCustomerCredentialsIdOrderByOrderedAtAsc(UUID credentialsId);
+    List<Eurder> findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(UUID credentialsId);
 }

@@ -6,6 +6,7 @@ import com.tbaar.eurder.feature.eurder.api.EurderMapper;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
@@ -53,5 +54,10 @@ public class EurderService {
         }
         Eurder eurder = eurderRepository.save(new Eurder(customer, itemGroups, clock.instant()));
         return eurderMapper.toDto(eurder);
+    }
+
+    @Transactional(readOnly = true)
+    public ReportDto findReport(UUID credentialsId) {
+        return eurderMapper.toReportDto(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(credentialsId));
     }
 }
