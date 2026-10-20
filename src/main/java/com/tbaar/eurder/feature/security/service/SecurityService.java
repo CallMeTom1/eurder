@@ -5,6 +5,7 @@ import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Feature;
 import com.tbaar.eurder.feature.security.exception.FeatureAccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

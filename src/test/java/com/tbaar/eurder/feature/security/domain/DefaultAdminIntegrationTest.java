@@ -1,6 +1,7 @@
 package com.tbaar.eurder.feature.security.domain;
 
-import com.tbaar.eurder.feature.security.service.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -15,7 +16,7 @@ class DefaultAdminIntegrationTest {
     @Autowired
     private CredentialsRepository credentialsRepository;
 
-    private final PasswordEncoder passwordEncoder = new PasswordEncoder();
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Test
     void givenFreshlyMigratedDatabase_whenLookingUpTheDefaultAdmin_thenItExistsWithPasswordAdmin() {
