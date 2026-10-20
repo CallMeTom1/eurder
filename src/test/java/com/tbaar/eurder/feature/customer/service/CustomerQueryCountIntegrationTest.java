@@ -1,14 +1,11 @@
 package com.tbaar.eurder.feature.customer.service;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
-import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
-import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Role;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,25 +21,13 @@ class CustomerQueryCountIntegrationTest {
     private CustomerService customerService;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private CredentialsRepository credentialsRepository;
-
-    @Autowired
     private EntityManagerFactory entityManagerFactory;
-
-    @AfterEach
-    void deleteRegisteredCustomers() {
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
-    }
 
     @Test
     void givenThreeCustomers_whenFindingAll_thenLoadsThemWithTheirCredentialsInASingleQuery() {
-        registerCustomer("adams@doe.be", "Adams");
-        registerCustomer("brown@doe.be", "Brown");
-        registerCustomer("clark@doe.be", "Clark");
+        registerCustomer(UniqueEmail.of("adams"), "Adams");
+        registerCustomer(UniqueEmail.of("brown"), "Brown");
+        registerCustomer(UniqueEmail.of("clark"), "Clark");
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 

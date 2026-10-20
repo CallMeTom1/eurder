@@ -1,6 +1,6 @@
 package com.tbaar.eurder.feature.customer.api;
 
-import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
@@ -8,7 +8,6 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,13 +15,19 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomerEndToEndTest {
@@ -31,26 +36,19 @@ class CustomerEndToEndTest {
     private int port;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private CredentialsRepository credentialsRepository;
 
-    @AfterEach
-    void deleteRegisteredCustomers() {
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
-    }
+    private final String janeEmail = UniqueEmail.of("jane");
 
     @Test
     void givenValidRegistration_whenPostingCustomer_thenReturns201WithLocationAndTheCustomerWithoutPassword() {
-        RequestSpecification request = jsonRequest(registration("Jane@Doe.be", "secret123", "Bruxelles"));
+        RequestSpecification request = jsonRequest(registration(janeEmail.toUpperCase(Locale.ROOT), "secret123", "Bruxelles"));
 
         Response response = request.post("/customers");
 
         String id = response.then()
                 .statusCode(HttpStatus.CREATED.value())
-                .body("email", equalTo("jane@doe.be"))
+                .body("email", equalTo(janeEmail))
                 .body("firstName", equalTo("Jane"))
                 .body("address.city", equalTo("Bruxelles"))
                 .body("keySet()", containsInAnyOrder("id", "firstName", "lastName", "email", "address", "phoneNumber"))
@@ -60,14 +58,14 @@ class CustomerEndToEndTest {
 
     @Test
     void givenEmailAlreadyUsedWithAnotherCase_whenPostingCustomer_thenReturns409() {
-        jsonRequest(registration("jane@doe.be", "secret123", "Bruxelles")).post("/customers");
-        RequestSpecification request = jsonRequest(registration("JANE@DOE.BE", "secret123", "Bruxelles"));
+        jsonRequest(registration(janeEmail, "secret123", "Bruxelles")).post("/customers");
+        RequestSpecification request = jsonRequest(registration(janeEmail.toUpperCase(Locale.ROOT), "secret123", "Bruxelles"));
 
         Response response = request.post("/customers");
 
         response.then()
                 .statusCode(HttpStatus.CONFLICT.value())
-                .body("detail", equalTo("Email jane@doe.be is already in use"));
+                .body("detail", equalTo("Email " + janeEmail + " is already in use"));
     }
 
     @Test
@@ -111,15 +109,15 @@ class CustomerEndToEndTest {
     @Test
     void givenRoleAdminInTheRequest_whenPostingCustomer_thenTheAccountIsStillACustomer() {
         RequestSpecification request = jsonRequest("""
-                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
+                {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
                  "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
                  "phoneNumber": "0470123456", "role": "ADMIN"}
-                """);
+                """.formatted(janeEmail));
 
         Response response = request.post("/customers");
 
         response.then().statusCode(HttpStatus.CREATED.value());
-        Optional<Credentials> credentials = credentialsRepository.findByEmail("jane@doe.be");
+        Optional<Credentials> credentials = credentialsRepository.findByEmail(janeEmail);
         assertThat(credentials).hasValueSatisfying(created -> assertThat(created.getRole()).isEqualTo(Role.CUSTOMER));
     }
 
@@ -176,40 +174,42 @@ class CustomerEndToEndTest {
 
     @Test
     void givenTwoRegisteredCustomers_whenTheAdminListsCustomers_thenReturnsThemSortedWithoutPassword() {
-        jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers");
-        jsonRequest(registrationOf("zoe@adams.be", "Zoe", "Adams")).post("/customers");
+        jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers");
+        String zoeEmail = UniqueEmail.of("zoe");
+        jsonRequest(registrationOf(zoeEmail, "Zoe", "Adams")).post("/customers");
         RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
 
         Response response = request.get("/customers");
 
-        response.then()
-                .statusCode(HttpStatus.OK.value())
-                .body("lastName", contains("Adams", "Doe"))
-                .body("email", contains("zoe@adams.be", "jane@doe.be"))
-                .body("[0].keySet()", containsInAnyOrder("id", "firstName", "lastName", "email", "address", "phoneNumber"));
+        response.then().statusCode(HttpStatus.OK.value());
+        List<Map<String, Object>> ownCustomers = response.jsonPath().<Map<String, Object>>getList("$").stream()
+                .filter(customer -> Set.of(janeEmail, zoeEmail).contains(customer.get("email")))
+                .toList();
+        assertThat(ownCustomers).extracting(customer -> customer.get("email")).containsExactly(zoeEmail, janeEmail);
+        assertThat(ownCustomers.get(0)).containsOnlyKeys("id", "firstName", "lastName", "email", "address", "phoneNumber");
     }
 
     @Test
-    void givenNoRegisteredCustomer_whenTheAdminListsCustomers_thenReturnsAnEmptyListWithoutTheAdmin() {
+    void givenTheDefaultAdmin_whenTheAdminListsCustomers_thenTheAdminIsNotAmongThem() {
         RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
 
         Response response = request.get("/customers");
 
         response.then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", equalTo(0));
+                .body("email", not(hasItem("admin@eurder.be")));
     }
 
     @Test
     void givenACustomer_whenListingCustomers_thenReturns403() {
-        jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers");
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.get("/customers");
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User jane@doe.be has no access to VIEW_CUSTOMERS"));
+                .body("detail", equalTo("User " + janeEmail + " has no access to VIEW_CUSTOMERS"));
     }
 
     @Test
@@ -236,7 +236,7 @@ class CustomerEndToEndTest {
 
     @Test
     void givenRegisteredCustomer_whenTheAdminGetsItById_thenReturnsItsDetailsWithoutPassword() {
-        String id = jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers").path("id");
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
         RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
 
         Response response = request.get("/customers/" + id);
@@ -244,7 +244,7 @@ class CustomerEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.OK.value())
                 .body("id", equalTo(id))
-                .body("email", equalTo("jane@doe.be"))
+                .body("email", equalTo(janeEmail))
                 .body("address.city", equalTo("Bruxelles"))
                 .body("keySet()", containsInAnyOrder("id", "firstName", "lastName", "email", "address", "phoneNumber"));
     }
@@ -284,8 +284,8 @@ class CustomerEndToEndTest {
 
     @Test
     void givenACustomer_whenGettingACustomerById_thenReturns403() {
-        String id = jsonRequest(registrationOf("jane@doe.be", "Jane", "Doe")).post("/customers").path("id");
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.get("/customers/" + id);
 

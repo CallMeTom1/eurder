@@ -1,17 +1,13 @@
 package com.tbaar.eurder.feature.security;
 
-import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
-import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Role;
+import com.tbaar.eurder.common.UniqueEmail;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
@@ -25,17 +21,7 @@ class AuthenticationEndToEndTest {
     @LocalServerPort
     private int port;
 
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private CredentialsRepository credentialsRepository;
-
-    @AfterEach
-    void deleteRegisteredCustomers() {
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
-    }
+    private final String email = UniqueEmail.of("jane");
 
     @ParameterizedTest(name = "Authorization: \"{0}\" is rejected")
     @ValueSource(strings = {"", "Bearer some-token", "Basic !!!not-base64!!!", "Basic bm8tY29sb24="})
@@ -73,11 +59,11 @@ class AuthenticationEndToEndTest {
     @Test
     void givenAPasswordContainingColons_whenTheCustomerAuthenticates_thenEverythingAfterTheFirstColonIsThePassword() {
         RestAssured.given().port(port).contentType(ContentType.JSON).body("""
-                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "se:cret:123",
+                {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "se:cret:123",
                  "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
                  "phoneNumber": "0470123456"}
-                """).post("/customers").then().statusCode(HttpStatus.CREATED.value());
-        RequestSpecification request = RestAssured.given().port(port).auth().preemptive().basic("jane@doe.be", "se:cret:123");
+                """.formatted(email)).post("/customers").then().statusCode(HttpStatus.CREATED.value());
+        RequestSpecification request = RestAssured.given().port(port).auth().preemptive().basic(email, "se:cret:123");
 
         Response response = request.get("/eurders/report");
 

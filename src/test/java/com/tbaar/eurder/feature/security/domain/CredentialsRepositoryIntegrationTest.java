@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.security.domain;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -14,11 +15,13 @@ class CredentialsRepositoryIntegrationTest {
     @Autowired
     private CredentialsRepository credentialsRepository;
 
+    private final String email = UniqueEmail.of("jane");
+
     @Test
     void givenSavedCredentials_whenFindingByEmail_thenReturnsThem() {
-        Credentials saved = credentialsRepository.save(new Credentials("jane@doe.be", "hashed-password", Role.CUSTOMER));
+        Credentials saved = credentialsRepository.save(new Credentials(email, "hashed-password", Role.CUSTOMER));
 
-        Optional<Credentials> found = credentialsRepository.findByEmail("jane@doe.be");
+        Optional<Credentials> found = credentialsRepository.findByEmail(email);
 
         assertThat(found).hasValueSatisfying(credentials -> {
             assertThat(credentials.getId()).isEqualTo(saved.getId());
