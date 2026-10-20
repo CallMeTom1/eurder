@@ -71,7 +71,7 @@ class ItemServiceIntegrationTest {
 
     @Test
     void givenExistingItem_whenUpdating_thenTheNewValuesAreStoredWithoutAnExplicitSave() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
         itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
 
@@ -84,7 +84,7 @@ class ItemServiceIntegrationTest {
 
     @Test
     void givenTheItemChangedByAnotherTransactionMeanwhile_whenTheUpdateCommits_thenFailsAndKeepsTheOtherChange() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         TransactionTemplate updateTransaction = new TransactionTemplate(transactionManager);
         TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
         concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -102,7 +102,7 @@ class ItemServiceIntegrationTest {
 
     @Test
     void givenExistingItem_whenAddingUnits_thenTheyAreStoredAsAvailableUnitsOfThatState() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         itemUnitRepository.saveAll(chair.newUnits(ItemState.PRISTINE, 2));
 
         itemService.addUnits(chair.getId(), new AddUnitsDto(ItemState.SLIGHTLY_DAMAGED, 3));
@@ -114,7 +114,7 @@ class ItemServiceIntegrationTest {
 
     @Test
     void givenAvailableUnit_whenChangingItsState_thenTheNewStateIsStored() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         ItemUnit unit = itemUnitRepository.save(new ItemUnit(chair, ItemState.PRISTINE));
 
         itemService.changeUnitState(chair.getId(), unit.getId(), new ChangeUnitStateDto(ItemState.DAMAGED));
@@ -125,7 +125,7 @@ class ItemServiceIntegrationTest {
 
     @Test
     void givenSoldUnit_whenChangingItsState_thenRefusesAndKeepsTheStoredState() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         ItemUnit sold = new ItemUnit(chair, ItemState.PRISTINE);
         sold.assignTo(UUID.randomUUID());
         itemUnitRepository.save(sold);

@@ -171,7 +171,7 @@ class EurderServiceTest {
 
     @Test
     void givenEurdersOfTheCustomer_whenFindingTheReport_thenReturnsThemWithTheTotalOfAllEurders() {
-        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         when(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(CREDENTIALS_ID)).thenReturn(List.of(
                 new Eurder(aCustomer(), List.of(ItemGroup.of(chair, ItemState.PRISTINE, 2, 10, LocalDate.of(2026, 12, 30))), NEW_YEARS_EVE.instant()),
                 new Eurder(aCustomer(), List.of(ItemGroup.of(chair, ItemState.PRISTINE, 1, 10, LocalDate.of(2026, 12, 31))), NEW_YEARS_EVE.instant())));
@@ -222,7 +222,7 @@ class EurderServiceTest {
     }
 
     private void givenItem(UUID id, String name, String price, int availablePristineUnits) {
-        Item item = new Item(name, name + " description", new BigDecimal(price), 0);
+        Item item = new Item(name, name + " description", new BigDecimal(price));
         List<ItemUnit> units = item.newUnits(ItemState.PRISTINE, availablePristineUnits);
         when(itemRepository.findLockedById(id)).thenReturn(Optional.of(item));
         lenient().when(itemUnitRepository.findByItemIdAndStateAndItemGroupIdIsNull(eq(id), eq(ItemState.PRISTINE), any(Limit.class)))

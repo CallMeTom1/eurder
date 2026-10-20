@@ -291,7 +291,7 @@ class EurderServiceIntegrationTest {
     }
 
     private Item itemWithPristineUnits(String name, String description, String price, int units) {
-        Item item = itemRepository.save(new Item(name, description, new BigDecimal(price), 0));
+        Item item = itemRepository.save(new Item(name, description, new BigDecimal(price)));
         itemUnitRepository.saveAll(item.newUnits(ItemState.PRISTINE, units));
         return item;
     }

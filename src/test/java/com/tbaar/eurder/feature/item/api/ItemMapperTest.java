@@ -34,7 +34,7 @@ class ItemMapperTest {
 
     @Test
     void givenItemAndItsAvailableUnits_whenMappingToDto_thenListsEveryStateInOrderWithZeroForMissingOnes() {
-        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         List<AvailableUnits> counts = List.of(
                 new AvailableUnits(item.getId(), ItemState.DAMAGED, 2),
                 new AvailableUnits(item.getId(), ItemState.PRISTINE, 8));
@@ -49,7 +49,7 @@ class ItemMapperTest {
 
     @Test
     void givenItemStockAndItsUnitsPerState_whenMappingToOverviewDto_thenShowsTheDetailAndTheUrgencyOfTheTotal() {
-        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         List<AvailableUnits> counts = List.of(
                 new AvailableUnits(item.getId(), ItemState.PRISTINE, 3),
                 new AvailableUnits(item.getId(), ItemState.DAMAGED, 4));

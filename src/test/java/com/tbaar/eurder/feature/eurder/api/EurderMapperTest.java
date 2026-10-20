@@ -38,8 +38,8 @@ class EurderMapperTest {
     @Test
     void givenEurder_whenMappingToDto_thenExposesEachItemGroupWithItsSubtotalAndTheTotalPrice() {
         Eurder eurder = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE),
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99")), ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00")), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         EurderDto dto = eurderMapper.toDto(eurder);
 
@@ -52,10 +52,10 @@ class EurderMapperTest {
     @Test
     void givenTwoEurders_whenMappingToReport_thenListsEachEurderWithItsTotalAndTheTotalOfAllEurders() {
         Eurder first = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE),
-                ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99")), ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10")), ItemState.PRISTINE, 3, 10, ORDER_DATE)), ORDERED_AT);
         Eurder second = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.DAMAGED, 1, 0, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00")), ItemState.DAMAGED, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         ReportDto report = eurderMapper.toReportDto(List.of(first, second));
 

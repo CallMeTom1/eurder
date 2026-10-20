@@ -53,7 +53,7 @@ class EurderTest {
     }
 
     private static Item anItem(String price) {
-        return new Item("Chair", "Wooden chair", new BigDecimal(price), 10);
+        return new Item("Chair", "Wooden chair", new BigDecimal(price));
     }
 
     private static Customer aCustomer() {

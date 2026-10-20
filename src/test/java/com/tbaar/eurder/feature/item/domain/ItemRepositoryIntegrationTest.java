@@ -27,7 +27,7 @@ class ItemRepositoryIntegrationTest {
 
     @Test
     void givenSavedItem_whenReadingItBackFromTheDatabase_thenEveryFieldIsStored() {
-        Item saved = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item saved = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         entityManager.clear();
 
         Optional<Item> found = itemRepository.findById(saved.getId());
@@ -36,15 +36,14 @@ class ItemRepositoryIntegrationTest {
             assertThat(item.getName()).isEqualTo("Chair");
             assertThat(item.getDescription()).isEqualTo("Wooden chair");
             assertThat(item.getPrice()).isEqualTo(new BigDecimal("49.99"));
-            assertThat(item.getStock()).isEqualTo(10);
         });
     }
 
     @Test
     void givenItemWithTheNameOfAnExistingItem_whenSaving_thenBothItemsAreStored() {
-        itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
-        itemRepository.saveAndFlush(new Item("Chair", "Plastic chair", new BigDecimal("19.99"), 5));
+        itemRepository.saveAndFlush(new Item("Chair", "Plastic chair", new BigDecimal("19.99")));
 
         assertThat(itemRepository.count()).isEqualTo(2);
     }
@@ -85,7 +84,7 @@ class ItemRepositoryIntegrationTest {
     }
 
     private Item saveItem(String name, ItemState state, int units) {
-        Item item = itemRepository.save(new Item(name, name + " description", new BigDecimal("49.99"), 0));
+        Item item = itemRepository.save(new Item(name, name + " description", new BigDecimal("49.99")));
         itemUnitRepository.saveAll(item.newUnits(state, units));
         return item;
     }

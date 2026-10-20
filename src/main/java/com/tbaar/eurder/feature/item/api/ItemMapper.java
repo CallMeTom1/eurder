@@ -20,8 +20,7 @@ import java.util.Map;
 public class ItemMapper {
 
     public Item toEntity(CreateItemDto dto) {
-        int totalUnits = dto.units().values().stream().mapToInt(Integer::intValue).sum();
-        return new Item(dto.name(), dto.description(), dto.price(), totalUnits);
+        return new Item(dto.name(), dto.description(), dto.price());
     }
 
     public ItemDto toDto(Item item, List<AvailableUnits> availableUnits) {

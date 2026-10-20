@@ -27,7 +27,7 @@ class ItemUnitRepositoryIntegrationTest {
 
     @Test
     void givenAvailableAndAssignedUnitsOfSeveralStates_whenFindingAvailableUnitsOfAState_thenReturnsOnlyThoseUpToTheLimit() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         saveUnits(chair, ItemState.PRISTINE, 3);
         saveUnits(chair, ItemState.DAMAGED, 2);
         ItemUnit sold = new ItemUnit(chair, ItemState.PRISTINE);
@@ -44,8 +44,8 @@ class ItemUnitRepositoryIntegrationTest {
 
     @Test
     void givenUnitsOfTwoItems_whenCountingTheAvailableUnits_thenCountsThemPerItemAndState() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
-        Item lamp = itemRepository.save(new Item("Lamp", "Desk lamp", new BigDecimal("9.99"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
+        Item lamp = itemRepository.save(new Item("Lamp", "Desk lamp", new BigDecimal("9.99")));
         saveUnits(chair, ItemState.PRISTINE, 2);
         saveUnits(chair, ItemState.DAMAGED, 1);
         saveUnits(lamp, ItemState.SLIGHTLY_DAMAGED, 4);

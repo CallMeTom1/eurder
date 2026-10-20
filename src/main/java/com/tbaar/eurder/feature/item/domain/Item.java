@@ -26,19 +26,16 @@ public class Item {
 
     private BigDecimal price;
 
-    private int stock;
-
     @Version
     private long version;
 
     protected Item() {
     }
 
-    public Item(String name, String description, BigDecimal price, int stock) {
+    public Item(String name, String description, BigDecimal price) {
         this.name = name;
         this.description = description;
         this.price = twoDecimals(price);
-        this.stock = stock;
     }
 
     public UUID getId() {
@@ -57,10 +54,6 @@ public class Item {
         return price;
     }
 
-    public int getStock() {
-        return stock;
-    }
-
     public void update(String name, String description, BigDecimal price) {
         this.name = name;
         this.description = description;
@@ -75,14 +68,6 @@ public class Item {
         return IntStream.range(0, count)
                 .mapToObj(unit -> new ItemUnit(this, state))
                 .toList();
-    }
-
-    public boolean isInStock(int amount) {
-        return stock >= amount;
-    }
-
-    public void removeFromStock(int amount) {
-        stock = Math.max(0, stock - amount);
     }
 
     private static BigDecimal twoDecimals(BigDecimal price) {

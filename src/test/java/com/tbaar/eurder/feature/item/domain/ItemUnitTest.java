@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class ItemUnitTest {
 
-    private final Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+    private final Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
 
     @Test
     void givenAvailableUnit_whenChangingItsState_thenItHasTheNewState() {

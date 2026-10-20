@@ -89,7 +89,7 @@ class ItemServiceTest {
     @Test
     void givenExistingItem_whenUpdating_thenReplacesItsFieldsAndReturnsItWithItsAvailableUnits() {
         UUID id = UUID.randomUUID();
-        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         when(itemRepository.findById(id)).thenReturn(Optional.of(chair));
         when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.PRISTINE, 10)));
 
@@ -117,9 +117,9 @@ class ItemServiceTest {
     @Test
     void givenNoUrgencyFilter_whenFindingTheOverview_thenReturnsEveryItemSortedWithItsUrgency() {
         when(itemRepository.findStockBetween(0, Integer.MAX_VALUE)).thenReturn(List.of(
-                new ItemStock(new Item("Lamp", "Desk lamp", new BigDecimal("29.00"), 0), 0),
-                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0), 7),
-                new ItemStock(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 12)));
+                new ItemStock(new Item("Lamp", "Desk lamp", new BigDecimal("29.00")), 0),
+                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99")), 7),
+                new ItemStock(new Item("Table", "Oak table", new BigDecimal("199.00")), 12)));
         when(itemUnitRepository.countAvailableUnits(any())).thenReturn(List.of());
 
         List<ItemOverviewDto> overview = itemService.findOverview(null);
@@ -135,7 +135,7 @@ class ItemServiceTest {
     @Test
     void givenAnUrgencyFilter_whenFindingTheOverview_thenQueriesTheStockRangeOfThatUrgency() {
         when(itemRepository.findStockBetween(5, 9)).thenReturn(List.of(
-                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0), 7)));
+                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99")), 7)));
         when(itemUnitRepository.countAvailableUnits(any())).thenReturn(List.of());
 
         List<ItemOverviewDto> overview = itemService.findOverview(StockUrgency.STOCK_MEDIUM);
@@ -156,7 +156,7 @@ class ItemServiceTest {
     @Test
     void givenExistingItem_whenAddingUnits_thenSavesThatManyUnitsInThatStateAndReturnsTheNewCounts() {
         UUID id = UUID.randomUUID();
-        when(itemRepository.findById(id)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0)));
+        when(itemRepository.findById(id)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"))));
         when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.DAMAGED, 3)));
 
         ItemDto item = itemService.addUnits(id, new AddUnitsDto(ItemState.DAMAGED, 3));
@@ -182,7 +182,7 @@ class ItemServiceTest {
     void givenAvailableUnitOfTheItem_whenChangingItsState_thenReturnsItInTheNewState() {
         UUID itemId = UUID.randomUUID();
         UUID unitId = UUID.randomUUID();
-        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         when(itemRepository.findLockedById(itemId)).thenReturn(Optional.of(chair));
         when(itemUnitRepository.findByIdAndItemId(unitId, itemId)).thenReturn(Optional.of(new ItemUnit(chair, ItemState.PRISTINE)));
 
@@ -196,7 +196,7 @@ class ItemServiceTest {
     void givenAUnitThatIsNotOneOfTheItem_whenChangingItsState_thenThrowsItemUnitNotFoundWithBothIds() {
         UUID itemId = UUID.randomUUID();
         UUID unitId = UUID.randomUUID();
-        when(itemRepository.findLockedById(itemId)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0)));
+        when(itemRepository.findLockedById(itemId)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"))));
         when(itemUnitRepository.findByIdAndItemId(unitId, itemId)).thenReturn(Optional.empty());
 
         Throwable thrown = catchThrowable(() -> itemService.changeUnitState(itemId, unitId, new ChangeUnitStateDto(ItemState.DAMAGED)));
@@ -209,7 +209,7 @@ class ItemServiceTest {
     @Test
     void givenUnitsInSeveralStates_whenFindingTheUnitsOfTheItem_thenSortsThemByStateThenAvailableFirst() {
         UUID itemId = UUID.randomUUID();
-        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
         ItemUnit soldPristine = new ItemUnit(chair, ItemState.PRISTINE);
         soldPristine.assignTo(UUID.randomUUID());
         when(itemRepository.existsById(itemId)).thenReturn(true);
