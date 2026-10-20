@@ -2,13 +2,16 @@ package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -32,5 +35,13 @@ public class ItemService {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
         item.update(request.name(), request.description(), request.price(), request.stock());
         return itemMapper.toDto(item);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ItemOverviewDto> findOverview(StockUrgency urgency) {
+        List<Item> items = urgency == null
+                ? itemRepository.findAllByOrderByStockAscNameAsc()
+                : itemRepository.findByStockBetweenOrderByStockAscNameAsc(urgency.getMinStock(), urgency.getMaxStock());
+        return items.stream().map(itemMapper::toOverviewDto).toList();
     }
 }

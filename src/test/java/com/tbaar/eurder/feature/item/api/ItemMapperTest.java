@@ -1,8 +1,10 @@
 package com.tbaar.eurder.feature.item.api;
 
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
+import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -32,5 +34,14 @@ class ItemMapperTest {
         ItemDto dto = itemMapper.toDto(item);
 
         assertThat(dto).isEqualTo(new ItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+    }
+
+    @Test
+    void givenItem_whenMappingToOverviewDto_thenAddsTheUrgencyOfItsStock() {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 7);
+
+        ItemOverviewDto dto = itemMapper.toOverviewDto(item);
+
+        assertThat(dto).isEqualTo(new ItemOverviewDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 7, StockUrgency.STOCK_MEDIUM));
     }
 }

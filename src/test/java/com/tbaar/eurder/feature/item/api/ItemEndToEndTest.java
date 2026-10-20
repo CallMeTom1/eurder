@@ -12,6 +12,8 @@ import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -24,6 +26,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -244,8 +247,98 @@ class ItemEndToEndTest {
         assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
     }
 
+    @Test
+    void givenItemsWithDifferentStocks_whenTheAdminGetsTheOverview_thenReturnsThemFromMostToLeastUrgent() {
+        createItem("Table", 12);
+        createItem("Lamp", 0);
+        createItem("Chair", 7);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/items");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("name", contains("Lamp", "Chair", "Table"))
+                .body("urgency", contains("STOCK_LOW", "STOCK_MEDIUM", "STOCK_HIGH"))
+                .body("[0].keySet()", containsInAnyOrder("id", "name", "description", "price", "stock", "urgency"));
+    }
+
+    @Test
+    void givenAnUrgencyFilter_whenTheAdminGetsTheOverview_thenReturnsOnlyTheItemsOfThatUrgency() {
+        createItem("Table", 12);
+        createItem("Lamp", 0);
+        createItem("Desk", 4);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin").queryParam("urgency", "STOCK_LOW");
+
+        Response response = request.get("/items");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("name", contains("Lamp", "Desk"));
+    }
+
+    @Test
+    void givenNoItem_whenTheAdminGetsTheOverview_thenReturnsAnEmptyList() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/items");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("size()", equalTo(0));
+    }
+
+    @ParameterizedTest(name = "urgency \"{0}\" is rejected")
+    @ValueSource(strings = {"FOO", "stock_low"})
+    void givenAnUnknownUrgency_whenTheAdminGetsTheOverview_thenReturns400NamingTheParameter(String urgency) {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin").queryParam("urgency", urgency);
+
+        Response response = request.get("/items");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", containsString("'urgency'"));
+    }
+
+    @Test
+    void givenACustomer_whenGettingTheOverview_thenReturns403() {
+        registerJane();
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/items");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User jane@doe.be has no access to VIEW_ITEM_OVERVIEW"));
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenGettingTheOverview_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/items");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenTheApiDocumentation_whenReadingTheOverviewEndpoint_thenTheUrgencyParameterListsTheEnumValues() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/v3/api-docs");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("paths.'/items'.get.parameters.find { it.name == 'urgency' }.schema.enum",
+                        contains("STOCK_LOW", "STOCK_MEDIUM", "STOCK_HIGH"));
+    }
+
     private String createItem() {
-        return asAdmin(item("Chair", "49.99", "10")).post("/items")
+        return createItem("Chair", 10);
+    }
+
+    private String createItem(String name, int stock) {
+        return asAdmin(item(name, "49.99", String.valueOf(stock))).post("/items")
                 .then().statusCode(HttpStatus.CREATED.value())
                 .extract().path("id");
     }
@@ -263,12 +356,16 @@ class ItemEndToEndTest {
     }
 
     private RequestSpecification authenticatedAs(String email, String password, String body) {
+        return authenticatedAs(email, password)
+                .contentType(ContentType.JSON)
+                .body(body);
+    }
+
+    private RequestSpecification authenticatedAs(String email, String password) {
         return RestAssured.given()
                 .port(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
-                .auth().preemptive().basic(email, password)
-                .contentType(ContentType.JSON)
-                .body(body);
+                .auth().preemptive().basic(email, password);
     }
 
     private static String item(String name, String price, String stock) {
