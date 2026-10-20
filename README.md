@@ -55,7 +55,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | In progress |
 | S | Security: roles, features, Basic authentication (technical) | Done |
 | 1 | Create a customer account | Done |
-| 2 | Add an item | To do |
+| 2 | Add an item | Done |
 | 3 | Order items | To do |
 | 7 | View all customers | Done |
 | 8 | View a single customer | Done |
