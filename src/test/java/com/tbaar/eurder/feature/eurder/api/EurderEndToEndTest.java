@@ -319,6 +319,84 @@ class EurderEndToEndTest {
         response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @Test
+    void givenOwnEurderAndALaterPriceChange_whenTheCustomerReordersIt_thenReturns201WithANewEurderAtTheCurrentPrice() {
+        String chairId = createItem("Chair", "49.99", 10);
+        String originalId = order("jane@doe.be", chairId, 3);
+        authenticatedAs("admin@eurder.be", "admin", """
+                {"name": "Chair", "description": "Chair description", "price": 59.99, "stock": 7}
+                """).put("/items/" + chairId).then().statusCode(HttpStatus.OK.value());
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.post("/eurders/" + originalId + "/reorder");
+
+        String reorderedId = response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("itemGroups.itemId", contains(chairId))
+                .body("itemGroups.itemPrice", contains(new BigDecimal("59.99")))
+                .body("itemGroups.amount", contains(3))
+                .body("totalPrice", equalTo(new BigDecimal("179.97")))
+                .extract().path("id");
+        assertThat(reorderedId).isNotEqualTo(originalId);
+        response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + reorderedId));
+    }
+
+    @Test
+    void givenAnEurderOfAnotherCustomer_whenReorderingIt_thenReturns404AsIfItDidNotExist() {
+        String chairId = createItem("Chair", "49.99", 10);
+        registerCustomer("zoe@adams.be");
+        String zoesId = order("zoe@adams.be", chairId, 2);
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.post("/eurders/" + zoesId + "/reorder");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No eurder found for id " + zoesId));
+        assertThat(eurderRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void givenAnUnknownEurderId_whenReordering_thenReturns404() {
+        String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.post("/eurders/" + unknownId + "/reorder");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No eurder found for id " + unknownId));
+    }
+
+    @Test
+    void givenAnIdThatIsNotAUuid_whenReordering_thenReturns400() {
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.post("/eurders/last/reorder");
+
+        response.then().statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void givenTheAdmin_whenReordering_thenReturns403() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.post("/eurders/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90/reorder");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User admin@eurder.be has no access to ORDER_ITEMS"));
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenReordering_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.post("/eurders/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90/reorder");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
     private void registerCustomer(String email) {
         RestAssured.given().port(port).contentType(ContentType.JSON).body("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
@@ -327,11 +405,12 @@ class EurderEndToEndTest {
                 """.formatted(email)).post("/customers").then().statusCode(HttpStatus.CREATED.value());
     }
 
-    private void order(String email, String itemId, int amount) {
-        authenticatedAs(email, "secret123", """
+    private String order(String email, String itemId, int amount) {
+        return authenticatedAs(email, "secret123", """
                 {"itemGroups": [{"itemId": "%s", "amount": %d}]}
                 """.formatted(itemId, amount))
-                .post("/eurders").then().statusCode(HttpStatus.CREATED.value());
+                .post("/eurders").then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
     }
 
     private void order(String email, String firstItemId, int firstAmount, String secondItemId, int secondAmount) {

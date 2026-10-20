@@ -7,12 +7,16 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface EurderRepository extends JpaRepository<Eurder, UUID> {
 
     @EntityGraph(attributePaths = "itemGroups")
     List<Eurder> findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(UUID credentialsId);
+
+    @EntityGraph(attributePaths = "itemGroups")
+    Optional<Eurder> findByIdAndCustomerCredentialsId(UUID id, UUID credentialsId);
 
     @Query("""
             select new com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip(
