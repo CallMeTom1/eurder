@@ -230,7 +230,7 @@ class EurderEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("keySet()", containsInAnyOrder("eurders", "totalPrice"))
                 .body("eurders[0].keySet()", containsInAnyOrder("id", "itemGroups", "totalPrice"))
-                .body("eurders[0].itemGroups[0].keySet()", containsInAnyOrder("itemName", "amount", "subtotal"))
+                .body("eurders[0].itemGroups[0].keySet()", containsInAnyOrder("itemName", "itemState", "amount", "subtotal"))
                 .body("eurders.totalPrice", containsInAnyOrder(new BigDecimal("150.27"), new BigDecimal("49.99")))
                 .body("eurders.itemGroups.flatten().subtotal",
                         containsInAnyOrder(new BigDecimal("149.97"), new BigDecimal("0.30"), new BigDecimal("49.99")))
@@ -290,7 +290,8 @@ class EurderEndToEndTest {
                 .body("[0].address.street", equalTo("Rue Haute"))
                 .body("[0].address.city", equalTo("Bruxelles"))
                 .body("[0].itemGroups.itemName", contains("Chair"))
-                .body("[0].itemGroups.amount", contains(3));
+                .body("[0].itemGroups.amount", contains(3))
+                .body("[0].itemGroups.itemState", contains("PRISTINE"));
     }
 
     @Test

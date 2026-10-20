@@ -207,7 +207,7 @@ class EurderServiceIntegrationTest {
             assertThat(toShip.eurderId()).isEqualTo(eurder.id());
             assertThat(toShip.customerName()).isEqualTo("Jane Doe");
             assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles"));
-            assertThat(toShip.itemGroups()).containsExactly(new ShippingItemGroupDto("Chair", 3));
+            assertThat(toShip.itemGroups()).containsExactly(new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 3));
         });
     }
 
@@ -238,6 +238,21 @@ class EurderServiceIntegrationTest {
                 .containsExactly(
                         tuple(new BigDecimal("49.99"), LocalDate.of(2027, 1, 1)),
                         tuple(new BigDecimal("199.00"), LocalDate.of(2027, 1, 7)));
+    }
+
+    @Test
+    void givenAnEurderOfDamagedUnits_whenReorderingAfterAPriceChange_thenReordersTheSameStateAtTheNewDiscountedPrice() {
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 0);
+        itemUnitRepository.saveAll(chair.newUnits(ItemState.DAMAGED, 4));
+        EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2, ItemState.DAMAGED))));
+        itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("60.00")));
+
+        EurderDto reordered = eurderService.reorder(janeCredentialsId, original.id());
+
+        assertThat(reordered.itemGroups())
+                .extracting(ItemGroupDto::itemState, ItemGroupDto::itemPrice, ItemGroupDto::amount)
+                .containsExactly(tuple(ItemState.DAMAGED, new BigDecimal("54.00"), 2));
+        assertThat(availableUnits(chair)).isZero();
     }
 
     @Test

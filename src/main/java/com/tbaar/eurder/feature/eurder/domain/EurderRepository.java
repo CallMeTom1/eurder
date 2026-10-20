@@ -20,7 +20,7 @@ public interface EurderRepository extends JpaRepository<Eurder, UUID> {
 
     @Query("""
             select new com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip(
-                e.id, c.firstName, c.lastName, c.address, g.itemName, g.amount)
+                e.id, c.firstName, c.lastName, c.address, g.itemName, g.itemState, g.amount)
             from Eurder e
             join e.customer c
             join e.itemGroups g

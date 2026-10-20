@@ -108,7 +108,7 @@ public class EurderService {
         Eurder existing = eurderRepository.findByIdAndCustomerCredentialsId(eurderId, credentialsId)
                 .orElseThrow(() -> new EurderNotFoundException(eurderId));
         List<ItemGroupRequestDto> sameItems = existing.getItemGroups().stream()
-                .map(itemGroup -> new ItemGroupRequestDto(itemGroup.getItemId(), itemGroup.getAmount()))
+                .map(itemGroup -> new ItemGroupRequestDto(itemGroup.getItemId(), itemGroup.getAmount(), itemGroup.getItemState()))
                 .toList();
         return order(credentialsId, new CreateEurderDto(sameItems));
     }

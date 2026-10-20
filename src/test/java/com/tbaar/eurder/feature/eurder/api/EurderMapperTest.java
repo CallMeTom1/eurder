@@ -55,19 +55,19 @@ class EurderMapperTest {
                 ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE),
                 ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE)), ORDERED_AT);
         Eurder second = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.DAMAGED, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         ReportDto report = eurderMapper.toReportDto(List.of(first, second));
 
         assertThat(report).isEqualTo(new ReportDto(List.of(
                 new EurderReportDto(first.getId(), List.of(
-                        new ItemGroupReportDto("Chair", 3, new BigDecimal("149.97")),
-                        new ItemGroupReportDto("Lamp", 3, new BigDecimal("0.30"))),
+                        new ItemGroupReportDto("Chair", ItemState.PRISTINE, 3, new BigDecimal("149.97")),
+                        new ItemGroupReportDto("Lamp", ItemState.PRISTINE, 3, new BigDecimal("0.30"))),
                         new BigDecimal("150.27")),
                 new EurderReportDto(second.getId(), List.of(
-                        new ItemGroupReportDto("Table", 1, new BigDecimal("199.00"))),
-                        new BigDecimal("199.00"))),
-                new BigDecimal("349.27")));
+                        new ItemGroupReportDto("Table", ItemState.DAMAGED, 1, new BigDecimal("179.10"))),
+                        new BigDecimal("179.10"))),
+                new BigDecimal("329.37")));
     }
 
     @Test
@@ -86,17 +86,17 @@ class EurderMapperTest {
         UUID zoesEurder = UUID.randomUUID();
         Address janesAddress = new Address("Rue Haute", "1", "1000", "Bruxelles");
         List<ItemGroupToShip> toShip = List.of(
-                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Chair", 3),
-                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Lamp", 1),
-                new ItemGroupToShip(zoesEurder, "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "Chair", 2));
+                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Chair", ItemState.PRISTINE, 3),
+                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Lamp", ItemState.DAMAGED, 1),
+                new ItemGroupToShip(zoesEurder, "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "Chair", ItemState.PRISTINE, 2));
 
         List<ShippingEurderDto> shipping = eurderMapper.toShippingDtos(toShip);
 
         assertThat(shipping).containsExactly(
                 new ShippingEurderDto(janesEurder, "Jane Doe", new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), List.of(
-                        new ShippingItemGroupDto("Chair", 3), new ShippingItemGroupDto("Lamp", 1))),
+                        new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 3), new ShippingItemGroupDto("Lamp", ItemState.DAMAGED, 1))),
                 new ShippingEurderDto(zoesEurder, "Zoe Adams", new AddressDto("Rue Neuve", "8", "1000", "Bruxelles"), List.of(
-                        new ShippingItemGroupDto("Chair", 2))));
+                        new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 2))));
     }
 
     private static Customer aCustomer() {

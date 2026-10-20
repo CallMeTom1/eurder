@@ -137,8 +137,8 @@ class EurderRepositoryIntegrationTest {
         List<ItemGroupToShip> toShip = eurderRepository.findItemGroupsShippingOn(LocalDate.of(2027, 1, 1));
 
         assertThat(toShip)
-                .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::amount)
-                .containsExactly(tuple(janes.getId(), "Jane", "Chair", 3), tuple(zoes.getId(), "Zoe", "Chair", 2));
+                .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::itemState, ItemGroupToShip::amount)
+                .containsExactly(tuple(janes.getId(), "Jane", "Chair", ItemState.PRISTINE, 3), tuple(zoes.getId(), "Zoe", "Chair", ItemState.PRISTINE, 2));
         assertThat(toShip.get(1).address().getStreet()).isEqualTo("Rue Neuve");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }

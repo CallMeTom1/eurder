@@ -188,8 +188,8 @@ class EurderServiceTest {
         UUID eurderId = UUID.randomUUID();
         Address address = new Address("Rue Haute", "1", "1000", "Bruxelles");
         when(eurderRepository.findItemGroupsShippingOn(LocalDate.of(2026, 12, 31))).thenReturn(List.of(
-                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Chair", 3),
-                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Lamp", 1)));
+                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Chair", ItemState.PRISTINE, 3),
+                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Lamp", ItemState.PRISTINE, 1)));
 
         List<ShippingEurderDto> shipping = eurderService.findShippingToday();
 
