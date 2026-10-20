@@ -17,6 +17,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.tuple;
 class EurderRepositoryIntegrationTest {
 
     private static final LocalDate ORDER_DATE = LocalDate.of(2026, 12, 31);
+    private static final Instant ORDERED_AT = Instant.parse("2026-12-31T09:00:00Z");
 
     @Autowired
     private EurderRepository eurderRepository;
@@ -52,13 +54,14 @@ class EurderRepositoryIntegrationTest {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
         Eurder saved = eurderRepository.saveAndFlush(new Eurder(jane, List.of(
                 ItemGroup.of(table, 1, ORDER_DATE),
-                ItemGroup.of(chair, 2, ORDER_DATE))));
+                ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT));
         entityManager.clear();
 
         Optional<Eurder> found = eurderRepository.findById(saved.getId());
 
         assertThat(found).hasValueSatisfying(eurder -> {
             assertThat(eurder.getCustomer().getId()).isEqualTo(jane.getId());
+            assertThat(eurder.getOrderedAt()).isEqualTo(ORDERED_AT);
             assertThat(eurder.getItemGroups())
                     .extracting(ItemGroup::getItemId, ItemGroup::getItemName, ItemGroup::getItemPrice, ItemGroup::getAmount, ItemGroup::getShippingDate)
                     .containsExactly(
@@ -72,7 +75,7 @@ class EurderRepositoryIntegrationTest {
     void givenEurderWithTwoItemGroups_whenSavingIt_thenRunsOnlyThreeInsertsAndNoUpdate() {
         Customer jane = customerRepository.saveAndFlush(aCustomer());
         Item chair = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, 1, ORDER_DATE), ItemGroup.of(chair, 2, ORDER_DATE)));
+        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, 1, ORDER_DATE), ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT);
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 

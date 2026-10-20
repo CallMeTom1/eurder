@@ -14,6 +14,7 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -35,11 +36,14 @@ public class Eurder {
     @OrderBy("lineNumber")
     private List<ItemGroup> itemGroups = new ArrayList<>();
 
+    private Instant orderedAt;
+
     protected Eurder() {
     }
 
-    public Eurder(Customer customer, List<ItemGroup> itemGroups) {
+    public Eurder(Customer customer, List<ItemGroup> itemGroups, Instant orderedAt) {
         this.customer = customer;
+        this.orderedAt = orderedAt;
         this.itemGroups = new ArrayList<>(itemGroups);
         for (int index = 0; index < this.itemGroups.size(); index++) {
             this.itemGroups.get(index).numberAs(index + 1);
@@ -52,6 +56,10 @@ public class Eurder {
 
     public Customer getCustomer() {
         return customer;
+    }
+
+    public Instant getOrderedAt() {
+        return orderedAt;
     }
 
     public List<ItemGroup> getItemGroups() {

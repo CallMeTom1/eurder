@@ -51,7 +51,7 @@ public class EurderService {
             itemGroups.add(ItemGroup.of(item, requested.amount(), orderDate));
             item.removeFromStock(requested.amount());
         }
-        Eurder eurder = eurderRepository.save(new Eurder(customer, itemGroups));
+        Eurder eurder = eurderRepository.save(new Eurder(customer, itemGroups, clock.instant()));
         return eurderMapper.toDto(eurder);
     }
 }

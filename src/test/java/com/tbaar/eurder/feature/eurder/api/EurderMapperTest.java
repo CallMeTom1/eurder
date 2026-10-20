@@ -12,6 +12,7 @@ import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EurderMapperTest {
 
     private static final LocalDate ORDER_DATE = LocalDate.of(2026, 12, 31);
+    private static final Instant ORDERED_AT = Instant.parse("2026-12-31T09:00:00Z");
 
     private final EurderMapper eurderMapper = new EurderMapper();
 
@@ -27,7 +29,7 @@ class EurderMapperTest {
     void givenEurder_whenMappingToDto_thenExposesEachItemGroupWithItsSubtotalAndTheTotalPrice() {
         Eurder eurder = new Eurder(aCustomer(), List.of(
                 ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), 3, ORDER_DATE),
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 1, ORDER_DATE)));
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 1, ORDER_DATE)), ORDERED_AT);
 
         EurderDto dto = eurderMapper.toDto(eurder);
 

@@ -18,6 +18,7 @@ import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -80,6 +81,19 @@ class EurderServiceTest {
         assertThat(eurder.totalPrice()).isEqualTo(new BigDecimal("348.97"));
         assertThat(chair.getStock()).isEqualTo(7);
         assertThat(table.getStock()).isZero();
+    }
+
+    @Test
+    void givenValidOrder_whenOrdering_thenStampsTheEurderWithTheCurrentInstantOfTheClock() {
+        givenTheCustomerExists();
+        givenItem(CHAIR_ID, "Chair", "49.99", 10);
+        when(eurderRepository.save(any(Eurder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eurderService.order(CREDENTIALS_ID, request(new ItemGroupRequestDto(CHAIR_ID, 1)));
+
+        ArgumentCaptor<Eurder> saved = ArgumentCaptor.forClass(Eurder.class);
+        verify(eurderRepository).save(saved.capture());
+        assertThat(saved.getValue().getOrderedAt()).isEqualTo(NEW_YEARS_EVE.instant());
     }
 
     @Test
