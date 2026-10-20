@@ -35,7 +35,7 @@ public class Item {
     public Item(String name, String description, BigDecimal price, int stock) {
         this.name = name;
         this.description = description;
-        this.price = price.setScale(2);
+        this.price = twoDecimals(price);
         this.stock = stock;
     }
 
@@ -59,11 +59,22 @@ public class Item {
         return stock;
     }
 
+    public void update(String name, String description, BigDecimal price, int stock) {
+        this.name = name;
+        this.description = description;
+        this.price = twoDecimals(price);
+        this.stock = stock;
+    }
+
     public boolean isInStock(int amount) {
         return stock >= amount;
     }
 
     public void removeFromStock(int amount) {
         stock = Math.max(0, stock - amount);
+    }
+
+    private static BigDecimal twoDecimals(BigDecimal price) {
+        return price.setScale(2);
     }
 }

@@ -1,7 +1,7 @@
 package com.tbaar.eurder.feature.item.api;
 
-import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import org.junit.jupiter.api.Test;
 
@@ -14,8 +14,8 @@ class ItemMapperTest {
     private final ItemMapper itemMapper = new ItemMapper();
 
     @Test
-    void givenCreateItemDto_whenMappingToEntity_thenCopiesEveryField() {
-        CreateItemDto dto = new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+    void givenItemRequestDto_whenMappingToEntity_thenCopiesEveryField() {
+        ItemRequestDto dto = new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
 
         Item item = itemMapper.toEntity(dto);
 

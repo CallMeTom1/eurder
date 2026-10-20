@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -143,11 +144,7 @@ class ItemEndToEndTest {
 
     @Test
     void givenACustomer_whenPostingAnItem_thenReturns403AndStoresNothing() {
-        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
-                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
-                 "phoneNumber": "0470123456"}
-                """).post("/customers");
+        registerJane();
         RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", item("Chair", "49.99", "10"));
 
         Response response = request.post("/items");
@@ -168,6 +165,97 @@ class ItemEndToEndTest {
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
         assertThat(itemRepository.count()).isZero();
+    }
+
+    @Test
+    void givenExistingItem_whenTheAdminPutsNewValues_thenReturns200WithTheUpdatedItem() {
+        String id = createItem();
+        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+
+        Response response = request.put("/items/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", equalTo(id))
+                .body("name", equalTo("Armchair"))
+                .body("price", equalTo(new BigDecimal("150.00")))
+                .body("stock", equalTo(3));
+        assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Armchair");
+    }
+
+    @Test
+    void givenUnknownId_whenTheAdminPutsAnItem_thenReturns404WithTheId() {
+        String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
+        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+
+        Response response = request.put("/items/" + unknownId);
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No item found for id " + unknownId));
+    }
+
+    @Test
+    void givenInvalidValues_whenTheAdminPutsAnItem_thenReturns400WithTheCreationRulesAndChangesNothing() {
+        String id = createItem();
+        RequestSpecification request = asAdmin("""
+                {"name": "", "description": "Wooden chair", "price": 9.999, "stock": -1}
+                """);
+
+        Response response = request.put("/items/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.keySet()", containsInAnyOrder("name", "price", "stock"));
+        assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
+    }
+
+    @Test
+    void givenAnIdThatIsNotAUuid_whenTheAdminPutsAnItem_thenReturns400() {
+        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+
+        Response response = request.put("/items/chair");
+
+        response.then().statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void givenACustomer_whenPuttingAnItem_thenReturns403AndChangesNothing() {
+        String id = createItem();
+        registerJane();
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", item("Armchair", "150", "3"));
+
+        Response response = request.put("/items/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User jane@doe.be has no access to MANAGE_ITEMS"));
+        assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenPuttingAnItem_thenReturns401() {
+        String id = createItem();
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(item("Armchair", "150", "3"));
+
+        Response response = request.put("/items/" + id);
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+        assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
+    }
+
+    private String createItem() {
+        return asAdmin(item("Chair", "49.99", "10")).post("/items")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
+    }
+
+    private void registerJane() {
+        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "phoneNumber": "0470123456"}
+                """).post("/customers").then().statusCode(HttpStatus.CREATED.value());
     }
 
     private RequestSpecification asAdmin(String body) {

@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-public record CreateItemDto(
+public record ItemRequestDto(
         @NotBlank(message = "Name is required")
         @Size(max = 255, message = "Name must be at most 255 characters")
         String name,
