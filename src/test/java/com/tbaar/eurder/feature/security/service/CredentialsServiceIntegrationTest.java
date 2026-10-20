@@ -10,7 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -28,13 +30,15 @@ class CredentialsServiceIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private final String email = "jane." + UUID.randomUUID() + "@doe.be";
+
     @Test
     void givenNewCustomerCredentials_whenCreating_thenTheyAreStoredWithAVerifiableHash() {
         String rawPassword = "secret123";
 
-        credentialsService.create(" Jane@Doe.be", rawPassword, Role.CUSTOMER);
+        credentialsService.create(" " + email.toUpperCase(Locale.ROOT), rawPassword, Role.CUSTOMER);
 
-        Optional<Credentials> stored = credentialsRepository.findByEmail("jane@doe.be");
+        Optional<Credentials> stored = credentialsRepository.findByEmail(email);
         assertThat(stored).hasValueSatisfying(credentials -> {
             assertThat(credentials.getRole()).isEqualTo(Role.CUSTOMER);
             assertThat(passwordEncoder.matches(rawPassword, credentials.getPasswordHash())).isTrue();
@@ -42,13 +46,13 @@ class CredentialsServiceIntegrationTest {
     }
 
     @Test
-    void givenExistingCredentials_whenCreatingWithTheSameEmailInAnotherCase_thenThrowsEmailAlreadyUsed() {
-        credentialsService.create("jane@doe.be", "secret123", Role.CUSTOMER);
-        long credentialsBefore = credentialsRepository.count();
+    void givenExistingCredentials_whenCreatingWithTheSameEmailInAnotherCase_thenThrowsEmailAlreadyUsedAndKeepsTheFirstPassword() {
+        credentialsService.create(email, "secret123", Role.CUSTOMER);
 
-        Throwable thrown = catchThrowable(() -> credentialsService.create("JANE@DOE.BE", "other-password", Role.CUSTOMER));
+        Throwable thrown = catchThrowable(() -> credentialsService.create(email.toUpperCase(Locale.ROOT), "other-password", Role.CUSTOMER));
 
         assertThat(thrown).isInstanceOf(EmailAlreadyUsedException.class);
-        assertThat(credentialsRepository.count()).isEqualTo(credentialsBefore);
+        assertThat(credentialsRepository.findByEmail(email)).hasValueSatisfying(credentials ->
+                assertThat(passwordEncoder.matches("secret123", credentials.getPasswordHash())).isTrue());
     }
 }
