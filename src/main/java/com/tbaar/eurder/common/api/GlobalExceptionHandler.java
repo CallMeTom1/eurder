@@ -92,9 +92,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static String fieldPath(List<JacksonException.Reference> path) {
-        return path.stream()
-                .map(JacksonException.Reference::getPropertyName)
-                .collect(Collectors.joining("."));
+        StringBuilder fieldPath = new StringBuilder();
+        for (JacksonException.Reference reference : path) {
+            if (reference.getPropertyName() == null) {
+                fieldPath.append('[').append(reference.getIndex()).append(']');
+            } else {
+                fieldPath.append(fieldPath.isEmpty() ? "" : ".").append(reference.getPropertyName());
+            }
+        }
+        return fieldPath.toString();
     }
 
     @Override
