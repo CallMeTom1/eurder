@@ -3,7 +3,10 @@ package com.tbaar.eurder.feature.eurder.api;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.item.domain.Item;
@@ -37,6 +40,37 @@ class EurderMapperTest {
                 new ItemGroupDto(null, "Chair", new BigDecimal("49.99"), 3, new BigDecimal("149.97"), LocalDate.of(2027, 1, 1)),
                 new ItemGroupDto(null, "Table", new BigDecimal("199.00"), 1, new BigDecimal("199.00"), LocalDate.of(2027, 1, 7))),
                 new BigDecimal("348.97")));
+    }
+
+    @Test
+    void givenTwoEurders_whenMappingToReport_thenListsEachEurderWithItsTotalAndTheTotalOfAllEurders() {
+        Eurder first = new Eurder(aCustomer(), List.of(
+                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), 3, ORDER_DATE),
+                ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10"), 10), 3, ORDER_DATE)), ORDERED_AT);
+        Eurder second = new Eurder(aCustomer(), List.of(
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 1, ORDER_DATE)), ORDERED_AT);
+
+        ReportDto report = eurderMapper.toReportDto(List.of(first, second));
+
+        assertThat(report).isEqualTo(new ReportDto(List.of(
+                new EurderReportDto(first.getId(), List.of(
+                        new ItemGroupReportDto("Chair", 3, new BigDecimal("149.97")),
+                        new ItemGroupReportDto("Lamp", 3, new BigDecimal("0.30"))),
+                        new BigDecimal("150.27")),
+                new EurderReportDto(second.getId(), List.of(
+                        new ItemGroupReportDto("Table", 1, new BigDecimal("199.00"))),
+                        new BigDecimal("199.00"))),
+                new BigDecimal("349.27")));
+    }
+
+    @Test
+    void givenNoEurder_whenMappingToReport_thenReturnsAnEmptyListAndATotalOfZeroWithTwoDecimals() {
+        List<Eurder> noEurders = List.of();
+
+        ReportDto report = eurderMapper.toReportDto(noEurders);
+
+        assertThat(report.eurders()).isEmpty();
+        assertThat(report.totalPrice()).isEqualTo(new BigDecimal("0.00"));
     }
 
     private static Customer aCustomer() {
