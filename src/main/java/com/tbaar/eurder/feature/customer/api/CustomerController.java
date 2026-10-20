@@ -3,20 +3,17 @@ package com.tbaar.eurder.feature.customer.api;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
-import com.tbaar.eurder.feature.security.domain.Feature;
-import com.tbaar.eurder.feature.security.service.SecurityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -31,11 +28,9 @@ import java.util.UUID;
 public class CustomerController {
 
     private final CustomerService customerService;
-    private final SecurityService securityService;
 
-    public CustomerController(CustomerService customerService, SecurityService securityService) {
+    public CustomerController(CustomerService customerService) {
         this.customerService = customerService;
-        this.securityService = securityService;
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -52,17 +47,16 @@ public class CustomerController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all customers, sorted by last name then first name")
     @SecurityRequirement(name = "basicAuth")
-    public List<CustomerDto> findAll(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        securityService.validateAuthorization(authorization, Feature.VIEW_CUSTOMERS);
+    @Secured("VIEW_CUSTOMERS")
+    public List<CustomerDto> findAll() {
         return customerService.findAll();
     }
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the details of one customer")
     @SecurityRequirement(name = "basicAuth")
-    public CustomerDto findById(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-                                @PathVariable UUID id) {
-        securityService.validateAuthorization(authorization, Feature.VIEW_CUSTOMERS);
+    @Secured("VIEW_CUSTOMERS")
+    public CustomerDto findById(@PathVariable UUID id) {
         return customerService.findById(id);
     }
 }

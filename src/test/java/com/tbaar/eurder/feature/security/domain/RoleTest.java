@@ -26,7 +26,7 @@ class RoleTest {
             "CUSTOMER, VIEW_OWN_EURDERS,    true"
     })
     void givenRoleAndFeature_whenCheckingAccess_thenMatchesTheRightsMatrix(Role role, Feature feature, boolean expectedAccess) {
-        boolean hasAccess = role.containsFeature(feature);
+        boolean hasAccess = role.getFeatures().contains(feature);
 
         assertThat(hasAccess).isEqualTo(expectedAccess);
     }
@@ -36,7 +36,7 @@ class RoleTest {
     void givenAnyFeature_whenCheckingEveryRole_thenAtLeastOneRoleHasIt(Feature feature) {
         Role[] allRoles = Role.values();
 
-        boolean grantedToSomeone = Arrays.stream(allRoles).anyMatch(role -> role.containsFeature(feature));
+        boolean grantedToSomeone = Arrays.stream(allRoles).anyMatch(role -> role.getFeatures().contains(feature));
 
         assertThat(grantedToSomeone).isTrue();
     }

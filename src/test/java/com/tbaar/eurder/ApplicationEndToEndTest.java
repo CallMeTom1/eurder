@@ -6,6 +6,7 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -50,13 +51,24 @@ class ApplicationEndToEndTest {
     }
 
     @Test
-    void givenUnknownUrl_whenRequested_thenReturns404ProblemDetail() {
-        RequestSpecification request = RestAssured.given().port(port);
+    void givenUnknownUrl_whenAnAuthenticatedUserRequestsIt_thenReturns404ProblemDetail() {
+        RequestSpecification request = RestAssured.given().port(port).auth().preemptive().basic("admin@eurder.be", "admin");
 
         Response response = request.get("/does-not-exist");
 
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("status", equalTo(404));
+    }
+
+    @Test
+    void givenUnknownUrl_whenAnAnonymousUserRequestsIt_thenReturns401WithoutRevealingThatItDoesNotExist() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/does-not-exist");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
     }
 }

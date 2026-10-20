@@ -19,7 +19,7 @@ public enum Role {
         this.features = Set.of(features);
     }
 
-    public boolean containsFeature(Feature feature) {
-        return features.contains(feature);
+    public Set<Feature> getFeatures() {
+        return features;
     }
 }

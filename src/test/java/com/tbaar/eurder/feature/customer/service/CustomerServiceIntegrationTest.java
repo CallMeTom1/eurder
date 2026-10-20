@@ -4,18 +4,17 @@ import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
-import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Feature;
 import com.tbaar.eurder.feature.security.domain.Role;
-import com.tbaar.eurder.feature.security.service.SecurityService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +28,10 @@ class CustomerServiceIntegrationTest {
     private CustomerService customerService;
 
     @Autowired
-    private SecurityService securityService;
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -50,8 +52,9 @@ class CustomerServiceIntegrationTest {
         CustomerDto registered = customerService.register(registration);
 
         assertThat(customerRepository.findById(registered.id())).isPresent();
-        Credentials authenticated = securityService.validateAuthorization(basic("jane@doe.be", "secret123"), Feature.ORDER_ITEMS);
-        assertThat(authenticated.getRole()).isEqualTo(Role.CUSTOMER);
+        UserDetails authenticated = userDetailsService.loadUserByUsername("jane@doe.be");
+        assertThat(passwordEncoder.matches("secret123", authenticated.getPassword())).isTrue();
+        assertThat(authenticated.getAuthorities()).extracting(GrantedAuthority::getAuthority).contains("ORDER_ITEMS");
     }
 
     @Test
@@ -84,10 +87,5 @@ class CustomerServiceIntegrationTest {
     private static CreateCustomerDto registration(String email, String firstName, String lastName) {
         return new CreateCustomerDto(firstName, lastName, email, "secret123",
                 new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
-    }
-
-    private static String basic(String email, String password) {
-        String credentials = email + ":" + password;
-        return "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
     }
 }

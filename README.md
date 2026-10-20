@@ -8,6 +8,7 @@ Built as part of the Switchfully Java track.
 - Java 17, Spring Boot 4.1, Maven
 - Spring Data JPA + PostgreSQL, schema managed by Flyway (`src/main/resources/db/migration`)
 - H2 in-memory database for the tests
+- Spring Security: HTTP Basic authentication, each endpoint authorized by a feature of the role (`@Secured`)
 - OpenAPI / Swagger UI (springdoc)
 - JUnit 5, AssertJ, Mockito, RestAssured, JaCoCo (≥ 80 % line coverage)
 
@@ -39,6 +40,8 @@ The Flyway migration `V2__insert_default_admin.sql` creates an administrator acc
 The API uses HTTP Basic authentication: send `Authorization: Basic base64(email:password)` with every request,
 or use the **Authorize** button in Swagger UI. Change this password before any real deployment.
 
+Only the account creation (`POST /customers`) and the documentation are public. Every other request is authenticated before it reaches the API: a missing or wrong `Authorization` header gets a `401`, a role without the required feature gets a `403`.
+
 ## Test it
 
 ```
@@ -53,7 +56,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | --- | --- | --- |
 | 0 | Project setup | Done |
 | T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | Done |
-| S | Security: roles, features, Basic authentication (technical) | Done |
+| S | Security: roles, features, Basic authentication with Spring Security (technical) | Done |
 | 1 | Create a customer account | Done |
 | 2 | Add an item | Done |
 | 3 | Order items | Done |

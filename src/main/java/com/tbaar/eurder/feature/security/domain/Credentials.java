@@ -51,10 +51,6 @@ public class Credentials {
         return role;
     }
 
-    public boolean canHaveAccessTo(Feature feature) {
-        return role.containsFeature(feature);
-    }
-
     public static String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }

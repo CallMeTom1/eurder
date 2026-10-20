@@ -206,6 +206,19 @@ class ItemEndToEndTest {
     }
 
     @Test
+    void givenNoAuthorizationHeaderAndAnInvalidBody_whenPostingAnItem_thenReturns401BeforeValidatingTheBody() {
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+                {"name": " ", "price": 0}
+                """);
+
+        Response response = request.post("/items");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("detail", equalTo("Invalid credentials"));
+    }
+
+    @Test
     void givenExistingItem_whenTheAdminPutsNewValues_thenReturns200WithTheUpdatedItem() {
         String id = createItem();
         RequestSpecification request = asAdmin(updatedItem("Armchair", "150"));
