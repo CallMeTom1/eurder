@@ -1,9 +1,7 @@
 package com.tbaar.eurder.common.api;
 
 import com.tbaar.eurder.common.exception.ConflictException;
-import com.tbaar.eurder.common.exception.ForbiddenException;
 import com.tbaar.eurder.common.exception.NotFoundException;
-import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -15,6 +13,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorityAuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,6 +24,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -32,26 +34,6 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
-
-    @Test
-    void givenUnauthorizedException_whenHandled_thenReturns401WithItsMessage() {
-        UnauthorizedException exception = new UnauthorizedException();
-
-        ResponseEntity<ProblemDetail> response = handler.handleUnauthorized(exception);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).isEqualTo("Invalid credentials");
-    }
-
-    @Test
-    void givenUnauthorizedException_whenHandled_thenTellsTheClientToUseBasicAuthentication() {
-        UnauthorizedException exception = new UnauthorizedException();
-
-        ResponseEntity<ProblemDetail> response = handler.handleUnauthorized(exception);
-
-        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Basic realm=\"Eurder\"");
-    }
 
     @Test
     void givenAFailedAuthentication_whenHandled_thenReturns401WithABasicChallengeWithoutLeakingTheReason() {
@@ -86,13 +68,15 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void givenForbiddenException_whenHandled_thenReturns403WithItsMessage() {
-        ForbiddenException exception = new ForbiddenException("Not your order");
+    void givenAccessDeniedByAMissingAuthority_whenHandled_thenReturns403NamingTheUserAndTheAuthority() {
+        AuthorizationDeniedException exception = new AuthorizationDeniedException("Access Denied",
+                new AuthorityAuthorizationDecision(false, AuthorityUtils.createAuthorityList("ORDER_ITEMS")));
+        Principal jane = () -> "jane@doe.be";
 
-        ProblemDetail response = handler.handleForbidden(exception);
+        ProblemDetail response = handler.handleAccessDenied(exception, jane);
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.getDetail()).isEqualTo("Not your order");
+        assertThat(response.getDetail()).isEqualTo("User jane@doe.be has no access to ORDER_ITEMS");
     }
 
     @Test

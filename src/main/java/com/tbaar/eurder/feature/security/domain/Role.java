@@ -22,8 +22,4 @@ public enum Role {
     public Set<Feature> getFeatures() {
         return features;
     }
-
-    public boolean containsFeature(Feature feature) {
-        return features.contains(feature);
-    }
 }

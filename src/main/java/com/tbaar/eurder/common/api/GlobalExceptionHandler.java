@@ -1,9 +1,7 @@
 package com.tbaar.eurder.common.api;
 
 import com.tbaar.eurder.common.exception.ConflictException;
-import com.tbaar.eurder.common.exception.ForbiddenException;
 import com.tbaar.eurder.common.exception.NotFoundException;
-import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -13,7 +11,10 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorityAuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,6 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.MismatchedInputException;
 
+import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,12 +35,6 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ProblemDetail> handleUnauthorized(UnauthorizedException e) {
-        log.warn("Unauthorized: {}", e.getMessage());
-        return unauthorized();
-    }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ProblemDetail> handleAuthenticationFailure(AuthenticationException e) {
@@ -70,10 +66,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The data was modified by another request, please retry");
     }
 
-    @ExceptionHandler(ForbiddenException.class)
-    public ProblemDetail handleForbidden(ForbiddenException e) {
-        log.warn("Forbidden: {}", e.getMessage());
-        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, e.getMessage());
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ProblemDetail handleAccessDenied(AuthorizationDeniedException e, Principal principal) {
+        String detail = "User " + principal.getName() + " has no access to " + requiredAuthorities(e);
+        log.warn("Forbidden: {}", detail);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, detail);
+    }
+
+    private static String requiredAuthorities(AuthorizationDeniedException e) {
+        if (e.getAuthorizationResult() instanceof AuthorityAuthorizationDecision decision) {
+            return decision.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+        }
+        return "this resource";
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
