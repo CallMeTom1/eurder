@@ -9,9 +9,12 @@ import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
+import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
+import com.tbaar.eurder.feature.item.service.ItemService;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.AfterEach;
@@ -58,6 +61,9 @@ class EurderServiceIntegrationTest {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private ItemService itemService;
 
     @Autowired
     private EurderRepository eurderRepository;
@@ -138,5 +144,19 @@ class EurderServiceIntegrationTest {
         assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
         assertThat(eurderRepository.count()).isZero();
         assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(6);
+    }
+
+    @Test
+    void givenAnEurderPlacedBeforeTheItemChanged_whenUpdatingTheItem_thenTheEurderKeepsTheOldNameAndPrice() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
+
+        itemService.update(chair.getId(), new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150.00"), 8));
+
+        List<ItemGroup> storedItemGroups = new TransactionTemplate(transactionManager).execute(status ->
+                eurderRepository.findById(eurder.id()).orElseThrow().getItemGroups());
+        assertThat(storedItemGroups)
+                .extracting(ItemGroup::getItemName, ItemGroup::getItemPrice, ItemGroup::subtotal)
+                .containsExactly(tuple("Chair", new BigDecimal("49.99"), new BigDecimal("99.98")));
     }
 }
