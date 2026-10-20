@@ -15,6 +15,7 @@ import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ShippingItemGroupDto;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
+import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -200,6 +201,49 @@ class EurderServiceIntegrationTest {
             assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles"));
             assertThat(toShip.itemGroups()).containsExactly(new ShippingItemGroupDto("Chair", 3));
         });
+    }
+
+    @Test
+    void givenOwnEurderAndChangesToItsItems_whenReorderingTheNextDay_thenUsesTheCurrentPricesAndStockAndKeepsTheOldEurder() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
+                new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
+        itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("59.99"), 7));
+        itemService.update(table.getId(), new ItemRequestDto("Table", "Oak table", new BigDecimal("199.00"), 5));
+        clock.setTo(NEW_YEARS_EVE.plusDays(1));
+
+        EurderDto reordered = eurderService.reorder(janeCredentialsId, original.id());
+
+        assertThat(reordered.id()).isNotEqualTo(original.id());
+        assertThat(reordered.itemGroups())
+                .extracting(ItemGroupDto::itemId, ItemGroupDto::itemPrice, ItemGroupDto::amount, ItemGroupDto::shippingDate)
+                .containsExactly(
+                        tuple(chair.getId(), new BigDecimal("59.99"), 3, LocalDate.of(2027, 1, 2)),
+                        tuple(table.getId(), new BigDecimal("199.00"), 1, LocalDate.of(2027, 1, 2)));
+        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(4);
+        assertThat(itemRepository.findById(table.getId()).orElseThrow().getStock()).isEqualTo(4);
+        List<ItemGroup> originalItemGroups = new TransactionTemplate(transactionManager).execute(status ->
+                eurderRepository.findById(original.id()).orElseThrow().getItemGroups());
+        assertThat(originalItemGroups)
+                .extracting(ItemGroup::getItemPrice, ItemGroup::getShippingDate)
+                .containsExactly(
+                        tuple(new BigDecimal("49.99"), LocalDate.of(2027, 1, 1)),
+                        tuple(new BigDecimal("199.00"), LocalDate.of(2027, 1, 7)));
+    }
+
+    @Test
+    void givenAnEurderOfAnotherCustomer_whenReordering_thenThrowsEurderNotFoundAndOrdersNothing() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        EurderDto zoes = eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
+
+        Throwable thrown = catchThrowable(() -> eurderService.reorder(janeCredentialsId, zoes.id()));
+
+        assertThat(thrown)
+                .isInstanceOf(EurderNotFoundException.class)
+                .hasMessage("No eurder found for id " + zoes.id());
+        assertThat(eurderRepository.count()).isEqualTo(1);
+        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(8);
     }
 
     private UUID registerCustomer(String email) {

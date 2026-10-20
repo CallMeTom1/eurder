@@ -11,6 +11,7 @@ import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
+import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
@@ -65,5 +66,14 @@ public class EurderService {
     @Transactional(readOnly = true)
     public List<ShippingEurderDto> findShippingToday() {
         return eurderMapper.toShippingDtos(eurderRepository.findItemGroupsShippingOn(LocalDate.now(clock)));
+    }
+
+    public EurderDto reorder(UUID credentialsId, UUID eurderId) {
+        Eurder existing = eurderRepository.findByIdAndCustomerCredentialsId(eurderId, credentialsId)
+                .orElseThrow(() -> new EurderNotFoundException(eurderId));
+        List<ItemGroupRequestDto> sameItems = existing.getItemGroups().stream()
+                .map(itemGroup -> new ItemGroupRequestDto(itemGroup.getItemId(), itemGroup.getAmount()))
+                .toList();
+        return order(credentialsId, new CreateEurderDto(sameItems));
     }
 }

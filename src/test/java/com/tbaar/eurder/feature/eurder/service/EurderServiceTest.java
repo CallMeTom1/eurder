@@ -17,6 +17,7 @@ import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip;
+import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
@@ -172,6 +173,19 @@ class EurderServiceTest {
             assertThat(eurder.eurderId()).isEqualTo(eurderId);
             assertThat(eurder.itemGroups()).extracting(ShippingItemGroupDto::itemName).containsExactly("Chair", "Lamp");
         });
+    }
+
+    @Test
+    void givenAnEurderThatIsNotAmongTheCustomersEurders_whenReordering_thenThrowsEurderNotFoundAndOrdersNothing() {
+        UUID eurderId = UUID.randomUUID();
+        when(eurderRepository.findByIdAndCustomerCredentialsId(eurderId, CREDENTIALS_ID)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> eurderService.reorder(CREDENTIALS_ID, eurderId));
+
+        assertThat(thrown)
+                .isInstanceOf(EurderNotFoundException.class)
+                .hasMessage("No eurder found for id " + eurderId);
+        verify(eurderRepository, never()).save(any(Eurder.class));
     }
 
     private void givenTheCustomerExists() {
