@@ -65,6 +65,8 @@ Only the account creation (`POST /customers`) and the documentation are public. 
 
 Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 
+Test classes run in parallel (`src/test/resources/junit-platform.properties`), the tests of one class one after the other. They share the same database, so every test creates its own data (unique emails with `UniqueEmail`, unique item names), only asserts on that data, and never deletes data of others. A test that needs the whole JVM to itself, like the one capturing the console, is marked `@Isolated`.
+
 ## Stories
 
 | Story | Description | Status |
