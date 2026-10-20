@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.eurder.api;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,7 +111,7 @@ class EurderEndToEndTest {
                 .body("totalPrice", equalTo(new BigDecimal("348.97")))
                 .extract().path("id");
         response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + id));
-        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(7);
+        assertThat(availableUnits(chairId)).isEqualTo(7);
     }
 
     @Test
@@ -126,7 +128,7 @@ class EurderEndToEndTest {
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("detail", equalTo("No item found for id " + unknownId));
         assertThat(eurderRepository.count()).isZero();
-        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(10);
+        assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
     @Test
@@ -400,6 +402,27 @@ class EurderEndToEndTest {
         Response response = request.post("/eurders/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90/reorder");
 
         response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenADamagedState_whenACustomerOrders_thenTheItemGroupShowsTheStateAndTheDiscountedPrice() {
+        String chairId = createItem("Chair", "49.99", 10);
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "%s", "amount": 2, "state": "DAMAGED"}]}
+                """.formatted(chairId));
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("itemGroups[0].itemState", equalTo("DAMAGED"))
+                .body("itemGroups[0].itemPrice", equalTo(new BigDecimal("44.99")))
+                .body("itemGroups[0].shippingDate", equalTo("2027-01-07"))
+                .body("totalPrice", equalTo(new BigDecimal("89.98")));
+    }
+
+    private long availableUnits(String itemId) {
+        return itemUnitRepository.countAvailableUnits(List.of(UUID.fromString(itemId))).stream().mapToLong(AvailableUnits::count).sum();
     }
 
     private void registerCustomer(String email) {

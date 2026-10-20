@@ -1,7 +1,10 @@
 package com.tbaar.eurder.feature.eurder.domain;
 
 import com.tbaar.eurder.feature.item.domain.Item;
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +28,9 @@ public class ItemGroup {
 
     private String itemName;
 
+    @Enumerated(EnumType.STRING)
+    private ItemState itemState;
+
     private BigDecimal itemPrice;
 
     private int amount;
@@ -34,17 +40,22 @@ public class ItemGroup {
     protected ItemGroup() {
     }
 
-    private ItemGroup(UUID itemId, String itemName, BigDecimal itemPrice, int amount, LocalDate shippingDate) {
+    private ItemGroup(UUID itemId, String itemName, ItemState itemState, BigDecimal itemPrice, int amount, LocalDate shippingDate) {
         this.itemId = itemId;
         this.itemName = itemName;
+        this.itemState = itemState;
         this.itemPrice = itemPrice;
         this.amount = amount;
         this.shippingDate = shippingDate;
     }
 
-    public static ItemGroup of(Item item, int amount, LocalDate orderDate) {
-        LocalDate shippingDate = item.isInStock(amount) ? orderDate.plusDays(1) : orderDate.plusWeeks(1);
-        return new ItemGroup(item.getId(), item.getName(), item.getPrice(), amount, shippingDate);
+    public static ItemGroup of(Item item, ItemState state, int amount, int availableUnits, LocalDate orderDate) {
+        LocalDate shippingDate = availableUnits >= amount ? orderDate.plusDays(1) : orderDate.plusWeeks(1);
+        return new ItemGroup(item.getId(), item.getName(), state, item.priceFor(state), amount, shippingDate);
+    }
+
+    public UUID getId() {
+        return id;
     }
 
     void numberAs(int lineNumber) {
@@ -61,6 +72,10 @@ public class ItemGroup {
 
     public String getItemName() {
         return itemName;
+    }
+
+    public ItemState getItemState() {
+        return itemState;
     }
 
     public BigDecimal getItemPrice() {

@@ -17,8 +17,10 @@ import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import com.tbaar.eurder.feature.item.service.ItemService;
@@ -114,8 +116,8 @@ class EurderServiceIntegrationTest {
 
     @Test
     void givenItemsInAndOutOfStock_whenOrdering_thenStoresTheEurderAndTheNewStockInTheDatabase() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
+        Item table = itemWithPristineUnits("Table", "Oak table", "199.00", 0);
 
         EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
@@ -126,13 +128,13 @@ class EurderServiceIntegrationTest {
                 .containsExactly(
                         tuple(chair.getId(), LocalDate.of(2027, 1, 1)),
                         tuple(table.getId(), LocalDate.of(2027, 1, 7)));
-        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(7);
-        assertThat(itemRepository.findById(table.getId()).orElseThrow().getStock()).isZero();
+        assertThat(availableUnits(chair)).isEqualTo(7);
+        assertThat(availableUnits(table)).isZero();
     }
 
     @Test
     void givenAnUnknownItemAfterAValidOne_whenOrdering_thenNothingIsStoredAndNoStockMoves() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         UUID unknownId = UUID.randomUUID();
 
         Throwable thrown = catchThrowable(() -> eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
@@ -140,12 +142,13 @@ class EurderServiceIntegrationTest {
 
         assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
         assertThat(eurderRepository.count()).isZero();
-        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(10);
+        assertThat(availableUnits(chair)).isEqualTo(10);
     }
 
     @Test
-    void givenTheStockChangedByAnotherTransactionMeanwhile_whenTheEurderCommits_thenFailsAndKeepsTheOtherChange() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+    void givenAnotherEurderTakingTheSameUnitsMeanwhile_whenTheEurderCommits_thenFailsAndKeepsTheOtherEurder() {
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
+        UUID zoe = registerCustomer("zoe@adams.be");
         TransactionTemplate eurderTransaction = new TransactionTemplate(transactionManager);
         TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
         concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -153,17 +156,17 @@ class EurderServiceIntegrationTest {
         Throwable thrown = catchThrowable(() -> eurderTransaction.executeWithoutResult(eurderStatus -> {
             eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 3))));
             concurrentTransaction.executeWithoutResult(concurrentStatus ->
-                    itemRepository.findById(chair.getId()).orElseThrow().removeFromStock(4));
+                    eurderService.order(zoe, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 4)))));
         }));
 
         assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
-        assertThat(eurderRepository.count()).isZero();
-        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(6);
+        assertThat(eurderRepository.count()).isEqualTo(1);
+        assertThat(availableUnits(chair)).isEqualTo(6);
     }
 
     @Test
     void givenAnEurderPlacedBeforeTheItemChanged_whenUpdatingTheItem_thenTheEurderKeepsTheOldNameAndPrice() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
 
         itemService.update(chair.getId(), new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150.00"), 8));
@@ -177,7 +180,7 @@ class EurderServiceIntegrationTest {
 
     @Test
     void givenEurdersOfTwoCustomersAndALaterPriceChange_whenFindingTheReport_thenListsOnlyOwnEurdersAtTheCopiedPrices() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 1))));
         eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 5))));
@@ -192,8 +195,8 @@ class EurderServiceIntegrationTest {
 
     @Test
     void givenAnEurderPlacedYesterday_whenFindingWhatShipsToday_thenListsOnlyItsItemGroupInStockWithTheCustomerAddress() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
+        Item table = itemWithPristineUnits("Table", "Oak table", "199.00", 0);
         EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
         clock.setTo(NEW_YEARS_EVE.plusDays(1));
@@ -210,12 +213,12 @@ class EurderServiceIntegrationTest {
 
     @Test
     void givenOwnEurderAndChangesToItsItems_whenReorderingTheNextDay_thenUsesTheCurrentPricesAndStockAndKeepsTheOldEurder() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
+        Item table = itemWithPristineUnits("Table", "Oak table", "199.00", 0);
         EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
         itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("59.99"), 7));
-        itemService.update(table.getId(), new ItemRequestDto("Table", "Oak table", new BigDecimal("199.00"), 5));
+        itemUnitRepository.saveAll(table.newUnits(ItemState.PRISTINE, 5));
         clock.setTo(NEW_YEARS_EVE.plusDays(1));
 
         EurderDto reordered = eurderService.reorder(janeCredentialsId, original.id());
@@ -226,8 +229,8 @@ class EurderServiceIntegrationTest {
                 .containsExactly(
                         tuple(chair.getId(), new BigDecimal("59.99"), 3, LocalDate.of(2027, 1, 2)),
                         tuple(table.getId(), new BigDecimal("199.00"), 1, LocalDate.of(2027, 1, 2)));
-        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(4);
-        assertThat(itemRepository.findById(table.getId()).orElseThrow().getStock()).isEqualTo(4);
+        assertThat(availableUnits(chair)).isEqualTo(4);
+        assertThat(availableUnits(table)).isEqualTo(4);
         List<ItemGroup> originalItemGroups = new TransactionTemplate(transactionManager).execute(status ->
                 eurderRepository.findById(original.id()).orElseThrow().getItemGroups());
         assertThat(originalItemGroups)
@@ -239,7 +242,7 @@ class EurderServiceIntegrationTest {
 
     @Test
     void givenAnEurderOfAnotherCustomer_whenReordering_thenThrowsEurderNotFoundAndOrdersNothing() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         EurderDto zoes = eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
 
         Throwable thrown = catchThrowable(() -> eurderService.reorder(janeCredentialsId, zoes.id()));
@@ -248,7 +251,38 @@ class EurderServiceIntegrationTest {
                 .isInstanceOf(EurderNotFoundException.class)
                 .hasMessage("No eurder found for id " + zoes.id());
         assertThat(eurderRepository.count()).isEqualTo(1);
-        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(8);
+        assertThat(availableUnits(chair)).isEqualTo(8);
+    }
+
+    @Test
+    void givenUnitsInTwoStates_whenOrderingDamagedOnes_thenChargesTheDiscountAndLinksExactlyThoseUnitsToTheItemGroup() {
+        Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 3);
+        itemUnitRepository.saveAll(chair.newUnits(ItemState.DAMAGED, 3));
+
+        EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2, ItemState.DAMAGED))));
+
+        assertThat(eurder.itemGroups()).singleElement().satisfies(itemGroup -> {
+            assertThat(itemGroup.itemState()).isEqualTo(ItemState.DAMAGED);
+            assertThat(itemGroup.itemPrice()).isEqualTo(new BigDecimal("44.99"));
+            assertThat(itemGroup.subtotal()).isEqualTo(new BigDecimal("89.98"));
+        });
+        assertThat(itemUnitRepository.findAll())
+                .filteredOn(unit -> !unit.isAvailable())
+                .hasSize(2)
+                .allSatisfy(unit -> assertThat(unit.getState()).isEqualTo(ItemState.DAMAGED));
+        assertThat(itemUnitRepository.countAvailableUnits(List.of(chair.getId())))
+                .extracting(AvailableUnits::state, AvailableUnits::count)
+                .containsExactlyInAnyOrder(tuple(ItemState.PRISTINE, 3L), tuple(ItemState.DAMAGED, 1L));
+    }
+
+    private Item itemWithPristineUnits(String name, String description, String price, int units) {
+        Item item = itemRepository.save(new Item(name, description, new BigDecimal(price), 0));
+        itemUnitRepository.saveAll(item.newUnits(ItemState.PRISTINE, units));
+        return item;
+    }
+
+    private long availableUnits(Item item) {
+        return itemUnitRepository.countAvailableUnits(List.of(item.getId())).stream().mapToLong(AvailableUnits::count).sum();
     }
 
     private UUID registerCustomer(String email) {

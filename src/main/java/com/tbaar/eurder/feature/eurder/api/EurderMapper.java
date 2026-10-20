@@ -36,6 +36,7 @@ public class EurderMapper {
     private ItemGroupDto toDto(ItemGroup itemGroup) {
         return new ItemGroupDto(itemGroup.getItemId(),
                 itemGroup.getItemName(),
+                itemGroup.getItemState(),
                 itemGroup.getItemPrice(),
                 itemGroup.getAmount(),
                 itemGroup.subtotal(),

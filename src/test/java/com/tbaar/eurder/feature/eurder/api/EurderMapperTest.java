@@ -15,6 +15,7 @@ import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip;
 import com.tbaar.eurder.feature.item.domain.Item;
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.Test;
@@ -37,24 +38,24 @@ class EurderMapperTest {
     @Test
     void givenEurder_whenMappingToDto_thenExposesEachItemGroupWithItsSubtotalAndTheTotalPrice() {
         Eurder eurder = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), 3, ORDER_DATE),
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 1, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         EurderDto dto = eurderMapper.toDto(eurder);
 
         assertThat(dto).isEqualTo(new EurderDto(eurder.getId(), List.of(
-                new ItemGroupDto(null, "Chair", new BigDecimal("49.99"), 3, new BigDecimal("149.97"), LocalDate.of(2027, 1, 1)),
-                new ItemGroupDto(null, "Table", new BigDecimal("199.00"), 1, new BigDecimal("199.00"), LocalDate.of(2027, 1, 7))),
+                new ItemGroupDto(null, "Chair", ItemState.PRISTINE, new BigDecimal("49.99"), 3, new BigDecimal("149.97"), LocalDate.of(2027, 1, 1)),
+                new ItemGroupDto(null, "Table", ItemState.PRISTINE, new BigDecimal("199.00"), 1, new BigDecimal("199.00"), LocalDate.of(2027, 1, 7))),
                 new BigDecimal("348.97")));
     }
 
     @Test
     void givenTwoEurders_whenMappingToReport_thenListsEachEurderWithItsTotalAndTheTotalOfAllEurders() {
         Eurder first = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), 3, ORDER_DATE),
-                ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10"), 10), 3, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(new Item("Lamp", "Desk lamp", new BigDecimal("0.10"), 10), ItemState.PRISTINE, 3, 10, ORDER_DATE)), ORDERED_AT);
         Eurder second = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 1, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         ReportDto report = eurderMapper.toReportDto(List.of(first, second));
 

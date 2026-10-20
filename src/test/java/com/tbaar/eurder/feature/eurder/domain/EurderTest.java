@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.eurder.domain;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.item.domain.Item;
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.Test;
@@ -22,8 +23,8 @@ class EurderTest {
     @Test
     void givenSeveralItemGroups_whenComputingTotalPrice_thenReturnsTheExactSumOfTheirSubtotals() {
         Eurder eurder = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(anItem("0.10"), 3, ORDER_DATE),
-                ItemGroup.of(anItem("49.99"), 2, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(anItem("0.10"), ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(anItem("49.99"), ItemState.PRISTINE, 2, 10, ORDER_DATE)), ORDERED_AT);
 
         BigDecimal total = eurder.totalPrice();
 
@@ -32,8 +33,8 @@ class EurderTest {
 
     @Test
     void givenItemGroups_whenCreatingEurder_thenKeepsThemInTheGivenOrder() {
-        ItemGroup chairs = ItemGroup.of(anItem("49.99"), 2, ORDER_DATE);
-        ItemGroup tables = ItemGroup.of(anItem("199.00"), 1, ORDER_DATE);
+        ItemGroup chairs = ItemGroup.of(anItem("49.99"), ItemState.PRISTINE, 2, 10, ORDER_DATE);
+        ItemGroup tables = ItemGroup.of(anItem("199.00"), ItemState.PRISTINE, 1, 10, ORDER_DATE);
 
         Eurder eurder = new Eurder(aCustomer(), List.of(chairs, tables), ORDERED_AT);
 
@@ -43,8 +44,8 @@ class EurderTest {
     @Test
     void givenItemGroups_whenCreatingEurder_thenNumbersThemFromOneInTheGivenOrder() {
         List<ItemGroup> itemGroups = List.of(
-                ItemGroup.of(anItem("49.99"), 2, ORDER_DATE),
-                ItemGroup.of(anItem("199.00"), 1, ORDER_DATE));
+                ItemGroup.of(anItem("49.99"), ItemState.PRISTINE, 2, 10, ORDER_DATE),
+                ItemGroup.of(anItem("199.00"), ItemState.PRISTINE, 1, 10, ORDER_DATE));
 
         Eurder eurder = new Eurder(aCustomer(), itemGroups, ORDERED_AT);
 
