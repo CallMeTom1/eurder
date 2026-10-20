@@ -103,3 +103,5 @@ At most 1000 units per state can be added in one request. A sold unit keeps the 
 Units still owed to customers are not tracked. Ordering 10 units with 5 available ships the whole item group a week later and links the 5 available units to it: the 5 missing ones are only visible as the difference between the amount and the linked units.
 
 Updating an item replaces all of its fields. Two admins updating the same item at the same time: the last one wins, since the request does not carry the version of the item it was based on.
+
+Shipping is not tracked: an item group that was not shipped on its shipping date no longer appears in the items shipping today, and an item group whose units are still missing appears on its date anyway. Tracking a shipping status per item group would solve this limitation as well as the one about units still owed.
