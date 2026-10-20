@@ -116,6 +116,32 @@ class EurderRepositoryIntegrationTest {
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 
+    @Test
+    void givenItemGroupsShippingOnDifferentDays_whenFindingThoseShippingOnADate_thenReturnsOnlyThatDayInOneQuery() {
+        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
+        Customer zoe = customerRepository.save(new Customer(new Credentials("zoe@adams.be", "hash", Role.CUSTOMER),
+                "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "0470654321"));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 100));
+        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        LocalDate newYearsEve = LocalDate.of(2026, 12, 31);
+        Eurder janes = eurderRepository.save(new Eurder(jane, List.of(
+                ItemGroup.of(chair, 3, newYearsEve), ItemGroup.of(table, 1, newYearsEve)), Instant.parse("2026-12-31T09:00:00Z")));
+        Eurder zoes = eurderRepository.save(new Eurder(zoe, List.of(ItemGroup.of(chair, 2, newYearsEve)), Instant.parse("2026-12-31T10:00:00Z")));
+        eurderRepository.save(new Eurder(jane, List.of(ItemGroup.of(chair, 4, newYearsEve.minusDays(1))), Instant.parse("2026-12-30T09:00:00Z")));
+        eurderRepository.saveAndFlush(new Eurder(jane, List.of(ItemGroup.of(chair, 5, newYearsEve.plusDays(1))), Instant.parse("2027-01-01T09:00:00Z")));
+        entityManager.clear();
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        List<ItemGroupToShip> toShip = eurderRepository.findItemGroupsShippingOn(LocalDate.of(2027, 1, 1));
+
+        assertThat(toShip)
+                .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::amount)
+                .containsExactly(tuple(janes.getId(), "Jane", "Chair", 3), tuple(zoes.getId(), "Zoe", "Chair", 2));
+        assertThat(toShip.get(1).address().getStreet()).isEqualTo("Rue Neuve");
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+    }
+
     private static Eurder anEurder(Customer customer, Item item, int amount, String orderedAt) {
         return new Eurder(customer, List.of(ItemGroup.of(item, amount, ORDER_DATE)), Instant.parse(orderedAt));
     }
