@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,11 +15,13 @@ class CredentialsRepositoryIntegrationTest {
     @Autowired
     private CredentialsRepository credentialsRepository;
 
+    private final String email = "jane." + UUID.randomUUID() + "@doe.be";
+
     @Test
     void givenSavedCredentials_whenFindingByEmail_thenReturnsThem() {
-        Credentials saved = credentialsRepository.save(new Credentials("jane@doe.be", "hashed-password", Role.CUSTOMER));
+        Credentials saved = credentialsRepository.save(new Credentials(email, "hashed-password", Role.CUSTOMER));
 
-        Optional<Credentials> found = credentialsRepository.findByEmail("jane@doe.be");
+        Optional<Credentials> found = credentialsRepository.findByEmail(email);
 
         assertThat(found).hasValueSatisfying(credentials -> {
             assertThat(credentials.getId()).isEqualTo(saved.getId());
