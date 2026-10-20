@@ -1,10 +1,13 @@
 package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
+import com.tbaar.eurder.feature.item.api.dto.AddUnitsDto;
+import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -13,9 +16,11 @@ import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
+import com.tbaar.eurder.feature.item.exception.ItemUnitNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -66,6 +71,31 @@ public class ItemService {
                 .collect(Collectors.groupingBy(AvailableUnits::itemId));
         return stock.stream()
                 .map(itemStock -> itemMapper.toOverviewDto(itemStock, availableUnitsByItem.getOrDefault(itemStock.item().getId(), List.of())))
+                .toList();
+    }
+
+    public ItemDto addUnits(UUID itemId, AddUnitsDto request) {
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ItemNotFoundException(itemId));
+        itemUnitRepository.saveAll(item.newUnits(request.state(), request.amount()));
+        return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(itemId)));
+    }
+
+    public ItemUnitDto changeUnitState(UUID itemId, UUID unitId, ChangeUnitStateDto request) {
+        itemRepository.findLockedById(itemId).orElseThrow(() -> new ItemNotFoundException(itemId));
+        ItemUnit unit = itemUnitRepository.findByIdAndItemId(unitId, itemId)
+                .orElseThrow(() -> new ItemUnitNotFoundException(itemId, unitId));
+        unit.changeState(request.state());
+        return itemMapper.toUnitDto(unit);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ItemUnitDto> findUnits(UUID itemId) {
+        if (!itemRepository.existsById(itemId)) {
+            throw new ItemNotFoundException(itemId);
+        }
+        return itemUnitRepository.findByItemIdOrderById(itemId).stream()
+                .sorted(Comparator.comparing(ItemUnit::getState).thenComparing(unit -> !unit.isAvailable()))
+                .map(itemMapper::toUnitDto)
                 .toList();
     }
 }

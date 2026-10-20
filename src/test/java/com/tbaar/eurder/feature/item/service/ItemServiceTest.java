@@ -1,10 +1,13 @@
 package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
+import com.tbaar.eurder.feature.item.api.dto.AddUnitsDto;
+import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -14,6 +17,7 @@ import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
+import com.tbaar.eurder.feature.item.exception.ItemUnitNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -147,5 +151,85 @@ class ItemServiceTest {
 
         assertThat(overview).isEmpty();
         verify(itemUnitRepository, never()).countAvailableUnits(any());
+    }
+
+    @Test
+    void givenExistingItem_whenAddingUnits_thenSavesThatManyUnitsInThatStateAndReturnsTheNewCounts() {
+        UUID id = UUID.randomUUID();
+        when(itemRepository.findById(id)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0)));
+        when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.DAMAGED, 3)));
+
+        ItemDto item = itemService.addUnits(id, new AddUnitsDto(ItemState.DAMAGED, 3));
+
+        ArgumentCaptor<List<ItemUnit>> savedUnits = ArgumentCaptor.captor();
+        verify(itemUnitRepository).saveAll(savedUnits.capture());
+        assertThat(savedUnits.getValue()).hasSize(3).extracting(ItemUnit::getState).containsOnly(ItemState.DAMAGED);
+        assertThat(item.availableUnits()).containsEntry(ItemState.DAMAGED, 3L);
+    }
+
+    @Test
+    void givenUnknownItemId_whenAddingUnits_thenThrowsItemNotFoundAndSavesNothing() {
+        UUID unknownId = UUID.randomUUID();
+        when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> itemService.addUnits(unknownId, new AddUnitsDto(ItemState.PRISTINE, 1)));
+
+        assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
+        verify(itemUnitRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void givenAvailableUnitOfTheItem_whenChangingItsState_thenReturnsItInTheNewState() {
+        UUID itemId = UUID.randomUUID();
+        UUID unitId = UUID.randomUUID();
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        when(itemRepository.findLockedById(itemId)).thenReturn(Optional.of(chair));
+        when(itemUnitRepository.findByIdAndItemId(unitId, itemId)).thenReturn(Optional.of(new ItemUnit(chair, ItemState.PRISTINE)));
+
+        ItemUnitDto unit = itemService.changeUnitState(itemId, unitId, new ChangeUnitStateDto(ItemState.DAMAGED));
+
+        assertThat(unit.state()).isEqualTo(ItemState.DAMAGED);
+        assertThat(unit.available()).isTrue();
+    }
+
+    @Test
+    void givenAUnitThatIsNotOneOfTheItem_whenChangingItsState_thenThrowsItemUnitNotFoundWithBothIds() {
+        UUID itemId = UUID.randomUUID();
+        UUID unitId = UUID.randomUUID();
+        when(itemRepository.findLockedById(itemId)).thenReturn(Optional.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0)));
+        when(itemUnitRepository.findByIdAndItemId(unitId, itemId)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> itemService.changeUnitState(itemId, unitId, new ChangeUnitStateDto(ItemState.DAMAGED)));
+
+        assertThat(thrown)
+                .isInstanceOf(ItemUnitNotFoundException.class)
+                .hasMessage("No unit " + unitId + " found for item " + itemId);
+    }
+
+    @Test
+    void givenUnitsInSeveralStates_whenFindingTheUnitsOfTheItem_thenSortsThemByStateThenAvailableFirst() {
+        UUID itemId = UUID.randomUUID();
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        ItemUnit soldPristine = new ItemUnit(chair, ItemState.PRISTINE);
+        soldPristine.assignTo(UUID.randomUUID());
+        when(itemRepository.existsById(itemId)).thenReturn(true);
+        when(itemUnitRepository.findByItemIdOrderById(itemId)).thenReturn(List.of(
+                new ItemUnit(chair, ItemState.DAMAGED), soldPristine, new ItemUnit(chair, ItemState.PRISTINE)));
+
+        List<ItemUnitDto> units = itemService.findUnits(itemId);
+
+        assertThat(units)
+                .extracting(ItemUnitDto::state, ItemUnitDto::available)
+                .containsExactly(tuple(ItemState.PRISTINE, true), tuple(ItemState.PRISTINE, false), tuple(ItemState.DAMAGED, true));
+    }
+
+    @Test
+    void givenUnknownItemId_whenFindingItsUnits_thenThrowsItemNotFound() {
+        UUID unknownId = UUID.randomUUID();
+        when(itemRepository.existsById(unknownId)).thenReturn(false);
+
+        Throwable thrown = catchThrowable(() -> itemService.findUnits(unknownId));
+
+        assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
     }
 }

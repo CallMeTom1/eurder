@@ -3,10 +3,12 @@ package com.tbaar.eurder.feature.item.api;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.item.domain.ItemStock;
+import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +32,10 @@ public class ItemMapper {
         Item item = stock.item();
         return new ItemOverviewDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits),
                 StockUrgency.of(Math.toIntExact(stock.availableUnits())));
+    }
+
+    public ItemUnitDto toUnitDto(ItemUnit unit) {
+        return new ItemUnitDto(unit.getId(), unit.getState(), unit.isAvailable());
     }
 
     private static Map<ItemState, Long> byState(List<AvailableUnits> availableUnits) {

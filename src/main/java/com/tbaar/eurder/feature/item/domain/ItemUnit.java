@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.item.domain;
 
+import com.tbaar.eurder.feature.item.exception.ItemUnitAlreadySoldException;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -60,5 +61,12 @@ public class ItemUnit {
 
     public void assignTo(UUID itemGroupId) {
         this.itemGroupId = itemGroupId;
+    }
+
+    public void changeState(ItemState state) {
+        if (!isAvailable()) {
+            throw new ItemUnitAlreadySoldException(id);
+        }
+        this.state = state;
     }
 }

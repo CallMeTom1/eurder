@@ -367,6 +367,131 @@ class ItemEndToEndTest {
                         contains("STOCK_LOW", "STOCK_MEDIUM", "STOCK_HIGH"));
     }
 
+    @Test
+    void givenItemWithUnitsInTwoStates_whenTheAdminGetsItsUnits_thenListsThemByStateWithTheirAvailability() {
+        String id = createItemWithUnits("""
+                {"PRISTINE": 2, "DAMAGED": 1}
+                """);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/items/" + id + "/units");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("state", contains("PRISTINE", "PRISTINE", "DAMAGED"))
+                .body("available", contains(true, true, true))
+                .body("[0].keySet()", containsInAnyOrder("id", "state", "available"));
+    }
+
+    @Test
+    void givenExistingItem_whenTheAdminAddsUnits_thenReturns200WithTheNewAvailableUnits() {
+        String id = createItemWithUnits("""
+                {"PRISTINE": 2, "DAMAGED": 1}
+                """);
+        RequestSpecification request = asAdmin("""
+                {"state": "PRISTINE", "amount": 10}
+                """);
+
+        Response response = request.post("/items/" + id + "/units");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("availableUnits.PRISTINE", equalTo(12))
+                .body("availableUnits.DAMAGED", equalTo(1));
+    }
+
+    @Test
+    void givenAnAmountOfZero_whenTheAdminAddsUnits_thenReturns400NamingTheAmount() {
+        String id = createItem();
+        RequestSpecification request = asAdmin("""
+                {"state": "PRISTINE", "amount": 0}
+                """);
+
+        Response response = request.post("/items/" + id + "/units");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.amount", contains("Amount must be greater than 0"));
+    }
+
+    @Test
+    void givenAnAvailableUnit_whenTheAdminChangesItsState_thenReturns200AndTheItemCountsItInItsNewState() {
+        String id = createItemWithUnits("""
+                {"PRISTINE": 2}
+                """);
+        String unitId = authenticatedAs("admin@eurder.be", "admin").get("/items/" + id + "/units").path("[0].id");
+        RequestSpecification request = asAdmin("""
+                {"state": "DAMAGED"}
+                """);
+
+        Response response = request.patch("/items/" + id + "/units/" + unitId);
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", equalTo(unitId))
+                .body("state", equalTo("DAMAGED"));
+        authenticatedAs("admin@eurder.be", "admin").get("/items/" + id + "/units").then()
+                .body("state", contains("PRISTINE", "DAMAGED"));
+    }
+
+    @Test
+    void givenAUnitOfAnotherItem_whenTheAdminChangesItsState_thenReturns404WithBothIds() {
+        String id = createItem();
+        String unknownUnitId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
+        RequestSpecification request = asAdmin("""
+                {"state": "DAMAGED"}
+                """);
+
+        Response response = request.patch("/items/" + id + "/units/" + unknownUnitId);
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No unit " + unknownUnitId + " found for item " + id));
+    }
+
+    @Test
+    void givenAnUnknownItem_whenTheAdminGetsItsUnits_thenReturns404() {
+        String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/items/" + unknownId + "/units");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No item found for id " + unknownId));
+    }
+
+    @Test
+    void givenACustomer_whenAddingUnits_thenReturns403() {
+        String id = createItem();
+        registerJane();
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", """
+                {"state": "PRISTINE", "amount": 1}
+                """);
+
+        Response response = request.post("/items/" + id + "/units");
+
+        response.then().statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenGettingTheUnitsOfAnItem_thenReturns401() {
+        String id = createItem();
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/items/" + id + "/units");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    private String createItemWithUnits(String unitsJson) {
+        return asAdmin("""
+                {"name": "Chair", "description": "Wooden chair", "price": 49.99, "units": %s}
+                """.formatted(unitsJson.strip())).post("/items")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
+    }
+
     private String createItem() {
         return createItem("Chair", 10);
     }

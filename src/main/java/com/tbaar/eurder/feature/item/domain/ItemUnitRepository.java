@@ -7,9 +7,14 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ItemUnitRepository extends JpaRepository<ItemUnit, UUID> {
+
+    List<ItemUnit> findByItemIdOrderById(UUID itemId);
+
+    Optional<ItemUnit> findByIdAndItemId(UUID id, UUID itemId);
 
     List<ItemUnit> findByItemIdAndStateAndItemGroupIdIsNull(UUID itemId, ItemState state, Limit limit);
 
