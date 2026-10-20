@@ -11,9 +11,12 @@ import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingItemGroupDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
+import com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
@@ -153,6 +156,22 @@ class EurderServiceTest {
         assertThat(report.eurders()).extracting(EurderReportDto::totalPrice)
                 .containsExactly(new BigDecimal("99.98"), new BigDecimal("49.99"));
         assertThat(report.totalPrice()).isEqualTo(new BigDecimal("149.97"));
+    }
+
+    @Test
+    void givenItemGroupsShippingOnTheDateOfTheClock_whenFindingWhatShipsToday_thenReturnsThemGroupedByEurder() {
+        UUID eurderId = UUID.randomUUID();
+        Address address = new Address("Rue Haute", "1", "1000", "Bruxelles");
+        when(eurderRepository.findItemGroupsShippingOn(LocalDate.of(2026, 12, 31))).thenReturn(List.of(
+                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Chair", 3),
+                new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Lamp", 1)));
+
+        List<ShippingEurderDto> shipping = eurderService.findShippingToday();
+
+        assertThat(shipping).singleElement().satisfies(eurder -> {
+            assertThat(eurder.eurderId()).isEqualTo(eurderId);
+            assertThat(eurder.itemGroups()).extracting(ShippingItemGroupDto::itemName).containsExactly("Chair", "Lamp");
+        });
     }
 
     private void givenTheCustomerExists() {

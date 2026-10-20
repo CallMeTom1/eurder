@@ -7,6 +7,7 @@ import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
@@ -59,5 +60,10 @@ public class EurderService {
     @Transactional(readOnly = true)
     public ReportDto findReport(UUID credentialsId) {
         return eurderMapper.toReportDto(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(credentialsId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShippingEurderDto> findShippingToday() {
+        return eurderMapper.toShippingDtos(eurderRepository.findItemGroupsShippingOn(LocalDate.now(clock)));
     }
 }
