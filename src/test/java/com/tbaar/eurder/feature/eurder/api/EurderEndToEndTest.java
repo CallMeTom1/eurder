@@ -1,20 +1,15 @@
 package com.tbaar.eurder.feature.eurder.api;
 
 import com.tbaar.eurder.common.MutableClock;
-import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
-import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
-import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
-import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Role;
 import io.restassured.RestAssured;
 import io.restassured.config.JsonConfig;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.config.JsonPathConfig;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +32,8 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class EurderEndToEndTest {
@@ -60,33 +57,16 @@ class EurderEndToEndTest {
     private MutableClock clock;
 
     @Autowired
-    private EurderRepository eurderRepository;
-
-    @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
     private ItemUnitRepository itemUnitRepository;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final String janeEmail = UniqueEmail.of("jane");
 
-    @Autowired
-    private CredentialsRepository credentialsRepository;
+    private final String zoeEmail = UniqueEmail.of("zoe");
 
     @BeforeEach
     void registerJane() {
         clock.setTo(NEW_YEARS_EVE);
-        registerCustomer("jane@doe.be");
-    }
-
-    @AfterEach
-    void deleteCreatedData() {
-        eurderRepository.deleteAll();
-        itemUnitRepository.deleteAll();
-        itemRepository.deleteAll();
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
+        registerCustomer(janeEmail);
     }
 
     @Test
@@ -127,7 +107,7 @@ class EurderEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("detail", equalTo("No item found for id " + unknownId));
-        assertThat(eurderRepository.count()).isZero();
+        assertThat(eurdersOf(janeEmail)).isZero();
         assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
@@ -198,7 +178,7 @@ class EurderEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
                 .body("detail", equalTo("User admin@eurder.be has no access to ORDER_ITEMS"));
-        assertThat(eurderRepository.count()).isZero();
+        assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
     @Test
@@ -213,16 +193,16 @@ class EurderEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
-        assertThat(eurderRepository.count()).isZero();
+        assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
     @Test
     void givenTwoEurders_whenTheCustomerGetsTheReport_thenReturnsEachEurderWithItsLinesAndTheTotalOfAll() {
         String chairId = createItem("Chair", "49.99", 10);
         String lampId = createItem("Lamp", "0.10", 10);
-        order("jane@doe.be", chairId, 3, lampId, 3);
-        order("jane@doe.be", chairId, 1);
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        order(janeEmail, chairId, 3, lampId, 3);
+        order(janeEmail, chairId, 1);
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.get("/eurders/report");
 
@@ -240,9 +220,9 @@ class EurderEndToEndTest {
     @Test
     void givenACustomerWithoutEurder_whenGettingTheReport_thenReturnsAnEmptyListAndAZeroTotal() {
         String chairId = createItem("Chair", "49.99", 10);
-        registerCustomer("zoe@adams.be");
-        order("zoe@adams.be", chairId, 2);
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        registerCustomer(zoeEmail);
+        order(zoeEmail, chairId, 2);
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.get("/eurders/report");
 
@@ -276,46 +256,47 @@ class EurderEndToEndTest {
     void givenAnEurderPlacedYesterday_whenTheAdminGetsWhatShipsToday_thenListsItsItemGroupInStockWithTheAddress() {
         String chairId = createItem("Chair", "49.99", 10);
         String tableId = createItem("Table", "199.00", 0);
-        order("jane@doe.be", chairId, 3, tableId, 1);
+        String eurderId = order(janeEmail, chairId, 3, tableId, 1);
         clock.setTo(NEW_YEARS_EVE.plusDays(1));
         RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
 
         Response response = request.get("/eurders/shipping-today");
 
+        String own = "find { it.eurderId == '" + eurderId + "' }";
         response.then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", equalTo(1))
-                .body("[0].keySet()", containsInAnyOrder("eurderId", "customerName", "address", "itemGroups"))
-                .body("[0].customerName", equalTo("Jane Doe"))
-                .body("[0].address.street", equalTo("Rue Haute"))
-                .body("[0].address.city", equalTo("Bruxelles"))
-                .body("[0].itemGroups.itemName", contains("Chair"))
-                .body("[0].itemGroups.amount", contains(3))
-                .body("[0].itemGroups.itemState", contains("PRISTINE"));
+                .body("findAll { it.eurderId == '" + eurderId + "' }.size()", equalTo(1))
+                .body(own + ".keySet()", containsInAnyOrder("eurderId", "customerName", "address", "itemGroups"))
+                .body(own + ".customerName", equalTo("Jane Doe"))
+                .body(own + ".address.street", equalTo("Rue Haute"))
+                .body(own + ".address.city", equalTo("Bruxelles"))
+                .body(own + ".itemGroups.itemName", contains("Chair"))
+                .body(own + ".itemGroups.amount", contains(3))
+                .body(own + ".itemGroups.itemState", contains("PRISTINE"));
     }
 
     @Test
-    void givenNothingShippingToday_whenTheAdminGetsWhatShipsToday_thenReturnsAnEmptyList() {
+    void givenAnEurderShippingTomorrow_whenTheAdminGetsWhatShipsToday_thenItIsNotListed() {
         String chairId = createItem("Chair", "49.99", 10);
-        order("jane@doe.be", chairId, 1);
+        String eurderId = order(janeEmail, chairId, 1);
         RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
 
         Response response = request.get("/eurders/shipping-today");
 
         response.then()
                 .statusCode(HttpStatus.OK.value())
-                .body("size()", equalTo(0));
+                .body("eurderId", not(hasItem(eurderId)));
     }
 
     @Test
     void givenACustomer_whenGettingWhatShipsToday_thenReturns403() {
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.get("/eurders/shipping-today");
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User jane@doe.be has no access to VIEW_SHIPPING_TODAY"));
+                .body("detail", equalTo("User " + janeEmail + " has no access to VIEW_SHIPPING_TODAY"));
     }
 
     @Test
@@ -330,11 +311,11 @@ class EurderEndToEndTest {
     @Test
     void givenOwnEurderAndALaterPriceChange_whenTheCustomerReordersIt_thenReturns201WithANewEurderAtTheCurrentPrice() {
         String chairId = createItem("Chair", "49.99", 10);
-        String originalId = order("jane@doe.be", chairId, 3);
+        String originalId = order(janeEmail, chairId, 3);
         authenticatedAs("admin@eurder.be", "admin", """
                 {"name": "Chair", "description": "Chair description", "price": 59.99}
                 """).put("/items/" + chairId).then().statusCode(HttpStatus.OK.value());
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.post("/eurders/" + originalId + "/reorder");
 
@@ -352,22 +333,23 @@ class EurderEndToEndTest {
     @Test
     void givenAnEurderOfAnotherCustomer_whenReorderingIt_thenReturns404AsIfItDidNotExist() {
         String chairId = createItem("Chair", "49.99", 10);
-        registerCustomer("zoe@adams.be");
-        String zoesId = order("zoe@adams.be", chairId, 2);
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        registerCustomer(zoeEmail);
+        String zoesId = order(zoeEmail, chairId, 2);
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.post("/eurders/" + zoesId + "/reorder");
 
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("detail", equalTo("No eurder found for id " + zoesId));
-        assertThat(eurderRepository.count()).isEqualTo(1);
+        assertThat(eurdersOf(janeEmail)).isZero();
+        assertThat(eurdersOf(zoeEmail)).isEqualTo(1);
     }
 
     @Test
     void givenAnUnknownEurderId_whenReordering_thenReturns404() {
         String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.post("/eurders/" + unknownId + "/reorder");
 
@@ -378,7 +360,7 @@ class EurderEndToEndTest {
 
     @Test
     void givenAnIdThatIsNotAUuid_whenReordering_thenReturns400() {
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
 
         Response response = request.post("/eurders/last/reorder");
 
@@ -422,6 +404,10 @@ class EurderEndToEndTest {
                 .body("totalPrice", equalTo(new BigDecimal("89.98")));
     }
 
+    private int eurdersOf(String email) {
+        return authenticatedAs(email, "secret123").get("/eurders/report").path("eurders.size()");
+    }
+
     private long availableUnits(String itemId) {
         return itemUnitRepository.countAvailableUnits(List.of(UUID.fromString(itemId))).stream().mapToLong(AvailableUnits::count).sum();
     }
@@ -442,11 +428,12 @@ class EurderEndToEndTest {
                 .extract().path("id");
     }
 
-    private void order(String email, String firstItemId, int firstAmount, String secondItemId, int secondAmount) {
-        authenticatedAs(email, "secret123", """
+    private String order(String email, String firstItemId, int firstAmount, String secondItemId, int secondAmount) {
+        return authenticatedAs(email, "secret123", """
                 {"itemGroups": [{"itemId": "%s", "amount": %d}, {"itemId": "%s", "amount": %d}]}
                 """.formatted(firstItemId, firstAmount, secondItemId, secondAmount))
-                .post("/eurders").then().statusCode(HttpStatus.CREATED.value());
+                .post("/eurders").then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
     }
 
     private String createItem(String name, String price, int stock) {
@@ -459,7 +446,7 @@ class EurderEndToEndTest {
     }
 
     private RequestSpecification asJane(String body) {
-        return authenticatedAs("jane@doe.be", "secret123", body);
+        return authenticatedAs(janeEmail, "secret123", body);
     }
 
     private RequestSpecification authenticatedAs(String email, String password, String body) {
