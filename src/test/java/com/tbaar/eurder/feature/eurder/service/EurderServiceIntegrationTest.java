@@ -1,9 +1,9 @@
 package com.tbaar.eurder.feature.eurder.service;
 
 import com.tbaar.eurder.common.MutableClock;
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
-import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
@@ -25,8 +25,6 @@ import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import com.tbaar.eurder.feature.item.service.ItemService;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Role;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,31 +85,21 @@ class EurderServiceIntegrationTest {
     private ItemUnitRepository itemUnitRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
     private CredentialsRepository credentialsRepository;
 
     @Autowired
     private PlatformTransactionManager transactionManager;
+
+    private final String janeEmail = UniqueEmail.of("jane");
 
     private UUID janeCredentialsId;
 
     @BeforeEach
     void registerJane() {
         clock.setTo(NEW_YEARS_EVE);
-        customerService.register(new CreateCustomerDto("Jane", "Doe", "jane@doe.be", "secret123",
+        customerService.register(new CreateCustomerDto("Jane", "Doe", janeEmail, "secret123",
                 new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
-        janeCredentialsId = credentialsRepository.findByEmail("jane@doe.be").orElseThrow().getId();
-    }
-
-    @AfterEach
-    void deleteCreatedData() {
-        eurderRepository.deleteAll();
-        itemUnitRepository.deleteAll();
-        itemRepository.deleteAll();
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
+        janeCredentialsId = credentialsRepository.findByEmail(janeEmail).orElseThrow().getId();
     }
 
     @Test
@@ -141,14 +129,14 @@ class EurderServiceIntegrationTest {
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(unknownId, 1)))));
 
         assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
-        assertThat(eurderRepository.count()).isZero();
+        assertThat(eurdersOf(janeCredentialsId)).isZero();
         assertThat(availableUnits(chair)).isEqualTo(10);
     }
 
     @Test
     void givenAnotherEurderTakingTheSameUnitsMeanwhile_whenTheEurderCommits_thenFailsAndKeepsTheOtherEurder() {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
-        UUID zoe = registerCustomer("zoe@adams.be");
+        UUID zoe = registerCustomer(UniqueEmail.of("zoe"));
         TransactionTemplate eurderTransaction = new TransactionTemplate(transactionManager);
         TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
         concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -160,7 +148,8 @@ class EurderServiceIntegrationTest {
         }));
 
         assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
-        assertThat(eurderRepository.count()).isEqualTo(1);
+        assertThat(eurdersOf(janeCredentialsId)).isZero();
+        assertThat(eurdersOf(zoe)).isEqualTo(1);
         assertThat(availableUnits(chair)).isEqualTo(6);
     }
 
@@ -183,7 +172,7 @@ class EurderServiceIntegrationTest {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 1))));
-        eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 5))));
+        eurderService.order(registerCustomer(UniqueEmail.of("zoe")), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 5))));
         itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("99.00")));
 
         ReportDto report = eurderService.findReport(janeCredentialsId);
@@ -203,7 +192,7 @@ class EurderServiceIntegrationTest {
 
         List<ShippingEurderDto> shipping = eurderService.findShippingToday();
 
-        assertThat(shipping).singleElement().satisfies(toShip -> {
+        assertThat(shipping).filteredOn(toShip -> toShip.eurderId().equals(eurder.id())).singleElement().satisfies(toShip -> {
             assertThat(toShip.eurderId()).isEqualTo(eurder.id());
             assertThat(toShip.customerName()).isEqualTo("Jane Doe");
             assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles"));
@@ -258,14 +247,16 @@ class EurderServiceIntegrationTest {
     @Test
     void givenAnEurderOfAnotherCustomer_whenReordering_thenThrowsEurderNotFoundAndOrdersNothing() {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
-        EurderDto zoes = eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
+        UUID zoe = registerCustomer(UniqueEmail.of("zoe"));
+        EurderDto zoes = eurderService.order(zoe, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
 
         Throwable thrown = catchThrowable(() -> eurderService.reorder(janeCredentialsId, zoes.id()));
 
         assertThat(thrown)
                 .isInstanceOf(EurderNotFoundException.class)
                 .hasMessage("No eurder found for id " + zoes.id());
-        assertThat(eurderRepository.count()).isEqualTo(1);
+        assertThat(eurdersOf(janeCredentialsId)).isZero();
+        assertThat(eurdersOf(zoe)).isEqualTo(1);
         assertThat(availableUnits(chair)).isEqualTo(8);
     }
 
@@ -281,7 +272,7 @@ class EurderServiceIntegrationTest {
             assertThat(itemGroup.itemPrice()).isEqualTo(new BigDecimal("44.99"));
             assertThat(itemGroup.subtotal()).isEqualTo(new BigDecimal("89.98"));
         });
-        assertThat(itemUnitRepository.findAll())
+        assertThat(itemUnitRepository.findByItemIdOrderById(chair.getId()))
                 .filteredOn(unit -> !unit.isAvailable())
                 .hasSize(2)
                 .allSatisfy(unit -> assertThat(unit.getState()).isEqualTo(ItemState.DAMAGED));
@@ -298,6 +289,10 @@ class EurderServiceIntegrationTest {
 
     private long availableUnits(Item item) {
         return itemUnitRepository.countAvailableUnits(List.of(item.getId())).stream().mapToLong(AvailableUnits::count).sum();
+    }
+
+    private int eurdersOf(UUID credentialsId) {
+        return eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(credentialsId).size();
     }
 
     private UUID registerCustomer(String email) {

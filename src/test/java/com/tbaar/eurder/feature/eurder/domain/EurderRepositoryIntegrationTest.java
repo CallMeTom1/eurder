@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.eurder.domain;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
@@ -22,6 +23,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -87,8 +90,8 @@ class EurderRepositoryIntegrationTest {
 
     @Test
     void givenEurdersOfTwoCustomers_whenFindingByCredentials_thenReturnsOnlyThatCustomersEurdersOldestFirst() {
-        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
-        Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
+        Customer jane = customerRepository.save(aCustomer(UniqueEmail.of("jane")));
+        Customer zoe = customerRepository.save(aCustomer(UniqueEmail.of("zoe")));
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Eurder janesLatest = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T15:00:00Z"));
         eurderRepository.save(anEurder(zoe, chair, 1, "2026-12-31T12:00:00Z"));
@@ -102,7 +105,7 @@ class EurderRepositoryIntegrationTest {
 
     @Test
     void givenThreeEurdersWithItemGroups_whenFindingByCredentialsAndReadingTheirItemGroups_thenRunsASingleQuery() {
-        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
+        Customer jane = customerRepository.save(aCustomer(UniqueEmail.of("jane")));
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         eurderRepository.save(anEurder(jane, chair, 1, "2026-12-29T09:00:00Z"));
         eurderRepository.save(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
@@ -119,8 +122,8 @@ class EurderRepositoryIntegrationTest {
 
     @Test
     void givenItemGroupsShippingOnDifferentDays_whenFindingThoseShippingOnADate_thenReturnsOnlyThatDayInOneQuery() {
-        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
-        Customer zoe = customerRepository.save(new Customer(new Credentials("zoe@adams.be", "hash", Role.CUSTOMER),
+        Customer jane = customerRepository.save(aCustomer(UniqueEmail.of("jane")));
+        Customer zoe = customerRepository.save(new Customer(new Credentials(UniqueEmail.of("zoe"), "hash", Role.CUSTOMER),
                 "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "0470654321"));
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00")));
@@ -128,25 +131,27 @@ class EurderRepositoryIntegrationTest {
         Eurder janes = eurderRepository.save(new Eurder(jane, List.of(
                 ItemGroup.of(chair, ItemState.PRISTINE, 3, 10, newYearsEve), ItemGroup.of(table, ItemState.PRISTINE, 1, 0, newYearsEve)), Instant.parse("2026-12-31T09:00:00Z")));
         Eurder zoes = eurderRepository.save(new Eurder(zoe, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 2, 10, newYearsEve)), Instant.parse("2026-12-31T10:00:00Z")));
-        eurderRepository.save(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 4, 10, newYearsEve.minusDays(1))), Instant.parse("2026-12-30T09:00:00Z")));
-        eurderRepository.saveAndFlush(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 5, 10, newYearsEve.plusDays(1))), Instant.parse("2027-01-01T09:00:00Z")));
+        Eurder yesterdays = eurderRepository.save(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 4, 10, newYearsEve.minusDays(1))), Instant.parse("2026-12-30T09:00:00Z")));
+        Eurder tomorrows = eurderRepository.saveAndFlush(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 5, 10, newYearsEve.plusDays(1))), Instant.parse("2027-01-01T09:00:00Z")));
+        Set<UUID> ownEurders = Set.of(janes.getId(), zoes.getId(), yesterdays.getId(), tomorrows.getId());
         entityManager.clear();
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
         List<ItemGroupToShip> toShip = eurderRepository.findItemGroupsShippingOn(LocalDate.of(2027, 1, 1));
 
-        assertThat(toShip)
+        List<ItemGroupToShip> ownToShip = toShip.stream().filter(itemGroup -> ownEurders.contains(itemGroup.eurderId())).toList();
+        assertThat(ownToShip)
                 .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::itemState, ItemGroupToShip::amount)
                 .containsExactly(tuple(janes.getId(), "Jane", "Chair", ItemState.PRISTINE, 3), tuple(zoes.getId(), "Zoe", "Chair", ItemState.PRISTINE, 2));
-        assertThat(toShip.get(1).address().getStreet()).isEqualTo("Rue Neuve");
+        assertThat(ownToShip.get(1).address().getStreet()).isEqualTo("Rue Neuve");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 
     @Test
     void givenEurdersOfTwoCustomers_whenFindingOneByIdAndCredentials_thenFindsOnlyAnEurderOfThatCustomer() {
-        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
-        Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
+        Customer jane = customerRepository.save(aCustomer(UniqueEmail.of("jane")));
+        Customer zoe = customerRepository.save(aCustomer(UniqueEmail.of("zoe")));
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Eurder janes = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T09:00:00Z"));
         Eurder zoes = eurderRepository.saveAndFlush(anEurder(zoe, chair, 1, "2026-12-31T10:00:00Z"));
@@ -165,7 +170,7 @@ class EurderRepositoryIntegrationTest {
     }
 
     private static Customer aCustomer() {
-        return aCustomer("jane@doe.be");
+        return aCustomer(UniqueEmail.of("jane"));
     }
 
     private static Customer aCustomer(String email) {
