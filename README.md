@@ -59,7 +59,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 3 | Order items | Done |
 | 7 | View all customers | Done |
 | 8 | View a single customer | Done |
-| 4 | Update an item | Nice to have |
+| 4 | Update an item | Done |
 | 5 | View report of orders | Nice to have |
 | 6 | Reorder an existing order | Nice to have |
 | 9 | Items shipping today | Nice to have |
@@ -74,6 +74,8 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 - An item group copies the name and price of the item, so later price changes do not affect past eurders.
 - Two eurders changing the same item at the same time: the last one to commit gets a `409` and can retry (optimistic locking with `@Version`).
 
-### Known limitation
+### Known limitations
 
 The stock does not keep track of the units still owed to customers. Ordering 10 items with 5 in stock ships the whole item group a week later and sets the stock to 0: the 5 missing units are only visible in the item groups waiting to be shipped (Story 9).
+
+Updating an item replaces all of its fields. Two admins updating the same item at the same time: the last one wins, since the request does not carry the version of the item it was based on.
