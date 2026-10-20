@@ -1,0 +1,232 @@
+package com.tbaar.eurder.feature.eurder.api;
+
+import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
+import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
+import com.tbaar.eurder.feature.security.domain.Role;
+import io.restassured.RestAssured;
+import io.restassured.config.JsonConfig;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.config.JsonPathConfig;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.equalTo;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class EurderEndToEndTest {
+
+    @TestConfiguration
+    static class FixedClockConfig {
+
+        @Bean
+        @Primary
+        Clock newYearsEveClock() {
+            ZoneId brussels = ZoneId.of("Europe/Brussels");
+            return Clock.fixed(ZonedDateTime.of(2026, 12, 31, 10, 0, 0, 0, brussels).toInstant(), brussels);
+        }
+    }
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    private EurderRepository eurderRepository;
+
+    @Autowired
+    private ItemRepository itemRepository;
+
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private CredentialsRepository credentialsRepository;
+
+    @BeforeEach
+    void registerJane() {
+        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "phoneNumber": "0470123456"}
+                """).post("/customers").then().statusCode(HttpStatus.CREATED.value());
+    }
+
+    @AfterEach
+    void deleteCreatedData() {
+        eurderRepository.deleteAll();
+        itemRepository.deleteAll();
+        customerRepository.deleteAll();
+        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
+    }
+
+    @Test
+    void givenItemsInAndOutOfStock_whenACustomerOrdersThem_thenReturns201WithShippingDatesSubtotalsAndTotal() {
+        String chairId = createItem("Chair", "49.99", 10);
+        String tableId = createItem("Table", "199.00", 0);
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "%s", "amount": 3}, {"itemId": "%s", "amount": 1}]}
+                """.formatted(chairId, tableId));
+
+        Response response = request.post("/eurders");
+
+        String id = response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("keySet()", containsInAnyOrder("id", "itemGroups", "totalPrice"))
+                .body("itemGroups.itemId", contains(chairId, tableId))
+                .body("itemGroups.itemName", contains("Chair", "Table"))
+                .body("itemGroups.itemPrice", contains(new BigDecimal("49.99"), new BigDecimal("199.00")))
+                .body("itemGroups.amount", contains(3, 1))
+                .body("itemGroups.subtotal", contains(new BigDecimal("149.97"), new BigDecimal("199.00")))
+                .body("itemGroups.shippingDate", contains("2027-01-01", "2027-01-07"))
+                .body("totalPrice", equalTo(new BigDecimal("348.97")))
+                .extract().path("id");
+        response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + id));
+        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(7);
+    }
+
+    @Test
+    void givenAnUnknownItem_whenACustomerOrders_thenReturns404AndNoStockMoves() {
+        String chairId = createItem("Chair", "49.99", 10);
+        String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "%s", "amount": 3}, {"itemId": "%s", "amount": 1}]}
+                """.formatted(chairId, unknownId));
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("detail", equalTo("No item found for id " + unknownId));
+        assertThat(eurderRepository.count()).isZero();
+        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(10);
+    }
+
+    @Test
+    void givenNoItemGroup_whenACustomerOrders_thenReturns400() {
+        RequestSpecification request = asJane("""
+                {"itemGroups": []}
+                """);
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.itemGroups", contains("At least one item group is required"));
+    }
+
+    @Test
+    void givenInvalidItemGroups_whenACustomerOrders_thenReturns400NamingEachItemGroupByItsIndex() {
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90", "amount": 1}, {"amount": 0}, null]}
+                """);
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.keySet()", containsInAnyOrder("itemGroups[1].itemId", "itemGroups[1].amount", "itemGroups[2]"))
+                .body("errors.'itemGroups[1].itemId'", contains("Item id is required"))
+                .body("errors.'itemGroups[1].amount'", contains("Amount must be greater than 0"))
+                .body("errors.'itemGroups[2]'", contains("Item group is required"));
+    }
+
+    @Test
+    void givenAmountSentAsText_whenACustomerOrders_thenReturns400NamingTheFieldWithItsIndex() {
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90", "amount": "many"}]}
+                """);
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Invalid value for field 'itemGroups[0].amount'"));
+    }
+
+    @Test
+    void givenItemIdThatIsNotAUuid_whenACustomerOrders_thenReturns400NamingTheField() {
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "chair", "amount": 1}]}
+                """);
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", equalTo("Invalid value for field 'itemGroups[0].itemId'"));
+    }
+
+    @Test
+    void givenTheAdmin_whenOrdering_thenReturns403() {
+        String chairId = createItem("Chair", "49.99", 10);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin", """
+                {"itemGroups": [{"itemId": "%s", "amount": 1}]}
+                """.formatted(chairId));
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User admin@eurder.be has no access to ORDER_ITEMS"));
+        assertThat(eurderRepository.count()).isZero();
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenOrdering_thenReturns401WithABasicChallenge() {
+        String chairId = createItem("Chair", "49.99", 10);
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+                {"itemGroups": [{"itemId": "%s", "amount": 1}]}
+                """.formatted(chairId));
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+        assertThat(eurderRepository.count()).isZero();
+    }
+
+    private String createItem(String name, String price, int stock) {
+        return authenticatedAs("admin@eurder.be", "admin", """
+                {"name": "%s", "description": "%s description", "price": %s, "stock": %d}
+                """.formatted(name, name, price, stock))
+                .post("/items")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("id");
+    }
+
+    private RequestSpecification asJane(String body) {
+        return authenticatedAs("jane@doe.be", "secret123", body);
+    }
+
+    private RequestSpecification authenticatedAs(String email, String password, String body) {
+        return RestAssured.given()
+                .port(port)
+                .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
+                .auth().preemptive().basic(email, password)
+                .contentType(ContentType.JSON)
+                .body(body);
+    }
+}
