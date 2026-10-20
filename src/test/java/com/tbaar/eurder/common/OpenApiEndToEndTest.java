@@ -142,4 +142,25 @@ class OpenApiEndToEndTest {
 
         assertThat(description).contains("HTTP Basic").contains("ProblemDetail");
     }
+
+    @Test
+    void givenMapsKeyedByAState_whenReadingTheirSchemas_thenTheKeysAreLimitedToTheStates() {
+        List<String> unitsKeys = apiDocs.getList("components.schemas.CreateItemDto.properties.units.propertyNames.enum");
+        List<String> availableUnitsKeys = apiDocs.getList("components.schemas.ItemDto.properties.availableUnits.propertyNames.enum");
+
+        assertThat(unitsKeys).containsExactly("PRISTINE", "SLIGHTLY_DAMAGED", "DAMAGED");
+        assertThat(availableUnitsKeys).containsExactly("PRISTINE", "SLIGHTLY_DAMAGED", "DAMAGED");
+    }
+
+    @Test
+    void givenTheRequestBodies_whenReadingTheirFields_thenEachFieldHasADescriptionAndAnExample() {
+        String price = "components.schemas.CreateItemDto.properties.price";
+        String state = "components.schemas.ItemGroupRequestDto.properties.state";
+        String email = "components.schemas.CreateCustomerDto.properties.email";
+
+        assertThat(apiDocs.getString(price + ".description")).contains("2 decimals");
+        assertThat(apiDocs.getDouble(price + ".example")).isEqualTo(49.99);
+        assertThat(apiDocs.getString(state + ".description")).contains("PRISTINE when left out");
+        assertThat(apiDocs.getString(email + ".example")).isEqualTo("jane@doe.be");
+    }
 }
