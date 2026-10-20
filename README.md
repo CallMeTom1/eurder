@@ -65,6 +65,8 @@ Only the account creation (`POST /customers`) and the documentation are public. 
 
 Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 
+Tests are independent and repeatable: they share the same database, so every test creates its own data (unique emails with `UniqueEmail`, unique item names), only asserts on that data, and never deletes data of others. They pass in any order, alone or together.
+
 ## Stories
 
 | Story | Description | Status |
