@@ -61,7 +61,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 8 | View a single customer | Done |
 | 4 | Update an item | Done |
 | 5 | View report of orders | Done |
-| 6 | Reorder an existing order | Nice to have |
+| 6 | Reorder an existing order | Done |
 | 9 | Items shipping today | Done |
 | 10 | Item overview | Done |
 | C | Required configuration validated at startup (technical) | To do |
@@ -75,6 +75,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 - Two eurders changing the same item at the same time: the last one to commit gets a `409` and can retry (optimistic locking with `@Version`).
 - The report of a customer lists their eurders oldest first, at the prices copied when they ordered.
 - What ships today is grouped by eurder, with the name and address of the customer.
+- Reordering creates a new eurder with the same items and amounts, at the current prices and stock. An eurder of another customer is answered with a `404`, as if it did not exist.
 
 ### Known limitations
 
