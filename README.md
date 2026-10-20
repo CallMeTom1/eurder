@@ -29,6 +29,21 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 3. `./mvnw spring-boot:run`
 4. Open the API documentation: http://localhost:8080/docs. Each operation states the feature and role it requires, its response codes with the `ProblemDetail` error format, and an example request.
 
+## Configuration
+
+The application reads three required keys, with no default value:
+
+| Key | Example |
+| --- | --- |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/eurder` |
+| `DB_USERNAME` | `postgres` |
+| `DB_PASSWORD` | your database password |
+
+- They come from `.env` (a copy of `.env.example`, never committed) or from environment variables, which take precedence over `.env`.
+- `.env` uses the `.properties` format: write `DB_PASSWORD=abc`, without quotes.
+- A missing or blank key stops the startup with an `APPLICATION FAILED TO START` report that lists every missing key at once, without ever showing a value.
+- The tests do not need `.env`: they define the keys for their in-memory H2 database.
+
 ## Default admin
 
 The Flyway migration `V2__insert_default_admin.sql` creates an administrator account:
@@ -68,7 +83,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 9 | Items shipping today | Done |
 | 10 | Item overview | Done |
 | E | Item units and states (optional extension) | Done |
-| C | Required configuration validated at startup (technical) | To do |
+| C | Required configuration validated at startup (technical) | Done |
 
 ## Item units and states
 
