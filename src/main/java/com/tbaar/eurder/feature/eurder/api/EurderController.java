@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.eurder.api;
 
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
 import com.tbaar.eurder.feature.eurder.service.EurderService;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Feature;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -47,5 +49,13 @@ public class EurderController {
                 .buildAndExpand(ordered.id())
                 .toUri();
         return ResponseEntity.created(location).body(ordered);
+    }
+
+    @GetMapping(path = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Report of the authenticated customer's eurders with their totals, oldest first")
+    @SecurityRequirement(name = "basicAuth")
+    public ReportDto findReport(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        Credentials customer = securityService.validateAuthorization(authorization, Feature.VIEW_OWN_EURDERS);
+        return eurderService.findReport(customer.getId());
     }
 }

@@ -66,11 +66,7 @@ class EurderEndToEndTest {
 
     @BeforeEach
     void registerJane() {
-        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
-                {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
-                 "phoneNumber": "0470123456"}
-                """).post("/customers").then().statusCode(HttpStatus.CREATED.value());
+        registerCustomer("jane@doe.be");
     }
 
     @AfterEach
@@ -208,6 +204,84 @@ class EurderEndToEndTest {
         assertThat(eurderRepository.count()).isZero();
     }
 
+    @Test
+    void givenTwoEurders_whenTheCustomerGetsTheReport_thenReturnsEachEurderWithItsLinesAndTheTotalOfAll() {
+        String chairId = createItem("Chair", "49.99", 10);
+        String lampId = createItem("Lamp", "0.10", 10);
+        order("jane@doe.be", chairId, 3, lampId, 3);
+        order("jane@doe.be", chairId, 1);
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/eurders/report");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("keySet()", containsInAnyOrder("eurders", "totalPrice"))
+                .body("eurders[0].keySet()", containsInAnyOrder("id", "itemGroups", "totalPrice"))
+                .body("eurders[0].itemGroups[0].keySet()", containsInAnyOrder("itemName", "amount", "subtotal"))
+                .body("eurders.totalPrice", containsInAnyOrder(new BigDecimal("150.27"), new BigDecimal("49.99")))
+                .body("eurders.itemGroups.flatten().subtotal",
+                        containsInAnyOrder(new BigDecimal("149.97"), new BigDecimal("0.30"), new BigDecimal("49.99")))
+                .body("totalPrice", equalTo(new BigDecimal("200.26")));
+    }
+
+    @Test
+    void givenACustomerWithoutEurder_whenGettingTheReport_thenReturnsAnEmptyListAndAZeroTotal() {
+        String chairId = createItem("Chair", "49.99", 10);
+        registerCustomer("zoe@adams.be");
+        order("zoe@adams.be", chairId, 2);
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
+
+        Response response = request.get("/eurders/report");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("eurders.size()", equalTo(0))
+                .body("totalPrice", equalTo(new BigDecimal("0.00")));
+    }
+
+    @Test
+    void givenTheAdmin_whenGettingTheReport_thenReturns403() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/eurders/report");
+
+        response.then()
+                .statusCode(HttpStatus.FORBIDDEN.value())
+                .body("detail", equalTo("User admin@eurder.be has no access to VIEW_OWN_EURDERS"));
+    }
+
+    @Test
+    void givenNoAuthorizationHeader_whenGettingTheReport_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/eurders/report");
+
+        response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    private void registerCustomer(String email) {
+        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+                {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "phoneNumber": "0470123456"}
+                """.formatted(email)).post("/customers").then().statusCode(HttpStatus.CREATED.value());
+    }
+
+    private void order(String email, String itemId, int amount) {
+        authenticatedAs(email, "secret123", """
+                {"itemGroups": [{"itemId": "%s", "amount": %d}]}
+                """.formatted(itemId, amount))
+                .post("/eurders").then().statusCode(HttpStatus.CREATED.value());
+    }
+
+    private void order(String email, String firstItemId, int firstAmount, String secondItemId, int secondAmount) {
+        authenticatedAs(email, "secret123", """
+                {"itemGroups": [{"itemId": "%s", "amount": %d}, {"itemId": "%s", "amount": %d}]}
+                """.formatted(firstItemId, firstAmount, secondItemId, secondAmount))
+                .post("/eurders").then().statusCode(HttpStatus.CREATED.value());
+    }
+
     private String createItem(String name, String price, int stock) {
         return authenticatedAs("admin@eurder.be", "admin", """
                 {"name": "%s", "description": "%s description", "price": %s, "stock": %d}
@@ -222,11 +296,15 @@ class EurderEndToEndTest {
     }
 
     private RequestSpecification authenticatedAs(String email, String password, String body) {
+        return authenticatedAs(email, password)
+                .contentType(ContentType.JSON)
+                .body(body);
+    }
+
+    private RequestSpecification authenticatedAs(String email, String password) {
         return RestAssured.given()
                 .port(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
-                .auth().preemptive().basic(email, password)
-                .contentType(ContentType.JSON)
-                .body(body);
+                .auth().preemptive().basic(email, password);
     }
 }
