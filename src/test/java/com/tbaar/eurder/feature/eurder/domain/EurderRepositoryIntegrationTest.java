@@ -142,6 +142,23 @@ class EurderRepositoryIntegrationTest {
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
 
+    @Test
+    void givenEurdersOfTwoCustomers_whenFindingOneByIdAndCredentials_thenFindsOnlyAnEurderOfThatCustomer() {
+        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
+        Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Eurder janes = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T09:00:00Z"));
+        Eurder zoes = eurderRepository.saveAndFlush(anEurder(zoe, chair, 1, "2026-12-31T10:00:00Z"));
+        entityManager.clear();
+
+        Optional<Eurder> own = eurderRepository.findByIdAndCustomerCredentialsId(janes.getId(), jane.getCredentials().getId());
+        Optional<Eurder> someoneElses = eurderRepository.findByIdAndCustomerCredentialsId(zoes.getId(), jane.getCredentials().getId());
+
+        assertThat(own).hasValueSatisfying(eurder ->
+                assertThat(eurder.getItemGroups()).extracting(ItemGroup::getAmount).containsExactly(3));
+        assertThat(someoneElses).isEmpty();
+    }
+
     private static Eurder anEurder(Customer customer, Item item, int amount, String orderedAt) {
         return new Eurder(customer, List.of(ItemGroup.of(item, amount, ORDER_DATE)), Instant.parse(orderedAt));
     }
