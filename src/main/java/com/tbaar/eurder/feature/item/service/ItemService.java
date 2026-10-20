@@ -8,6 +8,7 @@ import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemStock;
 import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -52,9 +55,17 @@ public class ItemService {
 
     @Transactional(readOnly = true)
     public List<ItemOverviewDto> findOverview(StockUrgency urgency) {
-        List<Item> items = urgency == null
-                ? itemRepository.findAllByOrderByStockAscNameAsc()
-                : itemRepository.findByStockBetweenOrderByStockAscNameAsc(urgency.getMinStock(), urgency.getMaxStock());
-        return items.stream().map(itemMapper::toOverviewDto).toList();
+        List<ItemStock> stock = urgency == null
+                ? itemRepository.findStockBetween(0, Integer.MAX_VALUE)
+                : itemRepository.findStockBetween(urgency.getMinStock(), urgency.getMaxStock());
+        if (stock.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, List<AvailableUnits>> availableUnitsByItem = itemUnitRepository
+                .countAvailableUnits(stock.stream().map(itemStock -> itemStock.item().getId()).toList()).stream()
+                .collect(Collectors.groupingBy(AvailableUnits::itemId));
+        return stock.stream()
+                .map(itemStock -> itemMapper.toOverviewDto(itemStock, availableUnitsByItem.getOrDefault(itemStock.item().getId(), List.of())))
+                .toList();
     }
 }

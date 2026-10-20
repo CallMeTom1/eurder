@@ -6,6 +6,7 @@ import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemState;
+import com.tbaar.eurder.feature.item.domain.ItemStock;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import org.junit.jupiter.api.Test;
 
@@ -47,11 +48,17 @@ class ItemMapperTest {
     }
 
     @Test
-    void givenItem_whenMappingToOverviewDto_thenAddsTheUrgencyOfItsStock() {
-        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 7);
+    void givenItemStockAndItsUnitsPerState_whenMappingToOverviewDto_thenShowsTheDetailAndTheUrgencyOfTheTotal() {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+        List<AvailableUnits> counts = List.of(
+                new AvailableUnits(item.getId(), ItemState.PRISTINE, 3),
+                new AvailableUnits(item.getId(), ItemState.DAMAGED, 4));
 
-        ItemOverviewDto dto = itemMapper.toOverviewDto(item);
+        ItemOverviewDto dto = itemMapper.toOverviewDto(new ItemStock(item, 7), counts);
 
-        assertThat(dto).isEqualTo(new ItemOverviewDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 7, StockUrgency.STOCK_MEDIUM));
+        assertThat(dto.name()).isEqualTo("Chair");
+        assertThat(dto.availableUnits()).containsExactly(
+                entry(ItemState.PRISTINE, 3L), entry(ItemState.SLIGHTLY_DAMAGED, 0L), entry(ItemState.DAMAGED, 4L));
+        assertThat(dto.urgency()).isEqualTo(StockUrgency.STOCK_MEDIUM);
     }
 }

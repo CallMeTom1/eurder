@@ -9,6 +9,7 @@ import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.domain.ItemState;
+import com.tbaar.eurder.feature.item.domain.ItemStock;
 import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -110,10 +112,11 @@ class ItemServiceTest {
 
     @Test
     void givenNoUrgencyFilter_whenFindingTheOverview_thenReturnsEveryItemSortedWithItsUrgency() {
-        when(itemRepository.findAllByOrderByStockAscNameAsc()).thenReturn(List.of(
-                new Item("Lamp", "Desk lamp", new BigDecimal("29.00"), 0),
-                new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 7),
-                new Item("Table", "Oak table", new BigDecimal("199.00"), 12)));
+        when(itemRepository.findStockBetween(0, Integer.MAX_VALUE)).thenReturn(List.of(
+                new ItemStock(new Item("Lamp", "Desk lamp", new BigDecimal("29.00"), 0), 0),
+                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0), 7),
+                new ItemStock(new Item("Table", "Oak table", new BigDecimal("199.00"), 0), 12)));
+        when(itemUnitRepository.countAvailableUnits(any())).thenReturn(List.of());
 
         List<ItemOverviewDto> overview = itemService.findOverview(null);
 
@@ -127,11 +130,22 @@ class ItemServiceTest {
 
     @Test
     void givenAnUrgencyFilter_whenFindingTheOverview_thenQueriesTheStockRangeOfThatUrgency() {
-        when(itemRepository.findByStockBetweenOrderByStockAscNameAsc(5, 9)).thenReturn(List.of(
-                new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 7)));
+        when(itemRepository.findStockBetween(5, 9)).thenReturn(List.of(
+                new ItemStock(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0), 7)));
+        when(itemUnitRepository.countAvailableUnits(any())).thenReturn(List.of());
 
         List<ItemOverviewDto> overview = itemService.findOverview(StockUrgency.STOCK_MEDIUM);
 
         assertThat(overview).extracting(ItemOverviewDto::name).containsExactly("Chair");
+    }
+
+    @Test
+    void givenNoItemInTheRange_whenFindingTheOverview_thenReturnsAnEmptyListWithoutCountingUnits() {
+        when(itemRepository.findStockBetween(0, 4)).thenReturn(List.of());
+
+        List<ItemOverviewDto> overview = itemService.findOverview(StockUrgency.STOCK_LOW);
+
+        assertThat(overview).isEmpty();
+        verify(itemUnitRepository, never()).countAvailableUnits(any());
     }
 }

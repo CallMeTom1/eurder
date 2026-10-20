@@ -294,7 +294,7 @@ class ItemEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("name", contains("Lamp", "Chair", "Table"))
                 .body("urgency", contains("STOCK_LOW", "STOCK_MEDIUM", "STOCK_HIGH"))
-                .body("[0].keySet()", containsInAnyOrder("id", "name", "description", "price", "stock", "urgency"));
+                .body("[0].keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits", "urgency"));
     }
 
     @Test
