@@ -1,7 +1,7 @@
 package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
-import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -20,7 +20,7 @@ public class ItemService {
         this.itemMapper = itemMapper;
     }
 
-    public ItemDto create(CreateItemDto request) {
+    public ItemDto create(ItemRequestDto request) {
         Item item = itemRepository.save(itemMapper.toEntity(request));
         return itemMapper.toDto(item);
     }

@@ -1,7 +1,7 @@
 package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
-import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -36,7 +36,7 @@ class ItemServiceTest {
     void givenValidItem_whenCreating_thenSavesTheItem() {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        itemService.create(new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
 
         ArgumentCaptor<Item> saved = ArgumentCaptor.forClass(Item.class);
         verify(itemRepository).save(saved.capture());
@@ -48,7 +48,7 @@ class ItemServiceTest {
     void givenValidItem_whenCreating_thenReturnsTheSavedItemWithATwoDecimalPrice() {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ItemDto created = itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49"), 10));
+        ItemDto created = itemService.create(new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49"), 10));
 
         assertThat(created.name()).isEqualTo("Chair");
         assertThat(created.description()).isEqualTo("Wooden chair");

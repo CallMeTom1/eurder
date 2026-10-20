@@ -1,6 +1,6 @@
 package com.tbaar.eurder.feature.item.api;
 
-import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
+import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.service.ItemService;
 import com.tbaar.eurder.feature.security.domain.Feature;
@@ -38,7 +38,7 @@ public class ItemController {
     @Operation(summary = "Add an item to the catalog")
     @SecurityRequirement(name = "basicAuth")
     public ResponseEntity<ItemDto> create(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-                                          @Valid @RequestBody CreateItemDto request) {
+                                          @Valid @RequestBody ItemRequestDto request) {
         securityService.validateAuthorization(authorization, Feature.MANAGE_ITEMS);
         ItemDto created = itemService.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()

@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CreateItemDtoValidationTest {
+class ItemRequestDtoValidationTest {
 
     private static ValidatorFactory validatorFactory;
     private static Validator validator;
@@ -38,18 +38,18 @@ class CreateItemDtoValidationTest {
 
     @Test
     void givenCompleteItem_whenValidating_thenHasNoViolation() {
-        CreateItemDto dto = validItem();
+        ItemRequestDto dto = validItem();
 
-        Set<ConstraintViolation<CreateItemDto>> violations = validator.validate(dto);
+        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
 
         assertThat(violations).isEmpty();
     }
 
     @Test
     void givenItemOutOfStock_whenValidating_thenHasNoViolation() {
-        CreateItemDto dto = withStock(0);
+        ItemRequestDto dto = withStock(0);
 
-        Set<ConstraintViolation<CreateItemDto>> violations = validator.validate(dto);
+        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
 
         assertThat(violations).isEmpty();
     }
@@ -57,16 +57,16 @@ class CreateItemDtoValidationTest {
     @ParameterizedTest(name = "price {0} is accepted")
     @ValueSource(strings = {"0.01", "10", "9.9", "99999999.99"})
     void givenPositivePriceWithAtMostTwoDecimals_whenValidating_thenHasNoViolation(String price) {
-        CreateItemDto dto = withPrice(new BigDecimal(price));
+        ItemRequestDto dto = withPrice(new BigDecimal(price));
 
-        Set<ConstraintViolation<CreateItemDto>> violations = validator.validate(dto);
+        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
 
         assertThat(violations).isEmpty();
     }
 
     @ParameterizedTest(name = "{0} = \"{1}\" is rejected")
     @MethodSource("invalidFields")
-    void givenOneInvalidField_whenValidating_thenReportsThatFieldWithItsMessage(String field, CreateItemDto dto, String expectedMessage) {
+    void givenOneInvalidField_whenValidating_thenReportsThatFieldWithItsMessage(String field, ItemRequestDto dto, String expectedMessage) {
         Map<String, Set<String>> messagesByField = messagesByField(validator.validate(dto));
 
         assertThat(messagesByField).containsOnlyKeys(field);
@@ -90,29 +90,29 @@ class CreateItemDtoValidationTest {
         );
     }
 
-    private static Map<String, Set<String>> messagesByField(Set<ConstraintViolation<CreateItemDto>> violations) {
+    private static Map<String, Set<String>> messagesByField(Set<ConstraintViolation<ItemRequestDto>> violations) {
         return violations.stream().collect(Collectors.groupingBy(
                 violation -> violation.getPropertyPath().toString(),
                 Collectors.mapping(ConstraintViolation::getMessage, Collectors.toSet())));
     }
 
-    private static CreateItemDto validItem() {
-        return new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+    private static ItemRequestDto validItem() {
+        return new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
     }
 
-    private static CreateItemDto withName(String name) {
-        return new CreateItemDto(name, "Wooden chair", new BigDecimal("49.99"), 10);
+    private static ItemRequestDto withName(String name) {
+        return new ItemRequestDto(name, "Wooden chair", new BigDecimal("49.99"), 10);
     }
 
-    private static CreateItemDto withDescription(String description) {
-        return new CreateItemDto("Chair", description, new BigDecimal("49.99"), 10);
+    private static ItemRequestDto withDescription(String description) {
+        return new ItemRequestDto("Chair", description, new BigDecimal("49.99"), 10);
     }
 
-    private static CreateItemDto withPrice(BigDecimal price) {
-        return new CreateItemDto("Chair", "Wooden chair", price, 10);
+    private static ItemRequestDto withPrice(BigDecimal price) {
+        return new ItemRequestDto("Chair", "Wooden chair", price, 10);
     }
 
-    private static CreateItemDto withStock(Integer stock) {
-        return new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), stock);
+    private static ItemRequestDto withStock(Integer stock) {
+        return new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), stock);
     }
 }
