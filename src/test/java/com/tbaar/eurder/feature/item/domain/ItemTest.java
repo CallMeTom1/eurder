@@ -43,11 +43,11 @@ class ItemTest {
     void givenItem_whenUpdatingIt_thenReplacesEveryFieldWithATwoDecimalPrice() {
         Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
 
-        item.update("Armchair", "Leather armchair", new BigDecimal("150"), 3);
+        item.update("Armchair", "Leather armchair", new BigDecimal("150"));
 
         assertThat(item)
-                .extracting(Item::getName, Item::getDescription, Item::getPrice, Item::getStock)
-                .containsExactly("Armchair", "Leather armchair", new BigDecimal("150.00"), 3);
+                .extracting(Item::getName, Item::getDescription, Item::getPrice)
+                .containsExactly("Armchair", "Leather armchair", new BigDecimal("150.00"));
     }
 
     @Test

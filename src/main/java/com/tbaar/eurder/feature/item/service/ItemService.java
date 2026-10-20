@@ -6,7 +6,7 @@ import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
-import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
@@ -52,9 +52,9 @@ public class ItemService {
         return itemMapper.toDto(item, availableUnits);
     }
 
-    public ItemDto update(UUID id, ItemRequestDto request) {
+    public ItemDto update(UUID id, UpdateItemDto request) {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
-        item.update(request.name(), request.description(), request.price(), request.stock());
+        item.update(request.name(), request.description(), request.price());
         return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(id)));
     }
 

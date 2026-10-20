@@ -4,7 +4,7 @@ import com.tbaar.eurder.feature.item.api.dto.AddUnitsDto;
 import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
-import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -73,34 +73,31 @@ class ItemServiceIntegrationTest {
     void givenExistingItem_whenUpdating_thenTheNewValuesAreStoredWithoutAnExplicitSave() {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
 
-        itemService.update(chair.getId(), new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150"), 3));
+        itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
 
         assertThat(itemRepository.findById(chair.getId())).hasValueSatisfying(item -> {
             assertThat(item.getName()).isEqualTo("Armchair");
             assertThat(item.getDescription()).isEqualTo("Leather armchair");
             assertThat(item.getPrice()).isEqualTo(new BigDecimal("150.00"));
-            assertThat(item.getStock()).isEqualTo(3);
         });
     }
 
     @Test
-    void givenTheStockChangedByAnotherTransactionMeanwhile_whenTheUpdateCommits_thenFailsAndKeepsTheOtherChange() {
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+    void givenTheItemChangedByAnotherTransactionMeanwhile_whenTheUpdateCommits_thenFailsAndKeepsTheOtherChange() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0));
         TransactionTemplate updateTransaction = new TransactionTemplate(transactionManager);
         TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
         concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
         Throwable thrown = catchThrowable(() -> updateTransaction.executeWithoutResult(updateStatus -> {
-            itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("39.99"), 20));
+            itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("39.99")));
             concurrentTransaction.executeWithoutResult(concurrentStatus ->
-                    itemRepository.findById(chair.getId()).orElseThrow().removeFromStock(4));
+                    itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("29.99"))));
         }));
 
         assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
-        assertThat(itemRepository.findById(chair.getId())).hasValueSatisfying(item -> {
-            assertThat(item.getPrice()).isEqualTo(new BigDecimal("49.99"));
-            assertThat(item.getStock()).isEqualTo(6);
-        });
+        assertThat(itemRepository.findById(chair.getId())).hasValueSatisfying(item ->
+                assertThat(item.getPrice()).isEqualTo(new BigDecimal("29.99")));
     }
 
     @Test

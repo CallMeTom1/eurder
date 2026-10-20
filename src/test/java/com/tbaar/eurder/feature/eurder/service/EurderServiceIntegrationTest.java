@@ -16,7 +16,7 @@ import com.tbaar.eurder.feature.eurder.api.dto.ShippingItemGroupDto;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
-import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
@@ -169,7 +169,7 @@ class EurderServiceIntegrationTest {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
 
-        itemService.update(chair.getId(), new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150.00"), 8));
+        itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150.00")));
 
         List<ItemGroup> storedItemGroups = new TransactionTemplate(transactionManager).execute(status ->
                 eurderRepository.findById(eurder.id()).orElseThrow().getItemGroups());
@@ -184,7 +184,7 @@ class EurderServiceIntegrationTest {
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2))));
         eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 1))));
         eurderService.order(registerCustomer("zoe@adams.be"), new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 5))));
-        itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("99.00"), 10));
+        itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("99.00")));
 
         ReportDto report = eurderService.findReport(janeCredentialsId);
 
@@ -217,7 +217,7 @@ class EurderServiceIntegrationTest {
         Item table = itemWithPristineUnits("Table", "Oak table", "199.00", 0);
         EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
-        itemService.update(chair.getId(), new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("59.99"), 7));
+        itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("59.99")));
         itemUnitRepository.saveAll(table.newUnits(ItemState.PRISTINE, 5));
         clock.setTo(NEW_YEARS_EVE.plusDays(1));
 

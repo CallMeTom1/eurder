@@ -208,7 +208,7 @@ class ItemEndToEndTest {
     @Test
     void givenExistingItem_whenTheAdminPutsNewValues_thenReturns200WithTheUpdatedItem() {
         String id = createItem();
-        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+        RequestSpecification request = asAdmin(updatedItem("Armchair", "150"));
 
         Response response = request.put("/items/" + id);
 
@@ -223,7 +223,7 @@ class ItemEndToEndTest {
     @Test
     void givenUnknownId_whenTheAdminPutsAnItem_thenReturns404WithTheId() {
         String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
-        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+        RequestSpecification request = asAdmin(updatedItem("Armchair", "150"));
 
         Response response = request.put("/items/" + unknownId);
 
@@ -236,20 +236,20 @@ class ItemEndToEndTest {
     void givenInvalidValues_whenTheAdminPutsAnItem_thenReturns400WithTheCreationRulesAndChangesNothing() {
         String id = createItem();
         RequestSpecification request = asAdmin("""
-                {"name": "", "description": "Wooden chair", "price": 9.999, "stock": -1}
+                {"name": "", "description": "Wooden chair", "price": 9.999}
                 """);
 
         Response response = request.put("/items/" + id);
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.keySet()", containsInAnyOrder("name", "price", "stock"));
+                .body("errors.keySet()", containsInAnyOrder("name", "price"));
         assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
     }
 
     @Test
     void givenAnIdThatIsNotAUuid_whenTheAdminPutsAnItem_thenReturns400() {
-        RequestSpecification request = asAdmin(item("Armchair", "150", "3"));
+        RequestSpecification request = asAdmin(updatedItem("Armchair", "150"));
 
         Response response = request.put("/items/chair");
 
@@ -260,7 +260,7 @@ class ItemEndToEndTest {
     void givenACustomer_whenPuttingAnItem_thenReturns403AndChangesNothing() {
         String id = createItem();
         registerJane();
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", item("Armchair", "150", "3"));
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", updatedItem("Armchair", "150"));
 
         Response response = request.put("/items/" + id);
 
@@ -273,7 +273,7 @@ class ItemEndToEndTest {
     @Test
     void givenNoAuthorizationHeader_whenPuttingAnItem_thenReturns401() {
         String id = createItem();
-        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(item("Armchair", "150", "3"));
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(updatedItem("Armchair", "150"));
 
         Response response = request.put("/items/" + id);
 
@@ -533,9 +533,9 @@ class ItemEndToEndTest {
                 """.formatted(name, price, pristineUnits);
     }
 
-    private static String item(String name, String price, String stock) {
+    private static String updatedItem(String name, String price) {
         return """
-                {"name": "%s", "description": "Wooden chair", "price": %s, "stock": %s}
-                """.formatted(name, price, stock);
+                {"name": "%s", "description": "Wooden chair", "price": %s}
+                """.formatted(name, price);
     }
 }

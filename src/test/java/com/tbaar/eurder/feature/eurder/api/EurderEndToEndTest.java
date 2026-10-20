@@ -331,7 +331,7 @@ class EurderEndToEndTest {
         String chairId = createItem("Chair", "49.99", 10);
         String originalId = order("jane@doe.be", chairId, 3);
         authenticatedAs("admin@eurder.be", "admin", """
-                {"name": "Chair", "description": "Chair description", "price": 59.99, "stock": 7}
+                {"name": "Chair", "description": "Chair description", "price": 59.99}
                 """).put("/items/" + chairId).then().statusCode(HttpStatus.OK.value());
         RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
 

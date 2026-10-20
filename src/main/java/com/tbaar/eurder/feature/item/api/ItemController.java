@@ -5,7 +5,7 @@ import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
-import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.service.ItemService;
@@ -66,7 +66,7 @@ public class ItemController {
     @SecurityRequirement(name = "basicAuth")
     public ItemDto update(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
                           @PathVariable UUID id,
-                          @Valid @RequestBody ItemRequestDto request) {
+                          @Valid @RequestBody UpdateItemDto request) {
         securityService.validateAuthorization(authorization, Feature.MANAGE_ITEMS);
         return itemService.update(id, request);
     }

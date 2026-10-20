@@ -61,11 +61,10 @@ public class Item {
         return stock;
     }
 
-    public void update(String name, String description, BigDecimal price, int stock) {
+    public void update(String name, String description, BigDecimal price) {
         this.name = name;
         this.description = description;
         this.price = twoDecimals(price);
-        this.stock = stock;
     }
 
     public BigDecimal priceFor(ItemState state) {

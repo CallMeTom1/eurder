@@ -6,7 +6,7 @@ import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
-import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.api.dto.UpdateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemUnitDto;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
@@ -93,7 +93,7 @@ class ItemServiceTest {
         when(itemRepository.findById(id)).thenReturn(Optional.of(chair));
         when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.PRISTINE, 10)));
 
-        ItemDto updated = itemService.update(id, new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150"), 3));
+        ItemDto updated = itemService.update(id, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
 
         assertThat(updated)
                 .extracting(ItemDto::name, ItemDto::description, ItemDto::price)
@@ -107,7 +107,7 @@ class ItemServiceTest {
         UUID unknownId = UUID.randomUUID();
         when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
 
-        Throwable thrown = catchThrowable(() -> itemService.update(unknownId, new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150"), 3)));
+        Throwable thrown = catchThrowable(() -> itemService.update(unknownId, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"))));
 
         assertThat(thrown)
                 .isInstanceOf(ItemNotFoundException.class)
