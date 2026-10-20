@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -50,6 +51,18 @@ class GlobalExceptionHandlerTest {
         ResponseEntity<ProblemDetail> response = handler.handleUnauthorized(exception);
 
         assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Basic realm=\"Eurder\"");
+    }
+
+    @Test
+    void givenAFailedAuthentication_whenHandled_thenReturns401WithABasicChallengeWithoutLeakingTheReason() {
+        BadCredentialsException exception = new BadCredentialsException("Bad credentials for jane@doe.be");
+
+        ResponseEntity<ProblemDetail> response = handler.handleAuthenticationFailure(exception);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Basic realm=\"Eurder\"");
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDetail()).isEqualTo("Invalid credentials");
     }
 
     @Test

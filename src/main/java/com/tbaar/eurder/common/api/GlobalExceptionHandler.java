@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,9 +37,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ProblemDetail> handleUnauthorized(UnauthorizedException e) {
         log.warn("Unauthorized: {}", e.getMessage());
+        return unauthorized();
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ProblemDetail> handleAuthenticationFailure(AuthenticationException e) {
+        log.warn("Unauthorized: {}", e.getMessage());
+        return unauthorized();
+    }
+
+    private static ResponseEntity<ProblemDetail> unauthorized() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"")
-                .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage()));
+                .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     }
 
     @ExceptionHandler(NotFoundException.class)
