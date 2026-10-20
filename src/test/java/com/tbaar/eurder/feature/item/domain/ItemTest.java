@@ -16,4 +16,24 @@ class ItemTest {
 
         assertThat(item.getPrice()).isEqualTo(new BigDecimal(expectedPrice));
     }
+
+    @ParameterizedTest(name = "stock {0}, amount {1}: in stock = {2}")
+    @CsvSource({"10, 2, true", "2, 2, true", "1, 2, false", "0, 1, false"})
+    void givenStockAndAmount_whenCheckingIfInStock_thenTheStockMustCoverTheWholeAmount(int stock, int amount, boolean expected) {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), stock);
+
+        boolean inStock = item.isInStock(amount);
+
+        assertThat(inStock).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "stock {0} minus {1} leaves {2}")
+    @CsvSource({"10, 2, 8", "2, 2, 0", "5, 10, 0", "0, 3, 0"})
+    void givenStockAndAmount_whenRemovingFromStock_thenTheStockDecreasesButNeverBelowZero(int stock, int amount, int expectedStock) {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), stock);
+
+        item.removeFromStock(amount);
+
+        assertThat(item.getStock()).isEqualTo(expectedStock);
+    }
 }

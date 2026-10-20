@@ -6,6 +6,7 @@ import com.tbaar.eurder.common.exception.NotFoundException;
 import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -52,6 +53,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ProblemDetail handleConcurrentModification(OptimisticLockingFailureException e) {
+        log.warn("Concurrent modification: {}", e.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The data was modified by another request, please retry");
+    }
+
     @ExceptionHandler(ForbiddenException.class)
     public ProblemDetail handleForbidden(ForbiddenException e) {
         log.warn("Forbidden: {}", e.getMessage());
@@ -92,9 +99,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static String fieldPath(List<JacksonException.Reference> path) {
-        return path.stream()
-                .map(JacksonException.Reference::getPropertyName)
-                .collect(Collectors.joining("."));
+        StringBuilder fieldPath = new StringBuilder();
+        for (JacksonException.Reference reference : path) {
+            if (reference.getPropertyName() == null) {
+                fieldPath.append('[').append(reference.getIndex()).append(']');
+            } else {
+                fieldPath.append(fieldPath.isEmpty() ? "" : ".").append(reference.getPropertyName());
+            }
+        }
+        return fieldPath.toString();
     }
 
     @Override

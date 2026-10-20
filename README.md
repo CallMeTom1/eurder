@@ -52,11 +52,11 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | Story | Description | Status |
 | --- | --- | --- |
 | 0 | Project setup | Done |
-| T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | In progress |
+| T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | Done |
 | S | Security: roles, features, Basic authentication (technical) | Done |
 | 1 | Create a customer account | Done |
 | 2 | Add an item | Done |
-| 3 | Order items | To do |
+| 3 | Order items | Done |
 | 7 | View all customers | Done |
 | 8 | View a single customer | Done |
 | 4 | Update an item | Nice to have |
@@ -65,3 +65,15 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 9 | Items shipping today | Nice to have |
 | 10 | Item overview | Nice to have |
 | C | Required configuration validated at startup (technical) | To do |
+
+## Ordering rules
+
+- An item group ships the next day when the stock covers its whole amount, otherwise one week later.
+- Item groups are handled in the order they are sent: ordering the same item twice, the second group sees the stock left by the first.
+- The stock never goes below zero.
+- An item group copies the name and price of the item, so later price changes do not affect past eurders.
+- Two eurders changing the same item at the same time: the last one to commit gets a `409` and can retry (optimistic locking with `@Version`).
+
+### Known limitation
+
+The stock does not keep track of the units still owed to customers. Ordering 10 items with 5 in stock ships the whole item group a week later and sets the stock to 0: the 5 missing units are only visible in the item groups waiting to be shipped (Story 9).

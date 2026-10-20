@@ -6,20 +6,27 @@ import com.tbaar.eurder.common.exception.NotFoundException;
 import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.ServletWebRequest;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class GlobalExceptionHandlerTest {
 
@@ -121,6 +128,54 @@ class GlobalExceptionHandlerTest {
 
         assertThat(errorsOf(response)).isEqualTo(Map.of(
                 "password", List.of("Password is required", "Password must be between 8 and 72 characters")));
+    }
+
+    @Test
+    void givenOptimisticLockingFailure_whenHandled_thenReturns409AskingTheClientToRetry() {
+        OptimisticLockingFailureException exception = new OptimisticLockingFailureException("Row was updated by another transaction");
+
+        ProblemDetail response = handler.handleConcurrentModification(exception);
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(response.getDetail()).isEqualTo("The data was modified by another request, please retry");
+    }
+
+    @Test
+    void givenWrongTypeInsideAList_whenTheBodyIsUnreadable_thenNamesTheFieldWithItsIndex() {
+        HttpMessageNotReadableException exception = unreadable("""
+                {"lines": [{"amount": 1}, {"amount": "many"}]}
+                """);
+
+        ResponseEntity<Object> response = handler.handleHttpMessageNotReadable(exception, new HttpHeaders(),
+                HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
+
+        assertThat(((ProblemDetail) response.getBody()).getDetail()).isEqualTo("Invalid value for field 'lines[1].amount'");
+    }
+
+    @Test
+    void givenWrongTypeInANestedObject_whenTheBodyIsUnreadable_thenNamesTheFullPath() {
+        HttpMessageNotReadableException exception = unreadable("""
+                {"lines": [], "delivery": {"floor": "top"}}
+                """);
+
+        ResponseEntity<Object> response = handler.handleHttpMessageNotReadable(exception, new HttpHeaders(),
+                HttpStatus.BAD_REQUEST, new ServletWebRequest(new MockHttpServletRequest()));
+
+        assertThat(((ProblemDetail) response.getBody()).getDetail()).isEqualTo("Invalid value for field 'delivery.floor'");
+    }
+
+    private static HttpMessageNotReadableException unreadable(String json) {
+        JacksonException cause = catchThrowableOfType(JacksonException.class, () -> new JsonMapper().readValue(json, Order.class));
+        return new HttpMessageNotReadableException("Unreadable", cause, new MockHttpInputMessage(json.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private record Order(List<Line> lines, Delivery delivery) {
+    }
+
+    private record Line(Integer amount) {
+    }
+
+    private record Delivery(Integer floor) {
     }
 
     private static FieldError fieldError(String field, String message) {
