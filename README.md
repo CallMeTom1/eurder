@@ -27,7 +27,7 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 2. Copy `.env.example` to `.env` and fill in your database URL and credentials
    (environment variables with the same names take precedence over `.env`)
 3. `./mvnw spring-boot:run`
-4. Open the API documentation: http://localhost:8080/docs
+4. Open the API documentation: http://localhost:8080/docs. Each operation states the feature and role it requires, its response codes with the `ProblemDetail` error format, and an example request.
 
 ## Default admin
 

@@ -7,6 +7,7 @@ import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
 import com.tbaar.eurder.feature.eurder.service.EurderService;
 import com.tbaar.eurder.feature.security.service.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/eurders")
-@Tag(name = "Eurders")
+@Tag(name = "Eurders", description = "Ordering items, reordering, the report of a customer and what ships today")
 public class EurderController {
 
     private final EurderService eurderService;
@@ -39,6 +40,9 @@ public class EurderController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Order one or more items as the authenticated customer")
+    @ApiResponse(responseCode = "201", description = "Eurder placed", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", description = "One of the items does not exist")
+    @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
     @SecurityRequirement(name = "basicAuth")
     @Secured("ORDER_ITEMS")
     public ResponseEntity<EurderDto> order(@AuthenticationPrincipal AuthenticatedUser customer,
@@ -69,6 +73,9 @@ public class EurderController {
 
     @PostMapping(path = "/{id}/reorder", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Order again the items of one of the authenticated customer's eurders, at the current prices")
+    @ApiResponse(responseCode = "201", description = "Eurder placed again at the current prices", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", description = "No such eurder among the customer's eurders, or one of its items no longer exists")
+    @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
     @SecurityRequirement(name = "basicAuth")
     @Secured("ORDER_ITEMS")
     public ResponseEntity<EurderDto> reorder(@AuthenticationPrincipal AuthenticatedUser customer,

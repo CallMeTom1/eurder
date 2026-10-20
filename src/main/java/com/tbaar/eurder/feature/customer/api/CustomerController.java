@@ -4,6 +4,7 @@ import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,7 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/customers")
-@Tag(name = "Customers")
+@Tag(name = "Customers", description = "Customer accounts: registration, and their details for the admin")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -35,6 +36,8 @@ public class CustomerController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Register a new customer account")
+    @ApiResponse(responseCode = "201", description = "Customer account created", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "409", description = "Email already in use")
     public ResponseEntity<CustomerDto> register(@Valid @RequestBody CreateCustomerDto request) {
         CustomerDto registered = customerService.register(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
