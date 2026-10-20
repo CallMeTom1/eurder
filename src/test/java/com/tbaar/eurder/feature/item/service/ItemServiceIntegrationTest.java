@@ -12,7 +12,6 @@ import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.item.domain.ItemUnit;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.exception.ItemUnitAlreadySoldException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,12 +44,6 @@ class ItemServiceIntegrationTest {
 
     @Autowired
     private PlatformTransactionManager transactionManager;
-
-    @AfterEach
-    void deleteCreatedItems() {
-        itemUnitRepository.deleteAll();
-        itemRepository.deleteAll();
-    }
 
     @Test
     void givenValidItemWithUnits_whenCreating_thenTheItemAndItsAvailableUnitsAreStored() {
