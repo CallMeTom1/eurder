@@ -16,6 +16,8 @@
 
     <properties>
         <java.version>17</java.version>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <test.order.seed>${maven.build.timestamp}</test.order.seed>
     </properties>
 
     <dependencies>
@@ -90,6 +92,15 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <junit.jupiter.execution.order.random.seed>${test.order.seed}</junit.jupiter.execution.order.random.seed>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
