@@ -29,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/eurders")
-@Tag(name = "Eurders")
+@Tag(name = "Eurders", description = "Ordering items, reordering, the report of a customer and what ships today")
 public class EurderController {
 
     private final EurderService eurderService;

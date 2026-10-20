@@ -34,7 +34,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/items")
-@Tag(name = "Items")
+@Tag(name = "Items", description = "Catalog of items, their units in stock per state and their resupply urgency")
 public class ItemController {
 
     private final ItemService itemService;

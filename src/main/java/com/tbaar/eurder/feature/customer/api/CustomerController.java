@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/customers")
-@Tag(name = "Customers")
+@Tag(name = "Customers", description = "Customer accounts: registration, and their details for the admin")
 public class CustomerController {
 
     private final CustomerService customerService;

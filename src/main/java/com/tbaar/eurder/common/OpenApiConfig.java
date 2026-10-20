@@ -30,7 +30,14 @@ import java.util.List;
 import java.util.Map;
 
 @Configuration
-@OpenAPIDefinition(info = @Info(title = "Eurder", version = "1.0", description = "Order management back-end"))
+@OpenAPIDefinition(info = @Info(title = "Eurder", version = "1.0", description = """
+        Order management back-end.
+
+        Authenticate with HTTP Basic (your email and password) through the Authorize button: \
+        each operation states the feature it requires and the roles having it.
+
+        Every error is a ProblemDetail (RFC 9457); validation errors also list the messages of each invalid field.
+        """))
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
 public class OpenApiConfig {
 

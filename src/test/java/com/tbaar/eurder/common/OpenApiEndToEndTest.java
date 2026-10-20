@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,5 +110,36 @@ class OpenApiEndToEndTest {
 
         assertThat(update).containsKeys("200", "409");
         assertThat(changeState).containsKeys("200", "409");
+    }
+
+    @Test
+    void givenASecuredEndpoint_whenReadingItsDescription_thenStatesTheRequiredFeatureAndTheRolesHavingIt() {
+        String description = apiDocs.getString("paths.'/items'.post.description");
+
+        assertThat(description).contains("Requires the MANAGE_ITEMS feature (role ADMIN)");
+    }
+
+    @Test
+    void givenThePublicRegistrationEndpoint_whenReadingItsDescription_thenStatesThatNoAuthenticationIsNeeded() {
+        String description = apiDocs.getString("paths.'/customers'.post.description");
+
+        assertThat(description).contains("Public: no authentication needed");
+    }
+
+    @Test
+    void givenTheApiDocumentation_whenReadingTheTags_thenEachTagHasADescription() {
+        List<Map<String, String>> tags = apiDocs.getList("tags");
+
+        assertThat(tags)
+                .extracting(tag -> tag.get("name"))
+                .containsExactlyInAnyOrder("Customers", "Items", "Eurders");
+        assertThat(tags).allSatisfy(tag -> assertThat(tag.get("description")).isNotBlank());
+    }
+
+    @Test
+    void givenTheApiDocumentation_whenReadingItsDescription_thenExplainsHowToAuthenticateAndTheErrorFormat() {
+        String description = apiDocs.getString("info.description");
+
+        assertThat(description).contains("HTTP Basic").contains("ProblemDetail");
     }
 }
