@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.eurder.service;
 
+import com.tbaar.eurder.feature.customer.api.AddressMapper;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
@@ -64,7 +65,7 @@ class EurderServiceTest {
 
     @BeforeEach
     void createService() {
-        eurderService = new EurderService(eurderRepository, customerRepository, itemRepository, new EurderMapper(), NEW_YEARS_EVE);
+        eurderService = new EurderService(eurderRepository, customerRepository, itemRepository, new EurderMapper(new AddressMapper()), NEW_YEARS_EVE);
     }
 
     @Test
