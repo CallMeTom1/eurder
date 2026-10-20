@@ -1,11 +1,11 @@
 package com.tbaar.eurder.feature.security.domain;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,7 +15,7 @@ class CredentialsRepositoryIntegrationTest {
     @Autowired
     private CredentialsRepository credentialsRepository;
 
-    private final String email = "jane." + UUID.randomUUID() + "@doe.be";
+    private final String email = UniqueEmail.of("jane");
 
     @Test
     void givenSavedCredentials_whenFindingByEmail_thenReturnsThem() {

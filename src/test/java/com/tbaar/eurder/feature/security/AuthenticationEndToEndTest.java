@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.security;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -12,8 +13,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
-import java.util.UUID;
-
 import static org.hamcrest.Matchers.equalTo;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -22,7 +21,7 @@ class AuthenticationEndToEndTest {
     @LocalServerPort
     private int port;
 
-    private final String email = "jane." + UUID.randomUUID() + "@doe.be";
+    private final String email = UniqueEmail.of("jane");
 
     @ParameterizedTest(name = "Authorization: \"{0}\" is rejected")
     @ValueSource(strings = {"", "Bearer some-token", "Basic !!!not-base64!!!", "Basic bm8tY29sb24="})
