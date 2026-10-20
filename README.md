@@ -65,7 +65,7 @@ Only the account creation (`POST /customers`) and the documentation are public. 
 
 Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 
-Tests are independent and repeatable: they share the same database, so every test creates its own data (unique emails with `UniqueEmail`, unique item names), only asserts on that data, and never deletes data of others. They pass in any order, alone or together.
+Tests are independent and repeatable: they share the same database, so every test creates its own data (unique emails with `UniqueEmail`, unique item names), only asserts on that data, and never deletes data of others. They pass in any order, alone or together: classes and methods run in a random order (`src/test/resources/junit-platform.properties`), so a test depending on another one fails quickly. The seed of the order is in the test reports (`junit.jupiter.execution.order.random.seed` in `target/surefire-reports/TEST-*.xml`); replay the same order with `./mvnw test -Dtest.order.seed=<seed>`.
 
 ## Stories
 
