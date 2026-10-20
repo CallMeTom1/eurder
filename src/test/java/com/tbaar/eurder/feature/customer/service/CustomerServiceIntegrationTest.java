@@ -1,12 +1,11 @@
 package com.tbaar.eurder.feature.customer.service;
 
+import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
-import com.tbaar.eurder.feature.security.domain.Role;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -39,11 +39,7 @@ class CustomerServiceIntegrationTest {
     @Autowired
     private CredentialsRepository credentialsRepository;
 
-    @AfterEach
-    void deleteRegisteredCustomers() {
-        customerRepository.deleteAll();
-        credentialsRepository.deleteAllByRole(Role.CUSTOMER);
-    }
+    private final String janeEmail = UniqueEmail.of("jane");
 
     @Test
     void givenValidRegistration_whenRegistering_thenTheCustomerIsStoredAndCanAuthenticate() {
@@ -52,7 +48,7 @@ class CustomerServiceIntegrationTest {
         CustomerDto registered = customerService.register(registration);
 
         assertThat(customerRepository.findById(registered.id())).isPresent();
-        UserDetails authenticated = userDetailsService.loadUserByUsername("jane@doe.be");
+        UserDetails authenticated = userDetailsService.loadUserByUsername(janeEmail);
         assertThat(passwordEncoder.matches("secret123", authenticated.getPassword())).isTrue();
         assertThat(authenticated.getAuthorities()).extracting(GrantedAuthority::getAuthority).contains("ORDER_ITEMS");
     }
@@ -64,23 +60,25 @@ class CustomerServiceIntegrationTest {
         Throwable thrown = catchThrowable(() -> customerService.register(registrationWithTooLongHouseNumber));
 
         assertThat(thrown).isNotNull();
-        assertThat(credentialsRepository.findByEmail("jane@doe.be")).isEmpty();
+        assertThat(credentialsRepository.findByEmail(janeEmail)).isEmpty();
     }
 
     @Test
     void givenRegisteredCustomers_whenFindingAll_thenReturnsThemSortedWithTheEmailOfTheirCredentials() {
-        customerService.register(registration("jane@doe.be", "Jane", "Doe"));
-        customerService.register(registration("zoe@adams.be", "Zoe", "Adams"));
+        String zoeEmail = UniqueEmail.of("zoe");
+        customerService.register(registration(janeEmail, "Jane", "Doe"));
+        customerService.register(registration(zoeEmail, "Zoe", "Adams"));
 
         List<CustomerDto> customers = customerService.findAll();
 
         assertThat(customers)
+                .filteredOn(customer -> Set.of(janeEmail, zoeEmail).contains(customer.email()))
                 .extracting(CustomerDto::lastName, CustomerDto::email)
-                .containsExactly(tuple("Adams", "zoe@adams.be"), tuple("Doe", "jane@doe.be"));
+                .containsExactly(tuple("Adams", zoeEmail), tuple("Doe", janeEmail));
     }
 
-    private static CreateCustomerDto registration(String houseNumber) {
-        return new CreateCustomerDto("Jane", "Doe", "jane@doe.be", "secret123",
+    private CreateCustomerDto registration(String houseNumber) {
+        return new CreateCustomerDto("Jane", "Doe", janeEmail, "secret123",
                 new AddressDto("Rue Haute", houseNumber, "1000", "Bruxelles"), "0470123456");
     }
 
