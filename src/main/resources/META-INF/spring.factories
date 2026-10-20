@@ -1,2 +1,5 @@
 org.springframework.boot.EnvironmentPostProcessor=\
 com.tbaar.eurder.common.config.RequiredConfigurationEnvironmentPostProcessor
+
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+com.tbaar.eurder.common.config.MissingConfigurationFailureAnalyzer
