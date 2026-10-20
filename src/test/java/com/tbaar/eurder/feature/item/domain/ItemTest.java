@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -47,5 +48,28 @@ class ItemTest {
         assertThat(item)
                 .extracting(Item::getName, Item::getDescription, Item::getPrice, Item::getStock)
                 .containsExactly("Armchair", "Leather armchair", new BigDecimal("150.00"), 3);
+    }
+
+    @Test
+    void givenItem_whenCreatingNewUnitsOfAState_thenReturnsThatManyAvailableUnitsOfTheItemInThatState() {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+
+        List<ItemUnit> units = item.newUnits(ItemState.DAMAGED, 3);
+
+        assertThat(units).hasSize(3).allSatisfy(unit -> {
+            assertThat(unit.getItem()).isSameAs(item);
+            assertThat(unit.getState()).isEqualTo(ItemState.DAMAGED);
+            assertThat(unit.isAvailable()).isTrue();
+        });
+    }
+
+    @ParameterizedTest(name = "{0} at 49.99 costs {1}")
+    @CsvSource({"PRISTINE, 49.99", "SLIGHTLY_DAMAGED, 47.49", "DAMAGED, 44.99"})
+    void givenItem_whenAskingThePriceOfAUnitInAState_thenAppliesTheDiscountOfThatState(ItemState state, String expectedPrice) {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 0);
+
+        BigDecimal price = item.priceFor(state);
+
+        assertThat(price).isEqualTo(new BigDecimal(expectedPrice));
     }
 }

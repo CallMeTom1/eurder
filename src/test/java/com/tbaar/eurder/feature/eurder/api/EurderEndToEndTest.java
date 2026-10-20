@@ -4,6 +4,7 @@ import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
 import io.restassured.RestAssured;
@@ -63,6 +64,9 @@ class EurderEndToEndTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private ItemUnitRepository itemUnitRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -77,6 +81,7 @@ class EurderEndToEndTest {
     @AfterEach
     void deleteCreatedData() {
         eurderRepository.deleteAll();
+        itemUnitRepository.deleteAll();
         itemRepository.deleteAll();
         customerRepository.deleteAll();
         credentialsRepository.deleteAllByRole(Role.CUSTOMER);
@@ -422,7 +427,7 @@ class EurderEndToEndTest {
 
     private String createItem(String name, String price, int stock) {
         return authenticatedAs("admin@eurder.be", "admin", """
-                {"name": "%s", "description": "%s description", "price": %s, "stock": %d}
+                {"name": "%s", "description": "%s description", "price": %s, "units": {"PRISTINE": %d}}
                 """.formatted(name, name, price, stock))
                 .post("/items")
                 .then().statusCode(HttpStatus.CREATED.value())

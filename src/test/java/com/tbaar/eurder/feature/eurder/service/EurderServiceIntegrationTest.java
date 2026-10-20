@@ -19,6 +19,7 @@ import com.tbaar.eurder.feature.eurder.exception.EurderNotFoundException;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import com.tbaar.eurder.feature.item.service.ItemService;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
@@ -81,6 +82,9 @@ class EurderServiceIntegrationTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private ItemUnitRepository itemUnitRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -102,6 +106,7 @@ class EurderServiceIntegrationTest {
     @AfterEach
     void deleteCreatedData() {
         eurderRepository.deleteAll();
+        itemUnitRepository.deleteAll();
         itemRepository.deleteAll();
         customerRepository.deleteAll();
         credentialsRepository.deleteAllByRole(Role.CUSTOMER);

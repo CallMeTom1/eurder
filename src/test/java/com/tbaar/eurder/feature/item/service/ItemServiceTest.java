@@ -1,11 +1,16 @@
 package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
+import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemState;
+import com.tbaar.eurder.feature.item.domain.ItemUnit;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.item.domain.StockUrgency;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,11 +22,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -33,48 +40,59 @@ class ItemServiceTest {
     @Mock
     private ItemRepository itemRepository;
 
+    @Mock
+    private ItemUnitRepository itemUnitRepository;
+
     private ItemService itemService;
 
     @BeforeEach
     void createService() {
-        itemService = new ItemService(itemRepository, new ItemMapper());
+        itemService = new ItemService(itemRepository, itemUnitRepository, new ItemMapper());
     }
 
     @Test
-    void givenValidItem_whenCreating_thenSavesTheItem() {
+    void givenItemWithUnitsInTwoStates_whenCreating_thenSavesTheItemAndOneUnitPerPieceInItsState() {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        itemService.create(new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"),
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1)));
 
-        ArgumentCaptor<Item> saved = ArgumentCaptor.forClass(Item.class);
-        verify(itemRepository).save(saved.capture());
-        assertThat(saved.getValue().getName()).isEqualTo("Chair");
-        assertThat(saved.getValue().getStock()).isEqualTo(10);
+        ArgumentCaptor<Item> savedItem = ArgumentCaptor.forClass(Item.class);
+        verify(itemRepository).save(savedItem.capture());
+        assertThat(savedItem.getValue().getName()).isEqualTo("Chair");
+        ArgumentCaptor<List<ItemUnit>> savedUnits = ArgumentCaptor.captor();
+        verify(itemUnitRepository).saveAll(savedUnits.capture());
+        assertThat(savedUnits.getValue())
+                .extracting(ItemUnit::getState)
+                .containsExactlyInAnyOrder(ItemState.PRISTINE, ItemState.PRISTINE, ItemState.DAMAGED);
     }
 
     @Test
-    void givenValidItem_whenCreating_thenReturnsTheSavedItemWithATwoDecimalPrice() {
+    void givenValidItem_whenCreating_thenReturnsItWithATwoDecimalPriceAndItsAvailableUnitsPerState() {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ItemDto created = itemService.create(new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49"), 10));
+        ItemDto created = itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49"),
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1)));
 
         assertThat(created.name()).isEqualTo("Chair");
-        assertThat(created.description()).isEqualTo("Wooden chair");
         assertThat(created.price()).isEqualTo(new BigDecimal("49.00"));
-        assertThat(created.stock()).isEqualTo(10);
+        assertThat(created.availableUnits()).containsExactly(
+                entry(ItemState.PRISTINE, 2L), entry(ItemState.SLIGHTLY_DAMAGED, 0L), entry(ItemState.DAMAGED, 1L));
     }
 
     @Test
-    void givenExistingItem_whenUpdating_thenReplacesItsFieldsAndReturnsTheUpdatedItem() {
+    void givenExistingItem_whenUpdating_thenReplacesItsFieldsAndReturnsItWithItsAvailableUnits() {
         UUID id = UUID.randomUUID();
         Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
         when(itemRepository.findById(id)).thenReturn(Optional.of(chair));
+        when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.PRISTINE, 10)));
 
         ItemDto updated = itemService.update(id, new ItemRequestDto("Armchair", "Leather armchair", new BigDecimal("150"), 3));
 
         assertThat(updated)
-                .extracting(ItemDto::name, ItemDto::description, ItemDto::price, ItemDto::stock)
-                .containsExactly("Armchair", "Leather armchair", new BigDecimal("150.00"), 3);
+                .extracting(ItemDto::name, ItemDto::description, ItemDto::price)
+                .containsExactly("Armchair", "Leather armchair", new BigDecimal("150.00"));
+        assertThat(updated.availableUnits()).containsEntry(ItemState.PRISTINE, 10L);
         assertThat(chair.getName()).isEqualTo("Armchair");
     }
 

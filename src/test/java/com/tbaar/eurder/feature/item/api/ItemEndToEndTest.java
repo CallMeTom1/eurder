@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.item.api;
 
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
 import io.restassured.RestAssured;
@@ -29,6 +30,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.startsWith;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ItemEndToEndTest {
@@ -40,6 +42,9 @@ class ItemEndToEndTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private ItemUnitRepository itemUnitRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -47,14 +52,17 @@ class ItemEndToEndTest {
 
     @AfterEach
     void deleteCreatedData() {
+        itemUnitRepository.deleteAll();
         itemRepository.deleteAll();
         customerRepository.deleteAll();
         credentialsRepository.deleteAllByRole(Role.CUSTOMER);
     }
 
     @Test
-    void givenValidItem_whenTheAdminPostsIt_thenReturns201WithLocationAndTheItemWithATwoDecimalPrice() {
-        RequestSpecification request = asAdmin(item("Chair", "49.9", "10"));
+    void givenValidItemWithUnitsInTwoStates_whenTheAdminPostsIt_thenReturns201WithLocationAndItsAvailableUnitsPerState() {
+        RequestSpecification request = asAdmin("""
+                {"name": "Chair", "description": "Wooden chair", "price": 49.9, "units": {"PRISTINE": 8, "DAMAGED": 2}}
+                """);
 
         Response response = request.post("/items");
 
@@ -63,27 +71,54 @@ class ItemEndToEndTest {
                 .body("name", equalTo("Chair"))
                 .body("description", equalTo("Wooden chair"))
                 .body("price", equalTo(new BigDecimal("49.90")))
-                .body("stock", equalTo(10))
-                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "stock"))
+                .body("availableUnits.PRISTINE", equalTo(8))
+                .body("availableUnits.SLIGHTLY_DAMAGED", equalTo(0))
+                .body("availableUnits.DAMAGED", equalTo(2))
+                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits"))
                 .extract().path("id");
         response.then().header(HttpHeaders.LOCATION, endsWith("/items/" + id));
     }
 
     @Test
-    void givenItemOutOfStock_whenTheAdminPostsIt_thenReturns201() {
-        RequestSpecification request = asAdmin(item("Chair", "49.99", "0"));
+    void givenItemWithoutAnyUnit_whenTheAdminPostsIt_thenReturns201WithZeroUnitsInEveryState() {
+        RequestSpecification request = asAdmin(newItem("Chair", "49.99", 0));
 
         Response response = request.post("/items");
 
         response.then()
                 .statusCode(HttpStatus.CREATED.value())
-                .body("stock", equalTo(0));
+                .body("availableUnits.values()", contains(0, 0, 0));
+    }
+
+    @Test
+    void givenMoreThanAThousandUnitsOfAState_whenTheAdminPostsAnItem_thenReturns400NamingTheState() {
+        RequestSpecification request = asAdmin(newItem("Chair", "49.99", 1001));
+
+        Response response = request.post("/items");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.'units[PRISTINE]'", contains("Units per state must be at most 1000"));
+        assertThat(itemRepository.count()).isZero();
+    }
+
+    @Test
+    void givenAnUnknownState_whenTheAdminPostsAnItem_thenReturns400NamingTheField() {
+        RequestSpecification request = asAdmin("""
+                {"name": "Chair", "description": "Wooden chair", "price": 49.99, "units": {"BROKEN": 1}}
+                """);
+
+        Response response = request.post("/items");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("detail", startsWith("Invalid value for field 'units"));
     }
 
     @Test
     void givenTheNameOfAnExistingItem_whenTheAdminPostsIt_thenBothItemsExist() {
-        asAdmin(item("Chair", "49.99", "10")).post("/items");
-        RequestSpecification request = asAdmin(item("Chair", "19.99", "5"));
+        asAdmin(newItem("Chair", "49.99", 10)).post("/items");
+        RequestSpecification request = asAdmin(newItem("Chair", "19.99", 5));
 
         Response response = request.post("/items");
 
@@ -94,7 +129,7 @@ class ItemEndToEndTest {
     @Test
     void givenSeveralInvalidFields_whenTheAdminPostsAnItem_thenReturns400ListingEachFieldWithItsMessage() {
         RequestSpecification request = asAdmin("""
-                {"name": " ", "description": "Wooden chair", "price": 0, "stock": -1}
+                {"name": " ", "description": "Wooden chair", "price": 0, "units": {"PRISTINE": -1}}
                 """);
 
         Response response = request.post("/items");
@@ -102,15 +137,15 @@ class ItemEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", equalTo("Validation failed"))
-                .body("errors.keySet()", containsInAnyOrder("name", "price", "stock"))
+                .body("errors.keySet()", containsInAnyOrder("name", "price", "units[PRISTINE]"))
                 .body("errors.name", contains("Name is required"))
                 .body("errors.price", contains("Price must be greater than 0"))
-                .body("errors.stock", contains("Stock must be 0 or more"));
+                .body("errors.'units[PRISTINE]'", contains("Units per state must be 0 or more"));
     }
 
     @Test
     void givenPriceWithThreeDecimals_whenTheAdminPostsAnItem_thenReturns400InsteadOfRounding() {
-        RequestSpecification request = asAdmin(item("Chair", "9.999", "10"));
+        RequestSpecification request = asAdmin(newItem("Chair", "9.999", 10));
 
         Response response = request.post("/items");
 
@@ -121,7 +156,7 @@ class ItemEndToEndTest {
     }
 
     @Test
-    void givenMissingPriceAndStock_whenTheAdminPostsAnItem_thenReturns400NamingBoth() {
+    void givenMissingPriceAndUnits_whenTheAdminPostsAnItem_thenReturns400NamingBoth() {
         RequestSpecification request = asAdmin("""
                 {"name": "Chair", "description": "Wooden chair"}
                 """);
@@ -131,12 +166,12 @@ class ItemEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("errors.price", contains("Price is required"))
-                .body("errors.stock", contains("Stock is required"));
+                .body("errors.units", contains("Units are required"));
     }
 
     @Test
     void givenPriceSentAsText_whenTheAdminPostsAnItem_thenReturns400NamingTheField() {
-        RequestSpecification request = asAdmin(item("Chair", "\"cheap\"", "10"));
+        RequestSpecification request = asAdmin(newItem("Chair", "\"cheap\"", 10));
 
         Response response = request.post("/items");
 
@@ -148,7 +183,7 @@ class ItemEndToEndTest {
     @Test
     void givenACustomer_whenPostingAnItem_thenReturns403AndStoresNothing() {
         registerJane();
-        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", item("Chair", "49.99", "10"));
+        RequestSpecification request = authenticatedAs("jane@doe.be", "secret123", newItem("Chair", "49.99", 10));
 
         Response response = request.post("/items");
 
@@ -160,7 +195,7 @@ class ItemEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenPostingAnItem_thenReturns401WithABasicChallenge() {
-        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(item("Chair", "49.99", "10"));
+        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(newItem("Chair", "49.99", 10));
 
         Response response = request.post("/items");
 
@@ -181,8 +216,7 @@ class ItemEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("id", equalTo(id))
                 .body("name", equalTo("Armchair"))
-                .body("price", equalTo(new BigDecimal("150.00")))
-                .body("stock", equalTo(3));
+                .body("price", equalTo(new BigDecimal("150.00")));
         assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Armchair");
     }
 
@@ -338,7 +372,7 @@ class ItemEndToEndTest {
     }
 
     private String createItem(String name, int stock) {
-        return asAdmin(item(name, "49.99", String.valueOf(stock))).post("/items")
+        return asAdmin(newItem(name, "49.99", stock)).post("/items")
                 .then().statusCode(HttpStatus.CREATED.value())
                 .extract().path("id");
     }
@@ -366,6 +400,12 @@ class ItemEndToEndTest {
                 .port(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
                 .auth().preemptive().basic(email, password);
+    }
+
+    private static String newItem(String name, String price, int pristineUnits) {
+        return """
+                {"name": "%s", "description": "Wooden chair", "price": %s, "units": {"PRISTINE": %d}}
+                """.formatted(name, price, pristineUnits);
     }
 
     private static String item(String name, String price, String stock) {

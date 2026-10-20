@@ -1,9 +1,13 @@
 package com.tbaar.eurder.feature.item.service;
 
+import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
+import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemState;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +18,13 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.tuple;
 
 @SpringBootTest
 class ItemServiceIntegrationTest {
@@ -29,16 +36,21 @@ class ItemServiceIntegrationTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private ItemUnitRepository itemUnitRepository;
+
+    @Autowired
     private PlatformTransactionManager transactionManager;
 
     @AfterEach
     void deleteCreatedItems() {
+        itemUnitRepository.deleteAll();
         itemRepository.deleteAll();
     }
 
     @Test
-    void givenValidItem_whenCreating_thenTheItemIsStoredUnderTheReturnedId() {
-        ItemRequestDto request = new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.9"), 0);
+    void givenValidItemWithUnits_whenCreating_thenTheItemAndItsAvailableUnitsAreStored() {
+        CreateItemDto request = new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.9"),
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1));
 
         ItemDto created = itemService.create(request);
 
@@ -46,8 +58,10 @@ class ItemServiceIntegrationTest {
         assertThat(stored).hasValueSatisfying(item -> {
             assertThat(item.getName()).isEqualTo("Chair");
             assertThat(item.getPrice()).isEqualTo(new BigDecimal("49.90"));
-            assertThat(item.getStock()).isZero();
         });
+        assertThat(itemUnitRepository.countAvailableUnits(List.of(created.id())))
+                .extracting(AvailableUnits::state, AvailableUnits::count)
+                .containsExactlyInAnyOrder(tuple(ItemState.PRISTINE, 2L), tuple(ItemState.DAMAGED, 1L));
     }
 
     @Test
