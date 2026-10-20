@@ -16,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/eurders")
@@ -67,5 +69,19 @@ public class EurderController {
     public List<ShippingEurderDto> findShippingToday(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         securityService.validateAuthorization(authorization, Feature.VIEW_SHIPPING_TODAY);
         return eurderService.findShippingToday();
+    }
+
+    @PostMapping(path = "/{id}/reorder", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Order again the items of one of the authenticated customer's eurders, at the current prices")
+    @SecurityRequirement(name = "basicAuth")
+    public ResponseEntity<EurderDto> reorder(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+                                             @PathVariable UUID id) {
+        Credentials customer = securityService.validateAuthorization(authorization, Feature.ORDER_ITEMS);
+        EurderDto reordered = eurderService.reorder(customer.getId(), id);
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/eurders/{id}")
+                .buildAndExpand(reordered.id())
+                .toUri();
+        return ResponseEntity.created(location).body(reordered);
     }
 }
