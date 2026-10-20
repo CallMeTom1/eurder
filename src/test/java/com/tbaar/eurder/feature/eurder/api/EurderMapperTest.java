@@ -1,5 +1,7 @@
 package com.tbaar.eurder.feature.eurder.api;
 
+import com.tbaar.eurder.feature.customer.api.AddressMapper;
+import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.domain.Address;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
@@ -7,8 +9,11 @@ import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingItemGroupDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
+import com.tbaar.eurder.feature.eurder.domain.ItemGroupToShip;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
@@ -18,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,7 +32,7 @@ class EurderMapperTest {
     private static final LocalDate ORDER_DATE = LocalDate.of(2026, 12, 31);
     private static final Instant ORDERED_AT = Instant.parse("2026-12-31T09:00:00Z");
 
-    private final EurderMapper eurderMapper = new EurderMapper();
+    private final EurderMapper eurderMapper = new EurderMapper(new AddressMapper());
 
     @Test
     void givenEurder_whenMappingToDto_thenExposesEachItemGroupWithItsSubtotalAndTheTotalPrice() {
@@ -71,6 +77,25 @@ class EurderMapperTest {
 
         assertThat(report.eurders()).isEmpty();
         assertThat(report.totalPrice()).isEqualTo(new BigDecimal("0.00"));
+    }
+
+    @Test
+    void givenItemGroupsToShipFromTwoEurders_whenMappingToShippingDtos_thenGroupsThemByEurderInTheGivenOrder() {
+        UUID janesEurder = UUID.randomUUID();
+        UUID zoesEurder = UUID.randomUUID();
+        Address janesAddress = new Address("Rue Haute", "1", "1000", "Bruxelles");
+        List<ItemGroupToShip> toShip = List.of(
+                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Chair", 3),
+                new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Lamp", 1),
+                new ItemGroupToShip(zoesEurder, "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "Chair", 2));
+
+        List<ShippingEurderDto> shipping = eurderMapper.toShippingDtos(toShip);
+
+        assertThat(shipping).containsExactly(
+                new ShippingEurderDto(janesEurder, "Jane Doe", new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), List.of(
+                        new ShippingItemGroupDto("Chair", 3), new ShippingItemGroupDto("Lamp", 1))),
+                new ShippingEurderDto(zoesEurder, "Zoe Adams", new AddressDto("Rue Neuve", "8", "1000", "Bruxelles"), List.of(
+                        new ShippingItemGroupDto("Chair", 2))));
     }
 
     private static Customer aCustomer() {

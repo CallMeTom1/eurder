@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.eurder.service;
 
+import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
@@ -10,6 +11,8 @@ import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingEurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ShippingItemGroupDto;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
 import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.item.api.dto.ItemRequestDto;
@@ -33,7 +36,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -47,16 +49,20 @@ import static org.assertj.core.api.Assertions.tuple;
 @SpringBootTest
 class EurderServiceIntegrationTest {
 
+    private static final ZonedDateTime NEW_YEARS_EVE = ZonedDateTime.of(2026, 12, 31, 10, 0, 0, 0, ZoneId.of("Europe/Brussels"));
+
     @TestConfiguration
-    static class FixedClockConfig {
+    static class MutableClockConfig {
 
         @Bean
         @Primary
-        Clock newYearsEveClock() {
-            ZoneId brussels = ZoneId.of("Europe/Brussels");
-            return Clock.fixed(ZonedDateTime.of(2026, 12, 31, 10, 0, 0, 0, brussels).toInstant(), brussels);
+        MutableClock testClock() {
+            return new MutableClock(NEW_YEARS_EVE);
         }
     }
+
+    @Autowired
+    private MutableClock clock;
 
     @Autowired
     private EurderService eurderService;
@@ -86,6 +92,7 @@ class EurderServiceIntegrationTest {
 
     @BeforeEach
     void registerJane() {
+        clock.setTo(NEW_YEARS_EVE);
         customerService.register(new CreateCustomerDto("Jane", "Doe", "jane@doe.be", "secret123",
                 new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
         janeCredentialsId = credentialsRepository.findByEmail("jane@doe.be").orElseThrow().getId();
@@ -175,6 +182,24 @@ class EurderServiceIntegrationTest {
         assertThat(report.eurders()).extracting(EurderReportDto::totalPrice)
                 .containsExactlyInAnyOrder(new BigDecimal("99.98"), new BigDecimal("49.99"));
         assertThat(report.totalPrice()).isEqualTo(new BigDecimal("149.97"));
+    }
+
+    @Test
+    void givenAnEurderPlacedYesterday_whenFindingWhatShipsToday_thenListsOnlyItsItemGroupInStockWithTheCustomerAddress() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
+                new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
+        clock.setTo(NEW_YEARS_EVE.plusDays(1));
+
+        List<ShippingEurderDto> shipping = eurderService.findShippingToday();
+
+        assertThat(shipping).singleElement().satisfies(toShip -> {
+            assertThat(toShip.eurderId()).isEqualTo(eurder.id());
+            assertThat(toShip.customerName()).isEqualTo("Jane Doe");
+            assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles"));
+            assertThat(toShip.itemGroups()).containsExactly(new ShippingItemGroupDto("Chair", 3));
+        });
     }
 
     private UUID registerCustomer(String email) {
