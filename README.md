@@ -67,22 +67,6 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | E | Item units and states (optional extension) | Done |
 | C | Required configuration validated at startup (technical) | To do |
 
-## Ordering rules
-
-- An item group ships the next day when the stock covers its whole amount, otherwise one week later.
-- Item groups are handled in the order they are sent: ordering the same item twice, the second group sees the stock left by the first.
-- The stock never goes below zero.
-- An item group copies the name and price of the item, so later price changes do not affect past eurders.
-- Two eurders changing the same item at the same time: the last one to commit gets a `409` and can retry (optimistic locking with `@Version`).
-- The report of a customer lists their eurders oldest first, at the prices copied when they ordered.
-- What ships today is grouped by eurder, with the name and address of the customer.
-- Reordering creates a new eurder with the same items and amounts, at the current prices and stock. An eurder of another customer is answered with a `404`, as if it did not exist.
-
-### Known limitations
-
-The stock does not keep track of the units still owed to customers. Ordering 10 items with 5 in stock ships the whole item group a week later and sets the stock to 0: the 5 missing units are only visible in the item groups waiting to be shipped (Story 9).
-
-Updating an item replaces all of its fields. Two admins updating the same item at the same time: the last one wins, since the request does not carry the version of the item it was based on.
 ## Item units and states
 
 Optional extension of the assignment: every piece in stock has a state, and damaged pieces are sold at a discount.
