@@ -54,4 +54,12 @@ public class Item {
     public int getStock() {
         return stock;
     }
+
+    public boolean isInStock(int amount) {
+        return stock >= amount;
+    }
+
+    public void removeFromStock(int amount) {
+        stock = Math.max(0, stock - amount);
+    }
 }
