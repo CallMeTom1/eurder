@@ -63,7 +63,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 5 | View report of orders | Nice to have |
 | 6 | Reorder an existing order | Nice to have |
 | 9 | Items shipping today | Nice to have |
-| 10 | Item overview | Nice to have |
+| 10 | Item overview | Done |
 | C | Required configuration validated at startup (technical) | To do |
 
 ## Ordering rules
