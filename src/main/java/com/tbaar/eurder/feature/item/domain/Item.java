@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -24,6 +25,9 @@ public class Item {
     private BigDecimal price;
 
     private int stock;
+
+    @Version
+    private long version;
 
     protected Item() {
     }

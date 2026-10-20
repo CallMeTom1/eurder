@@ -22,6 +22,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -66,6 +70,9 @@ class EurderServiceIntegrationTest {
 
     @Autowired
     private CredentialsRepository credentialsRepository;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private UUID janeCredentialsId;
 
@@ -113,5 +120,23 @@ class EurderServiceIntegrationTest {
         assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
         assertThat(eurderRepository.count()).isZero();
         assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(10);
+    }
+
+    @Test
+    void givenTheStockChangedByAnotherTransactionMeanwhile_whenTheEurderCommits_thenFailsAndKeepsTheOtherChange() {
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        TransactionTemplate eurderTransaction = new TransactionTemplate(transactionManager);
+        TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
+        concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+        Throwable thrown = catchThrowable(() -> eurderTransaction.executeWithoutResult(eurderStatus -> {
+            eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 3))));
+            concurrentTransaction.executeWithoutResult(concurrentStatus ->
+                    itemRepository.findById(chair.getId()).orElseThrow().removeFromStock(4));
+        }));
+
+        assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
+        assertThat(eurderRepository.count()).isZero();
+        assertThat(itemRepository.findById(chair.getId()).orElseThrow().getStock()).isEqualTo(6);
     }
 }

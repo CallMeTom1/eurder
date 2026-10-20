@@ -6,6 +6,7 @@ import com.tbaar.eurder.common.exception.NotFoundException;
 import com.tbaar.eurder.common.exception.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -127,6 +128,16 @@ class GlobalExceptionHandlerTest {
 
         assertThat(errorsOf(response)).isEqualTo(Map.of(
                 "password", List.of("Password is required", "Password must be between 8 and 72 characters")));
+    }
+
+    @Test
+    void givenOptimisticLockingFailure_whenHandled_thenReturns409AskingTheClientToRetry() {
+        OptimisticLockingFailureException exception = new OptimisticLockingFailureException("Row was updated by another transaction");
+
+        ProblemDetail response = handler.handleConcurrentModification(exception);
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(response.getDetail()).isEqualTo("The data was modified by another request, please retry");
     }
 
     @Test
