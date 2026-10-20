@@ -17,6 +17,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.tuple;
 class EurderRepositoryIntegrationTest {
 
     private static final LocalDate ORDER_DATE = LocalDate.of(2026, 12, 31);
+    private static final Instant ORDERED_AT = Instant.parse("2026-12-31T09:00:00Z");
 
     @Autowired
     private EurderRepository eurderRepository;
@@ -52,13 +54,14 @@ class EurderRepositoryIntegrationTest {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
         Eurder saved = eurderRepository.saveAndFlush(new Eurder(jane, List.of(
                 ItemGroup.of(table, 1, ORDER_DATE),
-                ItemGroup.of(chair, 2, ORDER_DATE))));
+                ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT));
         entityManager.clear();
 
         Optional<Eurder> found = eurderRepository.findById(saved.getId());
 
         assertThat(found).hasValueSatisfying(eurder -> {
             assertThat(eurder.getCustomer().getId()).isEqualTo(jane.getId());
+            assertThat(eurder.getOrderedAt()).isEqualTo(ORDERED_AT);
             assertThat(eurder.getItemGroups())
                     .extracting(ItemGroup::getItemId, ItemGroup::getItemName, ItemGroup::getItemPrice, ItemGroup::getAmount, ItemGroup::getShippingDate)
                     .containsExactly(
@@ -72,7 +75,7 @@ class EurderRepositoryIntegrationTest {
     void givenEurderWithTwoItemGroups_whenSavingIt_thenRunsOnlyThreeInsertsAndNoUpdate() {
         Customer jane = customerRepository.saveAndFlush(aCustomer());
         Item chair = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, 1, ORDER_DATE), ItemGroup.of(chair, 2, ORDER_DATE)));
+        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, 1, ORDER_DATE), ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT);
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
@@ -81,8 +84,48 @@ class EurderRepositoryIntegrationTest {
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(3);
     }
 
+    @Test
+    void givenEurdersOfTwoCustomers_whenFindingByCredentials_thenReturnsOnlyThatCustomersEurdersOldestFirst() {
+        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
+        Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Eurder janesLatest = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T15:00:00Z"));
+        eurderRepository.save(anEurder(zoe, chair, 1, "2026-12-31T12:00:00Z"));
+        Eurder janesFirst = eurderRepository.saveAndFlush(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
+        entityManager.clear();
+
+        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(jane.getCredentials().getId());
+
+        assertThat(eurders).extracting(Eurder::getId).containsExactly(janesFirst.getId(), janesLatest.getId());
+    }
+
+    @Test
+    void givenThreeEurdersWithItemGroups_whenFindingByCredentialsAndReadingTheirItemGroups_thenRunsASingleQuery() {
+        Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        eurderRepository.save(anEurder(jane, chair, 1, "2026-12-29T09:00:00Z"));
+        eurderRepository.save(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
+        eurderRepository.saveAndFlush(anEurder(jane, chair, 3, "2026-12-31T09:00:00Z"));
+        entityManager.clear();
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        List<Eurder> eurders = eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(jane.getCredentials().getId());
+
+        assertThat(eurders).flatExtracting(Eurder::getItemGroups).extracting(ItemGroup::getAmount).containsExactly(1, 2, 3);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+    }
+
+    private static Eurder anEurder(Customer customer, Item item, int amount, String orderedAt) {
+        return new Eurder(customer, List.of(ItemGroup.of(item, amount, ORDER_DATE)), Instant.parse(orderedAt));
+    }
+
     private static Customer aCustomer() {
-        return new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER),
+        return aCustomer("jane@doe.be");
+    }
+
+    private static Customer aCustomer(String email) {
+        return new Customer(new Credentials(email, "hash", Role.CUSTOMER),
                 "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
     }
 }

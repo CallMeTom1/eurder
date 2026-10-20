@@ -60,7 +60,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 | 7 | View all customers | Done |
 | 8 | View a single customer | Done |
 | 4 | Update an item | Done |
-| 5 | View report of orders | Nice to have |
+| 5 | View report of orders | Done |
 | 6 | Reorder an existing order | Nice to have |
 | 9 | Items shipping today | Nice to have |
 | 10 | Item overview | Done |
@@ -73,6 +73,7 @@ Tests run on in-memory H2 with the same Flyway scripts: no database needed.
 - The stock never goes below zero.
 - An item group copies the name and price of the item, so later price changes do not affect past eurders.
 - Two eurders changing the same item at the same time: the last one to commit gets a `409` and can retry (optimistic locking with `@Version`).
+- The report of a customer lists their eurders oldest first, at the prices copied when they ordered.
 
 ### Known limitations
 

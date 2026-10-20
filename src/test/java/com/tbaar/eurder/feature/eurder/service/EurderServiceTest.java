@@ -6,10 +6,13 @@ import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.api.EurderMapper;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
+import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupDto;
 import com.tbaar.eurder.feature.eurder.api.dto.ItemGroupRequestDto;
+import com.tbaar.eurder.feature.eurder.api.dto.ReportDto;
 import com.tbaar.eurder.feature.eurder.domain.Eurder;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.feature.eurder.domain.ItemGroup;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
@@ -18,6 +21,7 @@ import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -83,6 +87,19 @@ class EurderServiceTest {
     }
 
     @Test
+    void givenValidOrder_whenOrdering_thenStampsTheEurderWithTheCurrentInstantOfTheClock() {
+        givenTheCustomerExists();
+        givenItem(CHAIR_ID, "Chair", "49.99", 10);
+        when(eurderRepository.save(any(Eurder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        eurderService.order(CREDENTIALS_ID, request(new ItemGroupRequestDto(CHAIR_ID, 1)));
+
+        ArgumentCaptor<Eurder> saved = ArgumentCaptor.forClass(Eurder.class);
+        verify(eurderRepository).save(saved.capture());
+        assertThat(saved.getValue().getOrderedAt()).isEqualTo(NEW_YEARS_EVE.instant());
+    }
+
+    @Test
     void givenTheSameItemTwice_whenOrdering_thenTheSecondItemGroupSeesTheStockLeftByTheFirst() {
         givenTheCustomerExists();
         Item chair = givenItem(CHAIR_ID, "Chair", "49.99", 3);
@@ -123,10 +140,27 @@ class EurderServiceTest {
                 .hasMessage("No customer linked to credentials " + CREDENTIALS_ID);
     }
 
+    @Test
+    void givenEurdersOfTheCustomer_whenFindingTheReport_thenReturnsThemWithTheTotalOfAllEurders() {
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+        when(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(CREDENTIALS_ID)).thenReturn(List.of(
+                new Eurder(aCustomer(), List.of(ItemGroup.of(chair, 2, LocalDate.of(2026, 12, 30))), NEW_YEARS_EVE.instant()),
+                new Eurder(aCustomer(), List.of(ItemGroup.of(chair, 1, LocalDate.of(2026, 12, 31))), NEW_YEARS_EVE.instant())));
+
+        ReportDto report = eurderService.findReport(CREDENTIALS_ID);
+
+        assertThat(report.eurders()).extracting(EurderReportDto::totalPrice)
+                .containsExactly(new BigDecimal("99.98"), new BigDecimal("49.99"));
+        assertThat(report.totalPrice()).isEqualTo(new BigDecimal("149.97"));
+    }
+
     private void givenTheCustomerExists() {
-        Customer jane = new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER), "Jane", "Doe",
+        when(customerRepository.findByCredentialsId(CREDENTIALS_ID)).thenReturn(Optional.of(aCustomer()));
+    }
+
+    private static Customer aCustomer() {
+        return new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER), "Jane", "Doe",
                 new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
-        when(customerRepository.findByCredentialsId(CREDENTIALS_ID)).thenReturn(Optional.of(jane));
     }
 
     private Item givenItem(UUID id, String name, String price, int stock) {

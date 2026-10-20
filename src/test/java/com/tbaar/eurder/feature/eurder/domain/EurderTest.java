@@ -8,6 +8,7 @@ import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,12 +17,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EurderTest {
 
     private static final LocalDate ORDER_DATE = LocalDate.of(2026, 12, 31);
+    private static final Instant ORDERED_AT = Instant.parse("2026-12-31T09:00:00Z");
 
     @Test
     void givenSeveralItemGroups_whenComputingTotalPrice_thenReturnsTheExactSumOfTheirSubtotals() {
         Eurder eurder = new Eurder(aCustomer(), List.of(
                 ItemGroup.of(anItem("0.10"), 3, ORDER_DATE),
-                ItemGroup.of(anItem("49.99"), 2, ORDER_DATE)));
+                ItemGroup.of(anItem("49.99"), 2, ORDER_DATE)), ORDERED_AT);
 
         BigDecimal total = eurder.totalPrice();
 
@@ -33,7 +35,7 @@ class EurderTest {
         ItemGroup chairs = ItemGroup.of(anItem("49.99"), 2, ORDER_DATE);
         ItemGroup tables = ItemGroup.of(anItem("199.00"), 1, ORDER_DATE);
 
-        Eurder eurder = new Eurder(aCustomer(), List.of(chairs, tables));
+        Eurder eurder = new Eurder(aCustomer(), List.of(chairs, tables), ORDERED_AT);
 
         assertThat(eurder.getItemGroups()).containsExactly(chairs, tables);
     }
@@ -44,7 +46,7 @@ class EurderTest {
                 ItemGroup.of(anItem("49.99"), 2, ORDER_DATE),
                 ItemGroup.of(anItem("199.00"), 1, ORDER_DATE));
 
-        Eurder eurder = new Eurder(aCustomer(), itemGroups);
+        Eurder eurder = new Eurder(aCustomer(), itemGroups, ORDERED_AT);
 
         assertThat(eurder.getItemGroups()).extracting(ItemGroup::getLineNumber).containsExactly(1, 2);
     }
