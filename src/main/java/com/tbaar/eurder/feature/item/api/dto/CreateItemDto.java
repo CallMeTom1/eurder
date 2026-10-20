@@ -1,6 +1,8 @@
 package com.tbaar.eurder.feature.item.api.dto;
 
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,8 +10,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
-public record ItemRequestDto(
+public record CreateItemDto(
         @NotBlank(message = "Name is required")
         @Size(max = 255, message = "Name must be at most 255 characters")
         String name,
@@ -23,7 +26,10 @@ public record ItemRequestDto(
         @Digits(integer = 8, fraction = 2, message = "Price must have at most 8 digits before and 2 after the decimal point")
         BigDecimal price,
 
-        @NotNull(message = "Stock is required")
-        @PositiveOrZero(message = "Stock must be 0 or more")
-        Integer stock) {
+        @NotNull(message = "Units are required")
+        Map<ItemState,
+                @NotNull(message = "Units per state are required")
+                @PositiveOrZero(message = "Units per state must be 0 or more")
+                @Max(value = 1000, message = "Units per state must be at most 1000")
+                Integer> units) {
 }

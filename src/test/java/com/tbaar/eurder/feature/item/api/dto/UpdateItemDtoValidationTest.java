@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ItemRequestDtoValidationTest {
+class UpdateItemDtoValidationTest {
 
     private static ValidatorFactory validatorFactory;
     private static Validator validator;
@@ -38,18 +38,9 @@ class ItemRequestDtoValidationTest {
 
     @Test
     void givenCompleteItem_whenValidating_thenHasNoViolation() {
-        ItemRequestDto dto = validItem();
+        UpdateItemDto dto = validItem();
 
-        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
-
-        assertThat(violations).isEmpty();
-    }
-
-    @Test
-    void givenItemOutOfStock_whenValidating_thenHasNoViolation() {
-        ItemRequestDto dto = withStock(0);
-
-        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
+        Set<ConstraintViolation<UpdateItemDto>> violations = validator.validate(dto);
 
         assertThat(violations).isEmpty();
     }
@@ -57,16 +48,16 @@ class ItemRequestDtoValidationTest {
     @ParameterizedTest(name = "price {0} is accepted")
     @ValueSource(strings = {"0.01", "10", "9.9", "99999999.99"})
     void givenPositivePriceWithAtMostTwoDecimals_whenValidating_thenHasNoViolation(String price) {
-        ItemRequestDto dto = withPrice(new BigDecimal(price));
+        UpdateItemDto dto = withPrice(new BigDecimal(price));
 
-        Set<ConstraintViolation<ItemRequestDto>> violations = validator.validate(dto);
+        Set<ConstraintViolation<UpdateItemDto>> violations = validator.validate(dto);
 
         assertThat(violations).isEmpty();
     }
 
     @ParameterizedTest(name = "{0} = \"{1}\" is rejected")
     @MethodSource("invalidFields")
-    void givenOneInvalidField_whenValidating_thenReportsThatFieldWithItsMessage(String field, ItemRequestDto dto, String expectedMessage) {
+    void givenOneInvalidField_whenValidating_thenReportsThatFieldWithItsMessage(String field, UpdateItemDto dto, String expectedMessage) {
         Map<String, Set<String>> messagesByField = messagesByField(validator.validate(dto));
 
         assertThat(messagesByField).containsOnlyKeys(field);
@@ -84,35 +75,29 @@ class ItemRequestDtoValidationTest {
                 Arguments.of("price", withPrice(BigDecimal.ZERO), "Price must be greater than 0"),
                 Arguments.of("price", withPrice(new BigDecimal("-1.50")), "Price must be greater than 0"),
                 Arguments.of("price", withPrice(new BigDecimal("9.999")), "Price must have at most 8 digits before and 2 after the decimal point"),
-                Arguments.of("price", withPrice(new BigDecimal("100000000")), "Price must have at most 8 digits before and 2 after the decimal point"),
-                Arguments.of("stock", withStock(null), "Stock is required"),
-                Arguments.of("stock", withStock(-1), "Stock must be 0 or more")
+                Arguments.of("price", withPrice(new BigDecimal("100000000")), "Price must have at most 8 digits before and 2 after the decimal point")
         );
     }
 
-    private static Map<String, Set<String>> messagesByField(Set<ConstraintViolation<ItemRequestDto>> violations) {
+    private static Map<String, Set<String>> messagesByField(Set<ConstraintViolation<UpdateItemDto>> violations) {
         return violations.stream().collect(Collectors.groupingBy(
                 violation -> violation.getPropertyPath().toString(),
                 Collectors.mapping(ConstraintViolation::getMessage, Collectors.toSet())));
     }
 
-    private static ItemRequestDto validItem() {
-        return new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), 10);
+    private static UpdateItemDto validItem() {
+        return new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"));
     }
 
-    private static ItemRequestDto withName(String name) {
-        return new ItemRequestDto(name, "Wooden chair", new BigDecimal("49.99"), 10);
+    private static UpdateItemDto withName(String name) {
+        return new UpdateItemDto(name, "Wooden chair", new BigDecimal("49.99"));
     }
 
-    private static ItemRequestDto withDescription(String description) {
-        return new ItemRequestDto("Chair", description, new BigDecimal("49.99"), 10);
+    private static UpdateItemDto withDescription(String description) {
+        return new UpdateItemDto("Chair", description, new BigDecimal("49.99"));
     }
 
-    private static ItemRequestDto withPrice(BigDecimal price) {
-        return new ItemRequestDto("Chair", "Wooden chair", price, 10);
-    }
-
-    private static ItemRequestDto withStock(Integer stock) {
-        return new ItemRequestDto("Chair", "Wooden chair", new BigDecimal("49.99"), stock);
+    private static UpdateItemDto withPrice(BigDecimal price) {
+        return new UpdateItemDto("Chair", "Wooden chair", price);
     }
 }

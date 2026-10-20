@@ -36,6 +36,7 @@ public class EurderMapper {
     private ItemGroupDto toDto(ItemGroup itemGroup) {
         return new ItemGroupDto(itemGroup.getItemId(),
                 itemGroup.getItemName(),
+                itemGroup.getItemState(),
                 itemGroup.getItemPrice(),
                 itemGroup.getAmount(),
                 itemGroup.subtotal(),
@@ -56,7 +57,7 @@ public class EurderMapper {
     }
 
     private ItemGroupReportDto toReportDto(ItemGroup itemGroup) {
-        return new ItemGroupReportDto(itemGroup.getItemName(), itemGroup.getAmount(), itemGroup.subtotal());
+        return new ItemGroupReportDto(itemGroup.getItemName(), itemGroup.getItemState(), itemGroup.getAmount(), itemGroup.subtotal());
     }
 
     public List<ShippingEurderDto> toShippingDtos(List<ItemGroupToShip> itemGroups) {
@@ -73,7 +74,7 @@ public class EurderMapper {
                 first.customerFirstName() + " " + first.customerLastName(),
                 addressMapper.toDto(first.address()),
                 itemGroupsOfOneEurder.stream()
-                        .map(itemGroup -> new ShippingItemGroupDto(itemGroup.itemName(), itemGroup.amount()))
+                        .map(itemGroup -> new ShippingItemGroupDto(itemGroup.itemName(), itemGroup.itemState(), itemGroup.amount()))
                         .toList());
     }
 }

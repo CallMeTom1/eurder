@@ -5,6 +5,7 @@ import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemState;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
 import jakarta.persistence.EntityManagerFactory;
@@ -50,11 +51,11 @@ class EurderRepositoryIntegrationTest {
     @Test
     void givenEurderWithItemGroups_whenSavingIt_thenTheItemGroupsAreStoredTooInTheirOrder() {
         Customer jane = customerRepository.save(aCustomer());
-        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00")));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Eurder saved = eurderRepository.saveAndFlush(new Eurder(jane, List.of(
-                ItemGroup.of(table, 1, ORDER_DATE),
-                ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT));
+                ItemGroup.of(table, ItemState.PRISTINE, 1, 0, ORDER_DATE),
+                ItemGroup.of(chair, ItemState.PRISTINE, 2, 10, ORDER_DATE)), ORDERED_AT));
         entityManager.clear();
 
         Optional<Eurder> found = eurderRepository.findById(saved.getId());
@@ -74,8 +75,8 @@ class EurderRepositoryIntegrationTest {
     @Test
     void givenEurderWithTwoItemGroups_whenSavingIt_thenRunsOnlyThreeInsertsAndNoUpdate() {
         Customer jane = customerRepository.saveAndFlush(aCustomer());
-        Item chair = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
-        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, 1, ORDER_DATE), ItemGroup.of(chair, 2, ORDER_DATE)), ORDERED_AT);
+        Item chair = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
+        Eurder eurder = new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 1, 10, ORDER_DATE), ItemGroup.of(chair, ItemState.PRISTINE, 2, 10, ORDER_DATE)), ORDERED_AT);
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
 
@@ -88,7 +89,7 @@ class EurderRepositoryIntegrationTest {
     void givenEurdersOfTwoCustomers_whenFindingByCredentials_thenReturnsOnlyThatCustomersEurdersOldestFirst() {
         Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
         Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Eurder janesLatest = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T15:00:00Z"));
         eurderRepository.save(anEurder(zoe, chair, 1, "2026-12-31T12:00:00Z"));
         Eurder janesFirst = eurderRepository.saveAndFlush(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
@@ -102,7 +103,7 @@ class EurderRepositoryIntegrationTest {
     @Test
     void givenThreeEurdersWithItemGroups_whenFindingByCredentialsAndReadingTheirItemGroups_thenRunsASingleQuery() {
         Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         eurderRepository.save(anEurder(jane, chair, 1, "2026-12-29T09:00:00Z"));
         eurderRepository.save(anEurder(jane, chair, 2, "2026-12-30T09:00:00Z"));
         eurderRepository.saveAndFlush(anEurder(jane, chair, 3, "2026-12-31T09:00:00Z"));
@@ -121,14 +122,14 @@ class EurderRepositoryIntegrationTest {
         Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
         Customer zoe = customerRepository.save(new Customer(new Credentials("zoe@adams.be", "hash", Role.CUSTOMER),
                 "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "0470654321"));
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 100));
-        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00"), 0));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
+        Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00")));
         LocalDate newYearsEve = LocalDate.of(2026, 12, 31);
         Eurder janes = eurderRepository.save(new Eurder(jane, List.of(
-                ItemGroup.of(chair, 3, newYearsEve), ItemGroup.of(table, 1, newYearsEve)), Instant.parse("2026-12-31T09:00:00Z")));
-        Eurder zoes = eurderRepository.save(new Eurder(zoe, List.of(ItemGroup.of(chair, 2, newYearsEve)), Instant.parse("2026-12-31T10:00:00Z")));
-        eurderRepository.save(new Eurder(jane, List.of(ItemGroup.of(chair, 4, newYearsEve.minusDays(1))), Instant.parse("2026-12-30T09:00:00Z")));
-        eurderRepository.saveAndFlush(new Eurder(jane, List.of(ItemGroup.of(chair, 5, newYearsEve.plusDays(1))), Instant.parse("2027-01-01T09:00:00Z")));
+                ItemGroup.of(chair, ItemState.PRISTINE, 3, 10, newYearsEve), ItemGroup.of(table, ItemState.PRISTINE, 1, 0, newYearsEve)), Instant.parse("2026-12-31T09:00:00Z")));
+        Eurder zoes = eurderRepository.save(new Eurder(zoe, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 2, 10, newYearsEve)), Instant.parse("2026-12-31T10:00:00Z")));
+        eurderRepository.save(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 4, 10, newYearsEve.minusDays(1))), Instant.parse("2026-12-30T09:00:00Z")));
+        eurderRepository.saveAndFlush(new Eurder(jane, List.of(ItemGroup.of(chair, ItemState.PRISTINE, 5, 10, newYearsEve.plusDays(1))), Instant.parse("2027-01-01T09:00:00Z")));
         entityManager.clear();
         Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
@@ -136,8 +137,8 @@ class EurderRepositoryIntegrationTest {
         List<ItemGroupToShip> toShip = eurderRepository.findItemGroupsShippingOn(LocalDate.of(2027, 1, 1));
 
         assertThat(toShip)
-                .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::amount)
-                .containsExactly(tuple(janes.getId(), "Jane", "Chair", 3), tuple(zoes.getId(), "Zoe", "Chair", 2));
+                .extracting(ItemGroupToShip::eurderId, ItemGroupToShip::customerFirstName, ItemGroupToShip::itemName, ItemGroupToShip::itemState, ItemGroupToShip::amount)
+                .containsExactly(tuple(janes.getId(), "Jane", "Chair", ItemState.PRISTINE, 3), tuple(zoes.getId(), "Zoe", "Chair", ItemState.PRISTINE, 2));
         assertThat(toShip.get(1).address().getStreet()).isEqualTo("Rue Neuve");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
@@ -146,7 +147,7 @@ class EurderRepositoryIntegrationTest {
     void givenEurdersOfTwoCustomers_whenFindingOneByIdAndCredentials_thenFindsOnlyAnEurderOfThatCustomer() {
         Customer jane = customerRepository.save(aCustomer("jane@doe.be"));
         Customer zoe = customerRepository.save(aCustomer("zoe@adams.be"));
-        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99"), 10));
+        Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Eurder janes = eurderRepository.save(anEurder(jane, chair, 3, "2026-12-31T09:00:00Z"));
         Eurder zoes = eurderRepository.saveAndFlush(anEurder(zoe, chair, 1, "2026-12-31T10:00:00Z"));
         entityManager.clear();
@@ -160,7 +161,7 @@ class EurderRepositoryIntegrationTest {
     }
 
     private static Eurder anEurder(Customer customer, Item item, int amount, String orderedAt) {
-        return new Eurder(customer, List.of(ItemGroup.of(item, amount, ORDER_DATE)), Instant.parse(orderedAt));
+        return new Eurder(customer, List.of(ItemGroup.of(item, ItemState.PRISTINE, amount, 10, ORDER_DATE)), Instant.parse(orderedAt));
     }
 
     private static Customer aCustomer() {

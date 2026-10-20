@@ -8,6 +8,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.IntStream;
 import java.util.UUID;
 
 @Entity
@@ -24,19 +26,16 @@ public class Item {
 
     private BigDecimal price;
 
-    private int stock;
-
     @Version
     private long version;
 
     protected Item() {
     }
 
-    public Item(String name, String description, BigDecimal price, int stock) {
+    public Item(String name, String description, BigDecimal price) {
         this.name = name;
         this.description = description;
         this.price = twoDecimals(price);
-        this.stock = stock;
     }
 
     public UUID getId() {
@@ -55,23 +54,20 @@ public class Item {
         return price;
     }
 
-    public int getStock() {
-        return stock;
-    }
-
-    public void update(String name, String description, BigDecimal price, int stock) {
+    public void update(String name, String description, BigDecimal price) {
         this.name = name;
         this.description = description;
         this.price = twoDecimals(price);
-        this.stock = stock;
     }
 
-    public boolean isInStock(int amount) {
-        return stock >= amount;
+    public BigDecimal priceFor(ItemState state) {
+        return state.applyTo(price);
     }
 
-    public void removeFromStock(int amount) {
-        stock = Math.max(0, stock - amount);
+    public List<ItemUnit> newUnits(ItemState state, int count) {
+        return IntStream.range(0, count)
+                .mapToObj(unit -> new ItemUnit(this, state))
+                .toList();
     }
 
     private static BigDecimal twoDecimals(BigDecimal price) {

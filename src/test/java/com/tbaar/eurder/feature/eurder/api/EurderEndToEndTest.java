@@ -3,7 +3,9 @@ package com.tbaar.eurder.feature.eurder.api;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.domain.EurderRepository;
+import com.tbaar.eurder.feature.item.domain.AvailableUnits;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
+import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
 import io.restassured.RestAssured;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,6 +66,9 @@ class EurderEndToEndTest {
     private ItemRepository itemRepository;
 
     @Autowired
+    private ItemUnitRepository itemUnitRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -77,6 +83,7 @@ class EurderEndToEndTest {
     @AfterEach
     void deleteCreatedData() {
         eurderRepository.deleteAll();
+        itemUnitRepository.deleteAll();
         itemRepository.deleteAll();
         customerRepository.deleteAll();
         credentialsRepository.deleteAllByRole(Role.CUSTOMER);
@@ -104,7 +111,7 @@ class EurderEndToEndTest {
                 .body("totalPrice", equalTo(new BigDecimal("348.97")))
                 .extract().path("id");
         response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + id));
-        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(7);
+        assertThat(availableUnits(chairId)).isEqualTo(7);
     }
 
     @Test
@@ -121,7 +128,7 @@ class EurderEndToEndTest {
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .body("detail", equalTo("No item found for id " + unknownId));
         assertThat(eurderRepository.count()).isZero();
-        assertThat(itemRepository.findById(UUID.fromString(chairId)).orElseThrow().getStock()).isEqualTo(10);
+        assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
     @Test
@@ -223,7 +230,7 @@ class EurderEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("keySet()", containsInAnyOrder("eurders", "totalPrice"))
                 .body("eurders[0].keySet()", containsInAnyOrder("id", "itemGroups", "totalPrice"))
-                .body("eurders[0].itemGroups[0].keySet()", containsInAnyOrder("itemName", "amount", "subtotal"))
+                .body("eurders[0].itemGroups[0].keySet()", containsInAnyOrder("itemName", "itemState", "amount", "subtotal"))
                 .body("eurders.totalPrice", containsInAnyOrder(new BigDecimal("150.27"), new BigDecimal("49.99")))
                 .body("eurders.itemGroups.flatten().subtotal",
                         containsInAnyOrder(new BigDecimal("149.97"), new BigDecimal("0.30"), new BigDecimal("49.99")))
@@ -283,7 +290,8 @@ class EurderEndToEndTest {
                 .body("[0].address.street", equalTo("Rue Haute"))
                 .body("[0].address.city", equalTo("Bruxelles"))
                 .body("[0].itemGroups.itemName", contains("Chair"))
-                .body("[0].itemGroups.amount", contains(3));
+                .body("[0].itemGroups.amount", contains(3))
+                .body("[0].itemGroups.itemState", contains("PRISTINE"));
     }
 
     @Test
@@ -324,7 +332,7 @@ class EurderEndToEndTest {
         String chairId = createItem("Chair", "49.99", 10);
         String originalId = order("jane@doe.be", chairId, 3);
         authenticatedAs("admin@eurder.be", "admin", """
-                {"name": "Chair", "description": "Chair description", "price": 59.99, "stock": 7}
+                {"name": "Chair", "description": "Chair description", "price": 59.99}
                 """).put("/items/" + chairId).then().statusCode(HttpStatus.OK.value());
         RequestSpecification request = authenticatedAs("jane@doe.be", "secret123");
 
@@ -397,6 +405,27 @@ class EurderEndToEndTest {
         response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @Test
+    void givenADamagedState_whenACustomerOrders_thenTheItemGroupShowsTheStateAndTheDiscountedPrice() {
+        String chairId = createItem("Chair", "49.99", 10);
+        RequestSpecification request = asJane("""
+                {"itemGroups": [{"itemId": "%s", "amount": 2, "state": "DAMAGED"}]}
+                """.formatted(chairId));
+
+        Response response = request.post("/eurders");
+
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("itemGroups[0].itemState", equalTo("DAMAGED"))
+                .body("itemGroups[0].itemPrice", equalTo(new BigDecimal("44.99")))
+                .body("itemGroups[0].shippingDate", equalTo("2027-01-07"))
+                .body("totalPrice", equalTo(new BigDecimal("89.98")));
+    }
+
+    private long availableUnits(String itemId) {
+        return itemUnitRepository.countAvailableUnits(List.of(UUID.fromString(itemId))).stream().mapToLong(AvailableUnits::count).sum();
+    }
+
     private void registerCustomer(String email) {
         RestAssured.given().port(port).contentType(ContentType.JSON).body("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
@@ -422,7 +451,7 @@ class EurderEndToEndTest {
 
     private String createItem(String name, String price, int stock) {
         return authenticatedAs("admin@eurder.be", "admin", """
-                {"name": "%s", "description": "%s description", "price": %s, "stock": %d}
+                {"name": "%s", "description": "%s description", "price": %s, "units": {"PRISTINE": %d}}
                 """.formatted(name, name, price, stock))
                 .post("/items")
                 .then().statusCode(HttpStatus.CREATED.value())
