@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common;
+package com.tbaar.eurder.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

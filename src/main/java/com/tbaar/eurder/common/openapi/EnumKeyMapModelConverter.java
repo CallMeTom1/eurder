@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common;
+package com.tbaar.eurder.common.openapi;
 
 import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;

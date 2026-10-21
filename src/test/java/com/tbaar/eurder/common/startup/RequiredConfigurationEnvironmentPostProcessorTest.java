@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common.config;
+package com.tbaar.eurder.common.startup;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common;
+package com.tbaar.eurder.common.openapi;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;

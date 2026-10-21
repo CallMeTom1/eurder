@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common;
+package com.tbaar.eurder.common.openapi;
 
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;

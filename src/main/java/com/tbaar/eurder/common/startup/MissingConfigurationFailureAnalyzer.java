@@ -1,4 +1,4 @@
-package com.tbaar.eurder.common.config;
+package com.tbaar.eurder.common.startup;
 
 import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
 import org.springframework.boot.diagnostics.FailureAnalysis;
