@@ -98,20 +98,6 @@ public class EurderService {
                 .toList();
     }
 
-    private record UnitsOfAState(UUID itemId, ItemState state) {
-
-        static UnitsOfAState from(ItemGroupRequestDto requested) {
-            return new UnitsOfAState(requested.itemId(), requested.state());
-        }
-    }
-
-    private record Reservation(ItemGroup itemGroup, List<ItemUnit> units) {
-
-        void assignUnits() {
-            units.forEach(unit -> unit.assignTo(itemGroup.getId()));
-        }
-    }
-
     @Transactional(readOnly = true)
     public ReportDto findReport(UUID credentialsId) {
         return eurderMapper.toReportDto(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(credentialsId));
