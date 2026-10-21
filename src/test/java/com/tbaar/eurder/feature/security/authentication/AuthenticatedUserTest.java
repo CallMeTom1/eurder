@@ -1,4 +1,4 @@
-package com.tbaar.eurder.feature.security.service;
+package com.tbaar.eurder.feature.security.authentication;
 
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
