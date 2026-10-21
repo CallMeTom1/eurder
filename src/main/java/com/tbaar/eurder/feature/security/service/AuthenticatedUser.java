@@ -13,7 +13,7 @@ public record AuthenticatedUser(UUID id,
                                 String passwordHash,
                                 List<GrantedAuthority> authorities) implements UserDetails {
 
-    public static AuthenticatedUser of(Credentials credentials) {
+    public static AuthenticatedUser from(Credentials credentials) {
         List<GrantedAuthority> authorities = credentials.getRole().getFeatures().stream()
                 .<GrantedAuthority>map(feature -> new SimpleGrantedAuthority(feature.name()))
                 .toList();

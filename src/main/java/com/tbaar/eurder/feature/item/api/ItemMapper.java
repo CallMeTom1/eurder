@@ -30,7 +30,7 @@ public class ItemMapper {
     public ItemOverviewDto toOverviewDto(ItemStock stock, List<AvailableUnits> availableUnits) {
         Item item = stock.item();
         return new ItemOverviewDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits),
-                StockUrgency.of(Math.toIntExact(stock.availableUnits())));
+                StockUrgency.from(Math.toIntExact(stock.availableUnits())));
     }
 
     public ItemUnitDto toUnitDto(ItemUnit unit) {

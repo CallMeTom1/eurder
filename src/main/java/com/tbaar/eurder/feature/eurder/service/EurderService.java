@@ -59,14 +59,14 @@ public class EurderService {
                 .orElseThrow(() -> new IllegalStateException("No customer linked to credentials " + credentialsId));
         LocalDate orderDate = LocalDate.now(clock);
         Map<UnitsOfAState, Integer> requestedAmounts = request.itemGroups().stream()
-                .collect(Collectors.groupingBy(UnitsOfAState::of, Collectors.summingInt(ItemGroupRequestDto::amount)));
+                .collect(Collectors.groupingBy(UnitsOfAState::from, Collectors.summingInt(ItemGroupRequestDto::amount)));
         Map<UnitsOfAState, Deque<ItemUnit>> availableUnits = new HashMap<>();
         List<ItemGroup> itemGroups = new ArrayList<>();
         List<List<ItemUnit>> unitsOfEachItemGroup = new ArrayList<>();
         for (ItemGroupRequestDto requested : request.itemGroups()) {
             Item item = itemRepository.findLockedById(requested.itemId())
                     .orElseThrow(() -> new ItemNotFoundException(requested.itemId()));
-            Deque<ItemUnit> available = availableUnits.computeIfAbsent(UnitsOfAState.of(requested), units -> new ArrayDeque<>(
+            Deque<ItemUnit> available = availableUnits.computeIfAbsent(UnitsOfAState.from(requested), units -> new ArrayDeque<>(
                     itemUnitRepository.findByItemIdAndStateAndItemGroupIdIsNull(units.itemId(), units.state(), Limit.of(requestedAmounts.get(units)))));
             itemGroups.add(ItemGroup.of(item, requested.state(), requested.amount(), available.size(), orderDate));
             unitsOfEachItemGroup.add(take(available, requested.amount()));
@@ -89,7 +89,7 @@ public class EurderService {
 
     private record UnitsOfAState(UUID itemId, ItemState state) {
 
-        static UnitsOfAState of(ItemGroupRequestDto requested) {
+        static UnitsOfAState from(ItemGroupRequestDto requested) {
             return new UnitsOfAState(requested.itemId(), requested.state());
         }
     }

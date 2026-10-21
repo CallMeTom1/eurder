@@ -21,7 +21,7 @@ public class CredentialsUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         return credentialsRepository.findByEmail(Credentials.normalizeEmail(username))
-                .map(AuthenticatedUser::of)
+                .map(AuthenticatedUser::from)
                 .orElseThrow(() -> new UsernameNotFoundException("No credentials found for " + username));
     }
 }

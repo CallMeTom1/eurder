@@ -15,7 +15,7 @@ public enum StockUrgency {
         this.maxStock = maxStock;
     }
 
-    public static StockUrgency of(int stock) {
+    public static StockUrgency from(int stock) {
         return Arrays.stream(values())
                 .filter(urgency -> stock >= urgency.minStock && stock <= urgency.maxStock)
                 .findFirst()

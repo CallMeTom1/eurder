@@ -13,7 +13,7 @@ class AuthenticatedUserTest {
     void givenCredentialsOfAnAdmin_whenAuthenticatingThem_thenTheAuthoritiesAreTheFeaturesOfTheAdminRole() {
         Credentials credentials = new Credentials("admin@eurder.be", "hash", Role.ADMIN);
 
-        AuthenticatedUser user = AuthenticatedUser.of(credentials);
+        AuthenticatedUser user = AuthenticatedUser.from(credentials);
 
         assertThat(user.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
@@ -24,7 +24,7 @@ class AuthenticatedUserTest {
     void givenCredentialsOfACustomer_whenAuthenticatingThem_thenUsesTheEmailAndHashAsUsernameAndPassword() {
         Credentials credentials = new Credentials("jane@doe.be", "hash", Role.CUSTOMER);
 
-        AuthenticatedUser user = AuthenticatedUser.of(credentials);
+        AuthenticatedUser user = AuthenticatedUser.from(credentials);
 
         assertThat(user.getUsername()).isEqualTo("jane@doe.be");
         assertThat(user.getPassword()).isEqualTo("hash");
