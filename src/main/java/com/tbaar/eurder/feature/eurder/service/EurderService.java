@@ -25,13 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -55,42 +54,61 @@ public class EurderService {
     }
 
     public EurderDto order(UUID credentialsId, CreateEurderDto request) {
-        Customer customer = customerRepository.findByCredentialsId(credentialsId)
-                .orElseThrow(() -> new IllegalStateException("No customer linked to credentials " + credentialsId));
-        LocalDate orderDate = LocalDate.now(clock);
-        Map<UnitsOfAState, Integer> requestedAmounts = request.itemGroups().stream()
-                .collect(Collectors.groupingBy(UnitsOfAState::from, Collectors.summingInt(ItemGroupRequestDto::amount)));
-        Map<UnitsOfAState, Deque<ItemUnit>> availableUnits = new HashMap<>();
-        List<ItemGroup> itemGroups = new ArrayList<>();
-        List<List<ItemUnit>> unitsOfEachItemGroup = new ArrayList<>();
-        for (ItemGroupRequestDto requested : request.itemGroups()) {
-            Item item = itemRepository.findLockedById(requested.itemId())
-                    .orElseThrow(() -> new ItemNotFoundException(requested.itemId()));
-            Deque<ItemUnit> available = availableUnits.computeIfAbsent(UnitsOfAState.from(requested), units -> new ArrayDeque<>(
-                    itemUnitRepository.findByItemIdAndStateAndItemGroupIdIsNull(units.itemId(), units.state(), Limit.of(requestedAmounts.get(units)))));
-            itemGroups.add(ItemGroup.of(item, requested.state(), requested.amount(), available.size(), orderDate));
-            unitsOfEachItemGroup.add(take(available, requested.amount()));
-        }
-        Eurder eurder = eurderRepository.save(new Eurder(customer, itemGroups, clock.instant()));
-        for (int index = 0; index < itemGroups.size(); index++) {
-            UUID itemGroupId = itemGroups.get(index).getId();
-            unitsOfEachItemGroup.get(index).forEach(unit -> unit.assignTo(itemGroupId));
-        }
+        Customer customer = findCustomer(credentialsId);
+        List<Reservation> reservations = reserve(request.itemGroups());
+        Eurder eurder = eurderRepository.save(new Eurder(customer, reservations.stream().map(Reservation::itemGroup).toList(), clock.instant()));
+        reservations.forEach(Reservation::assignUnits);
         return eurderMapper.toDto(eurder);
     }
 
+    private Customer findCustomer(UUID credentialsId) {
+        return customerRepository.findByCredentialsId(credentialsId)
+                .orElseThrow(() -> new IllegalStateException("No customer linked to credentials " + credentialsId));
+    }
+
+    private List<Reservation> reserve(List<ItemGroupRequestDto> requests) {
+        LocalDate orderDate = LocalDate.now(clock);
+        Map<UnitsOfAState, Deque<ItemUnit>> availableUnits = findAvailableUnits(requests);
+        return requests.stream()
+                .map(requested -> reserve(requested, availableUnits.get(UnitsOfAState.from(requested)), orderDate))
+                .toList();
+    }
+
+    private Map<UnitsOfAState, Deque<ItemUnit>> findAvailableUnits(List<ItemGroupRequestDto> requests) {
+        return requests.stream()
+                .collect(Collectors.groupingBy(UnitsOfAState::from, Collectors.summingInt(ItemGroupRequestDto::amount)))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, requested -> findAvailableUnits(requested.getKey(), requested.getValue())));
+    }
+
+    private Deque<ItemUnit> findAvailableUnits(UnitsOfAState units, int amount) {
+        return new ArrayDeque<>(itemUnitRepository.findByItemIdAndStateAndItemGroupIdIsNull(units.itemId(), units.state(), Limit.of(amount)));
+    }
+
+    private Reservation reserve(ItemGroupRequestDto requested, Deque<ItemUnit> available, LocalDate orderDate) {
+        Item item = itemRepository.findLockedById(requested.itemId())
+                .orElseThrow(() -> new ItemNotFoundException(requested.itemId()));
+        ItemGroup itemGroup = ItemGroup.of(item, requested.state(), requested.amount(), available.size(), orderDate);
+        return new Reservation(itemGroup, take(available, requested.amount()));
+    }
+
     private static List<ItemUnit> take(Deque<ItemUnit> available, int amount) {
-        List<ItemUnit> taken = new ArrayList<>();
-        while (taken.size() < amount && !available.isEmpty()) {
-            taken.add(available.poll());
-        }
-        return taken;
+        return Stream.generate(available::poll)
+                .limit(Math.min(amount, available.size()))
+                .toList();
     }
 
     private record UnitsOfAState(UUID itemId, ItemState state) {
 
         static UnitsOfAState from(ItemGroupRequestDto requested) {
             return new UnitsOfAState(requested.itemId(), requested.state());
+        }
+    }
+
+    private record Reservation(ItemGroup itemGroup, List<ItemUnit> units) {
+
+        void assignUnits() {
+            units.forEach(unit -> unit.assignTo(itemGroup.getId()));
         }
     }
 
