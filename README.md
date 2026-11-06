@@ -55,7 +55,9 @@ The Flyway migration `V2__insert_default_admin.sql` creates an administrator acc
 The API uses HTTP Basic authentication: send `Authorization: Basic base64(email:password)` with every request,
 or use the **Authorize** button in Swagger UI. Change this password before any real deployment.
 
-Only the account creation (`POST /customers`) and the documentation are public. Every other request is authenticated before it reaches the API: a missing or wrong `Authorization` header gets a `401`, a role without the required feature gets a `403`.
+An admin creates another admin with `POST /administrators` and the body `{"email": "...", "password": "..."}`. An admin only has credentials: no address, no phone number, and it does not appear among the customers.
+
+Only the customer account creation (`POST /customers`) and the documentation are public. Every other request is authenticated before it reaches the API: a missing or wrong `Authorization` header gets a `401`, a role without the required feature gets a `403`.
 
 ## Test it
 
@@ -86,6 +88,7 @@ Tests are independent and repeatable: they share the same database, so every tes
 | 10 | Item overview | Done |
 | E | Item units and states (optional extension) | Done |
 | C | Required configuration validated at startup (technical) | Done |
+| B | Create another admin (bonus) | Done |
 
 ## Item units and states
 

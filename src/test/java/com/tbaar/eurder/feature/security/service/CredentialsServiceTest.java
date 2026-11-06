@@ -1,13 +1,18 @@
 package com.tbaar.eurder.feature.security.service;
 
+import com.tbaar.eurder.feature.security.api.AdminMapper;
+import com.tbaar.eurder.feature.security.api.dto.AdminDto;
+import com.tbaar.eurder.feature.security.api.dto.CreateAdminDto;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
 import com.tbaar.eurder.feature.security.exception.EmailAlreadyUsedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,8 +34,26 @@ class CredentialsServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Spy
+    private AdminMapper adminMapper = new AdminMapper();
+
     @InjectMocks
     private CredentialsService credentialsService;
+
+    @Test
+    void givenValidRegistration_whenCreatingAnAdmin_thenSavesCredentialsWithTheAdminRoleAndReturnsThem() {
+        when(credentialsRepository.existsByEmail("jane@doe.be")).thenReturn(false);
+        when(passwordEncoder.encode("secret123")).thenReturn("hashed-secret123");
+        when(credentialsRepository.saveAndFlush(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AdminDto created = credentialsService.createAdmin(new CreateAdminDto("Jane@Doe.be", "secret123"));
+
+        ArgumentCaptor<Credentials> saved = ArgumentCaptor.forClass(Credentials.class);
+        verify(credentialsRepository).saveAndFlush(saved.capture());
+        assertThat(saved.getValue().getRole()).isEqualTo(Role.ADMIN);
+        assertThat(saved.getValue().getPasswordHash()).isEqualTo("hashed-secret123");
+        assertThat(created.email()).isEqualTo("jane@doe.be");
+    }
 
     @Test
     void givenUnusedEmail_whenCreating_thenSavesCredentialsWithHashedPasswordAndRole() {

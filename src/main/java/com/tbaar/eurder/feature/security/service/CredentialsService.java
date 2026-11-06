@@ -1,5 +1,8 @@
 package com.tbaar.eurder.feature.security.service;
 
+import com.tbaar.eurder.feature.security.api.AdminMapper;
+import com.tbaar.eurder.feature.security.api.dto.AdminDto;
+import com.tbaar.eurder.feature.security.api.dto.CreateAdminDto;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
@@ -15,10 +18,13 @@ public class CredentialsService {
 
     private final CredentialsRepository credentialsRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminMapper adminMapper;
 
-    public CredentialsService(CredentialsRepository credentialsRepository, PasswordEncoder passwordEncoder) {
+    public CredentialsService(CredentialsRepository credentialsRepository, PasswordEncoder passwordEncoder,
+                              AdminMapper adminMapper) {
         this.credentialsRepository = credentialsRepository;
         this.passwordEncoder = passwordEncoder;
+        this.adminMapper = adminMapper;
     }
 
     public Credentials create(String email, String rawPassword, Role role) {
@@ -32,6 +38,11 @@ public class CredentialsService {
         } catch (DataIntegrityViolationException e) {
             throw new EmailAlreadyUsedException(normalizedEmail, e);
         }
+    }
+
+    public AdminDto createAdmin(CreateAdminDto dto) {
+        Credentials adminCred = create(dto.email(), dto.password(), Role.ADMIN);
+        return adminMapper.toDto(adminCred);
     }
 }
 

@@ -17,7 +17,8 @@ class AuthenticatedUserTest {
 
         assertThat(user.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
-                .containsExactlyInAnyOrder("VIEW_CUSTOMERS", "MANAGE_ITEMS", "VIEW_ITEM_OVERVIEW", "VIEW_SHIPPING_TODAY");
+                .containsExactlyInAnyOrder("VIEW_CUSTOMERS", "MANAGE_ITEMS", "VIEW_ITEM_OVERVIEW",
+                        "VIEW_SHIPPING_TODAY", "REGISTER_ADMIN");
     }
 
     @Test
