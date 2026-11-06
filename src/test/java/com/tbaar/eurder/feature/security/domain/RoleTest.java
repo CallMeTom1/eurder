@@ -16,12 +16,14 @@ class RoleTest {
             "ADMIN,    MANAGE_ITEMS,        true",
             "ADMIN,    VIEW_ITEM_OVERVIEW,  true",
             "ADMIN,    VIEW_SHIPPING_TODAY, true",
+            "ADMIN,    REGISTER_ADMIN,      true",
             "ADMIN,    ORDER_ITEMS,         false",
             "ADMIN,    VIEW_OWN_EURDERS,    false",
             "CUSTOMER, VIEW_CUSTOMERS,      false",
             "CUSTOMER, MANAGE_ITEMS,        false",
             "CUSTOMER, VIEW_ITEM_OVERVIEW,  false",
             "CUSTOMER, VIEW_SHIPPING_TODAY, false",
+            "CUSTOMER, REGISTER_ADMIN,      false",
             "CUSTOMER, ORDER_ITEMS,         true",
             "CUSTOMER, VIEW_OWN_EURDERS,    true"
     })

@@ -95,6 +95,16 @@ class OpenApiEndToEndTest {
     }
 
     @Test
+    void givenTheAdminRegistrationEndpoint_whenReadingIt_thenDocumentsItsResponsesAndTheRequiredFeature() {
+        String operation = "paths.'/administrators'.post";
+
+        Map<String, Object> codes = apiDocs.getMap(operation + ".responses");
+
+        assertThat(codes).containsKeys("201", "400", "401", "403", "409").doesNotContainKey("200");
+        assertThat(apiDocs.getString(operation + ".description")).contains("Requires the REGISTER_ADMIN feature (role ADMIN)");
+    }
+
+    @Test
     void givenTheOrderEndpoints_whenReadingTheirResponses_thenDocumentTheUnknownItemAndTheConcurrentChange() {
         Map<String, Object> order = apiDocs.getMap("paths.'/eurders'.post.responses");
         Map<String, Object> reorder = apiDocs.getMap("paths.'/eurders/{id}/reorder'.post.responses");
@@ -132,7 +142,7 @@ class OpenApiEndToEndTest {
 
         assertThat(tags)
                 .extracting(tag -> tag.get("name"))
-                .containsExactlyInAnyOrder("Customers", "Items", "Eurders");
+                .containsExactlyInAnyOrder("Customers", "Items", "Eurders", "Administrators");
         assertThat(tags).allSatisfy(tag -> assertThat(tag.get("description")).isNotBlank());
     }
 

@@ -25,7 +25,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.exc.MismatchedInputException;
 
 import java.security.Principal;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,12 +40,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleAuthenticationFailure(AuthenticationException e) {
         log.warn("Unauthorized: {}", e.getMessage());
         return unauthorized();
-    }
-
-    private static ResponseEntity<ProblemDetail> unauthorized() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"")
-                .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -73,16 +67,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, detail);
     }
 
-    private static String requiredAuthorities(AuthorizationDeniedException e) {
-        if (e.getAuthorizationResult() instanceof AuthorityAuthorizationDecision decision) {
-            return decision.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .sorted()
-                    .collect(Collectors.joining(", "));
-        }
-        return "this resource";
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleBadRequest(IllegalArgumentException e) {
         log.warn("Bad request: {}", e.getMessage());
@@ -98,40 +82,78 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException e, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
-        Map<String, List<String>> errors = e.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.groupingBy(FieldError::getField, TreeMap::new,
-                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
-        errors.values().forEach(Collections::sort);
         ProblemDetail body = ProblemDetail.forStatusAndDetail(status, "Validation failed");
-        body.setProperty("errors", errors);
+        body.setProperty("errors", errorsByField(e));
         return handleExceptionInternal(e, body, headers, status, request);
     }
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException e, HttpHeaders headers,
                                                                   HttpStatusCode status, WebRequest request) {
-        String detail = e.getCause() instanceof MismatchedInputException mismatch
-                ? "Invalid value for field '" + fieldPath(mismatch.getPath()) + "'"
-                : "Request body is missing or malformed";
-        return handleExceptionInternal(e, ProblemDetail.forStatusAndDetail(status, detail), headers, status, request);
-    }
-
-    private static String fieldPath(List<JacksonException.Reference> path) {
-        StringBuilder fieldPath = new StringBuilder();
-        for (JacksonException.Reference reference : path) {
-            if (reference.getPropertyName() == null) {
-                fieldPath.append('[').append(reference.getIndex()).append(']');
-            } else {
-                fieldPath.append(fieldPath.isEmpty() ? "" : ".").append(reference.getPropertyName());
-            }
-        }
-        return fieldPath.toString();
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(status, unreadableBodyDetail(e));
+        return handleExceptionInternal(e, body, headers, status, request);
     }
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception e, Object body, HttpHeaders headers,
                                                              HttpStatusCode statusCode, WebRequest request) {
-        log.warn("{} {}: {}", statusCode.value(), e.getClass().getSimpleName(), e.getMessage());
+        if (statusCode.is5xxServerError()) {
+            log.error("{} {}", statusCode.value(), e.getClass().getSimpleName(), e);
+        } else {
+            log.warn("{} {}: {}", statusCode.value(), e.getClass().getSimpleName(), loggableDetail(body));
+        }
         return super.handleExceptionInternal(e, body, headers, statusCode, request);
+    }
+
+    private static ResponseEntity<ProblemDetail> unauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"")
+                .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+    }
+
+    private static String requiredAuthorities(AuthorizationDeniedException e) {
+        if (e.getAuthorizationResult() instanceof AuthorityAuthorizationDecision decision) {
+            return decision.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+        }
+        return "this resource";
+    }
+
+    private static Map<String, List<String>> errorsByField(MethodArgumentNotValidException e) {
+        return e.getBindingResult().getFieldErrors().stream()
+                .sorted(Comparator.comparing(FieldError::getDefaultMessage))
+                .collect(Collectors.groupingBy(FieldError::getField, TreeMap::new,
+                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
+    }
+
+    private static String unreadableBodyDetail(HttpMessageNotReadableException e) {
+        if (e.getCause() instanceof MismatchedInputException mismatch) {
+            return "Invalid value for field '" + fieldPath(mismatch.getPath()) + "'";
+        }
+        return "Request body is missing or malformed";
+    }
+
+    private static String fieldPath(List<JacksonException.Reference> path) {
+        return path.stream()
+                .map(GlobalExceptionHandler::pathSegment)
+                .collect(Collectors.joining())
+                .replaceFirst("^\\.", "");
+    }
+
+    private static String pathSegment(JacksonException.Reference reference) {
+        return reference.getPropertyName() == null
+                ? "[" + reference.getIndex() + "]"
+                : "." + reference.getPropertyName();
+    }
+
+    private static String loggableDetail(Object body) {
+        if (body instanceof ProblemDetail problem) {
+            return problem.getProperties() == null
+                    ? problem.getDetail()
+                    : problem.getDetail() + " " + problem.getProperties();
+        }
+        return "no details";
     }
 }
