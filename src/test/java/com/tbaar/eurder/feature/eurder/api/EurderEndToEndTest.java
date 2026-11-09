@@ -30,7 +30,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -79,7 +78,7 @@ class EurderEndToEndTest {
 
         Response response = request.post("/eurders");
 
-        String id = response.then()
+        response.then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("keySet()", containsInAnyOrder("id", "itemGroups", "totalPrice"))
                 .body("itemGroups.itemId", contains(chairId, tableId))
@@ -88,9 +87,8 @@ class EurderEndToEndTest {
                 .body("itemGroups.amount", contains(3, 1))
                 .body("itemGroups.subtotal", contains(new BigDecimal("149.97"), new BigDecimal("199.00")))
                 .body("itemGroups.shippingDate", contains("2027-01-01", "2027-01-07"))
-                .body("totalPrice", equalTo(new BigDecimal("348.97")))
-                .extract().path("id");
-        response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + id));
+                .body("totalPrice", equalTo(new BigDecimal("348.97")));
+        assertThat(response.getHeader(HttpHeaders.LOCATION)).isNull();
         assertThat(availableUnits(chairId)).isEqualTo(7);
     }
 
@@ -327,7 +325,7 @@ class EurderEndToEndTest {
                 .body("totalPrice", equalTo(new BigDecimal("179.97")))
                 .extract().path("id");
         assertThat(reorderedId).isNotEqualTo(originalId);
-        response.then().header(HttpHeaders.LOCATION, endsWith("/eurders/" + reorderedId));
+        assertThat(response.getHeader(HttpHeaders.LOCATION)).isNull();
     }
 
     @Test

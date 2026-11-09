@@ -110,7 +110,7 @@ At most 1000 units per state can be added in one request. A sold unit keeps the 
 
 ## Ordering rules
 
-- Each item group names an item, an amount and optionally a state (`PRISTINE` when left out): `{"itemId": "...", "amount": 2, "state": "DAMAGED"}`.
+- Each item group names an item, an amount from 1 to 1000 and optionally a state (`PRISTINE` when left out): `{"itemId": "...", "amount": 2, "state": "DAMAGED"}`.
 - An item group ships the next day when enough units of that state are available, otherwise one week later.
 - Item groups are handled in the order they are sent: ordering the same item twice, the second group sees the units left by the first.
 - Ordering links the available units to the item group, up to the ordered amount.
