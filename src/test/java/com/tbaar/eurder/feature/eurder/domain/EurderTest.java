@@ -41,17 +41,6 @@ class EurderTest {
         assertThat(eurder.getItemGroups()).containsExactly(chairs, tables);
     }
 
-    @Test
-    void givenItemGroups_whenCreatingEurder_thenNumbersThemFromOneInTheGivenOrder() {
-        List<ItemGroup> itemGroups = List.of(
-                ItemGroup.of(anItem("49.99"), ItemState.PRISTINE, 2, 10, ORDER_DATE),
-                ItemGroup.of(anItem("199.00"), ItemState.PRISTINE, 1, 10, ORDER_DATE));
-
-        Eurder eurder = new Eurder(aCustomer(), itemGroups, ORDERED_AT);
-
-        assertThat(eurder.getItemGroups()).extracting(ItemGroup::getLineNumber).containsExactly(1, 2);
-    }
-
     private static Item anItem(String price) {
         return new Item("Chair", "Wooden chair", new BigDecimal(price));
     }

@@ -7,7 +7,8 @@ import java.util.List;
 
 record Reservation(ItemGroup itemGroup, List<ItemUnit> units) {
 
-    void assignUnits() {
+    List<ItemUnit> assignUnits() {
         units.forEach(unit -> unit.assignTo(itemGroup.getId()));
+        return units;
     }
 }

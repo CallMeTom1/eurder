@@ -2,33 +2,19 @@ package com.tbaar.eurder.feature.eurder.domain;
 
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemState;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity
-@Table(name = "item_group")
 public class ItemGroup {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    private int lineNumber;
+    private UUID id = UUID.randomUUID();
 
     private UUID itemId;
 
     private String itemName;
 
-    @Enumerated(EnumType.STRING)
     private ItemState itemState;
 
     private BigDecimal itemPrice;
@@ -56,14 +42,6 @@ public class ItemGroup {
 
     public UUID getId() {
         return id;
-    }
-
-    void numberAs(int lineNumber) {
-        this.lineNumber = lineNumber;
-    }
-
-    public int getLineNumber() {
-        return lineNumber;
     }
 
     public UUID getItemId() {

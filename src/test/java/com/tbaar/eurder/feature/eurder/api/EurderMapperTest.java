@@ -37,15 +37,17 @@ class EurderMapperTest {
 
     @Test
     void givenEurder_whenMappingToDto_thenExposesEachItemGroupWithItsSubtotalAndTheTotalPrice() {
+        Item chair = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
+        Item table = new Item("Table", "Oak table", new BigDecimal("199.00"));
         Eurder eurder = new Eurder(aCustomer(), List.of(
-                ItemGroup.of(new Item("Chair", "Wooden chair", new BigDecimal("49.99")), ItemState.PRISTINE, 3, 10, ORDER_DATE),
-                ItemGroup.of(new Item("Table", "Oak table", new BigDecimal("199.00")), ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
+                ItemGroup.of(chair, ItemState.PRISTINE, 3, 10, ORDER_DATE),
+                ItemGroup.of(table, ItemState.PRISTINE, 1, 0, ORDER_DATE)), ORDERED_AT);
 
         EurderDto dto = eurderMapper.toDto(eurder);
 
         assertThat(dto).isEqualTo(new EurderDto(eurder.getId(), List.of(
-                new ItemGroupDto(null, "Chair", ItemState.PRISTINE, new BigDecimal("49.99"), 3, new BigDecimal("149.97"), LocalDate.of(2027, 1, 1)),
-                new ItemGroupDto(null, "Table", ItemState.PRISTINE, new BigDecimal("199.00"), 1, new BigDecimal("199.00"), LocalDate.of(2027, 1, 7))),
+                new ItemGroupDto(chair.getId(), "Chair", ItemState.PRISTINE, new BigDecimal("49.99"), 3, new BigDecimal("149.97"), LocalDate.of(2027, 1, 1)),
+                new ItemGroupDto(table.getId(), "Table", ItemState.PRISTINE, new BigDecimal("199.00"), 1, new BigDecimal("199.00"), LocalDate.of(2027, 1, 7))),
                 new BigDecimal("348.97")));
     }
 

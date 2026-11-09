@@ -26,6 +26,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -400,6 +401,25 @@ class EurderEndToEndTest {
                 .body("itemGroups[0].itemPrice", equalTo(new BigDecimal("44.99")))
                 .body("itemGroups[0].shippingDate", equalTo("2027-01-07"))
                 .body("totalPrice", equalTo(new BigDecimal("89.98")));
+    }
+
+    @Test
+    void givenManyCustomersOrderingTheSameItemAtTheSameTime_whenTheyAllOrder_thenEachIsPlacedOrAskedToRetryAndNoUnitIsSoldTwice() {
+        String chairId = createItem("Chair", "49.99", 4);
+        String body = """
+                {"itemGroups": [{"itemId": "%s", "amount": 1}]}
+                """.formatted(chairId);
+
+        List<Integer> statuses = IntStream.range(0, 8).parallel()
+                .mapToObj(attempt -> asJane(body).post("/eurders").statusCode())
+                .toList();
+
+        assertThat(statuses)
+                .contains(HttpStatus.CREATED.value())
+                .isSubsetOf(HttpStatus.CREATED.value(), HttpStatus.CONFLICT.value());
+        long placed = statuses.stream().filter(status -> status == HttpStatus.CREATED.value()).count();
+        assertThat(availableUnits(chairId)).isEqualTo(Math.max(0, 4 - placed));
+        assertThat(eurdersOf(janeEmail)).isEqualTo((int) placed);
     }
 
     private int eurdersOf(String email) {

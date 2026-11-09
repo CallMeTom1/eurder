@@ -32,7 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -134,23 +134,23 @@ class EurderServiceIntegrationTest {
     }
 
     @Test
-    void givenAnotherEurderTakingTheSameUnitsMeanwhile_whenTheEurderCommits_thenFailsAndKeepsTheOtherEurder() {
+    void givenAnEurderStillOpenOnTheSameItem_whenAnotherEurderIsPlaced_thenTheSecondFailsAtOnceAndTheFirstIsKept() {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 10);
         UUID zoe = registerCustomer(UniqueEmail.of("zoe"));
-        TransactionTemplate eurderTransaction = new TransactionTemplate(transactionManager);
-        TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
-        concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        TransactionTemplate firstTransaction = new TransactionTemplate(transactionManager);
+        TransactionTemplate secondTransaction = new TransactionTemplate(transactionManager);
+        secondTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-        Throwable thrown = catchThrowable(() -> eurderTransaction.executeWithoutResult(eurderStatus -> {
+        Throwable thrown = firstTransaction.execute(firstStatus -> {
             eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 3))));
-            concurrentTransaction.executeWithoutResult(concurrentStatus ->
-                    eurderService.order(zoe, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 4)))));
-        }));
+            return catchThrowable(() -> secondTransaction.executeWithoutResult(secondStatus ->
+                    eurderService.order(zoe, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 4))))));
+        });
 
-        assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
-        assertThat(eurdersOf(janeCredentialsId)).isZero();
-        assertThat(eurdersOf(zoe)).isEqualTo(1);
-        assertThat(availableUnits(chair)).isEqualTo(6);
+        assertThat(thrown).isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("WriteConflict");
+        assertThat(eurdersOf(janeCredentialsId)).isEqualTo(1);
+        assertThat(eurdersOf(zoe)).isZero();
+        assertThat(availableUnits(chair)).isEqualTo(7);
     }
 
     @Test
@@ -207,7 +207,7 @@ class EurderServiceIntegrationTest {
         EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(
                 new ItemGroupRequestDto(chair.getId(), 3), new ItemGroupRequestDto(table.getId(), 1))));
         itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("59.99")));
-        itemUnitRepository.saveAll(table.newUnits(ItemState.PRISTINE, 5));
+        itemUnitRepository.insert(table.newUnits(ItemState.PRISTINE, 5));
         clock.setTo(NEW_YEARS_EVE.plusDays(1));
 
         EurderDto reordered = eurderService.reorder(janeCredentialsId, original.id());
@@ -232,7 +232,7 @@ class EurderServiceIntegrationTest {
     @Test
     void givenAnEurderOfDamagedUnits_whenReorderingAfterAPriceChange_thenReordersTheSameStateAtTheNewDiscountedPrice() {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 0);
-        itemUnitRepository.saveAll(chair.newUnits(ItemState.DAMAGED, 4));
+        itemUnitRepository.insert(chair.newUnits(ItemState.DAMAGED, 4));
         EurderDto original = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2, ItemState.DAMAGED))));
         itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("60.00")));
 
@@ -263,7 +263,7 @@ class EurderServiceIntegrationTest {
     @Test
     void givenUnitsInTwoStates_whenOrderingDamagedOnes_thenChargesTheDiscountAndLinksExactlyThoseUnitsToTheItemGroup() {
         Item chair = itemWithPristineUnits("Chair", "Wooden chair", "49.99", 3);
-        itemUnitRepository.saveAll(chair.newUnits(ItemState.DAMAGED, 3));
+        itemUnitRepository.insert(chair.newUnits(ItemState.DAMAGED, 3));
 
         EurderDto eurder = eurderService.order(janeCredentialsId, new CreateEurderDto(List.of(new ItemGroupRequestDto(chair.getId(), 2, ItemState.DAMAGED))));
 
@@ -283,7 +283,7 @@ class EurderServiceIntegrationTest {
 
     private Item itemWithPristineUnits(String name, String description, String price, int units) {
         Item item = itemRepository.save(new Item(name, description, new BigDecimal(price)));
-        itemUnitRepository.saveAll(item.newUnits(ItemState.PRISTINE, units));
+        itemUnitRepository.insert(item.newUnits(ItemState.PRISTINE, units));
         return item;
     }
 

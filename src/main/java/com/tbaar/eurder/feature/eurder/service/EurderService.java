@@ -57,7 +57,7 @@ public class EurderService {
         Customer customer = findCustomer(credentialsId);
         List<Reservation> reservations = reserve(request.itemGroups());
         Eurder eurder = eurderRepository.save(new Eurder(customer, reservations.stream().map(Reservation::itemGroup).toList(), clock.instant()));
-        reservations.forEach(Reservation::assignUnits);
+        itemUnitRepository.saveAll(reservations.stream().flatMap(reservation -> reservation.assignUnits().stream()).toList());
         return eurderMapper.toDto(eurder);
     }
 
