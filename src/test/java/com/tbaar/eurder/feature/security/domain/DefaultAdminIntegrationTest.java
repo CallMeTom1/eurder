@@ -4,13 +4,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
+@SpringBootTest
 class DefaultAdminIntegrationTest {
 
     @Autowired
@@ -19,7 +19,7 @@ class DefaultAdminIntegrationTest {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Test
-    void givenFreshlyMigratedDatabase_whenLookingUpTheDefaultAdmin_thenItExistsWithPasswordAdmin() {
+    void givenAStartedApplication_whenLookingUpTheDefaultAdmin_thenItExistsWithPasswordAdmin() {
         String adminEmail = "admin@eurder.be";
 
         Optional<Credentials> admin = credentialsRepository.findByEmail(adminEmail);

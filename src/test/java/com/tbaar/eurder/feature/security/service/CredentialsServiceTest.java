@@ -44,12 +44,12 @@ class CredentialsServiceTest {
     void givenValidRegistration_whenCreatingAnAdmin_thenSavesCredentialsWithTheAdminRoleAndReturnsThem() {
         when(credentialsRepository.existsByEmail("jane@doe.be")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("hashed-secret123");
-        when(credentialsRepository.saveAndFlush(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(credentialsRepository.save(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AdminDto created = credentialsService.createAdmin(new CreateAdminDto("Jane@Doe.be", "secret123"));
 
         ArgumentCaptor<Credentials> saved = ArgumentCaptor.forClass(Credentials.class);
-        verify(credentialsRepository).saveAndFlush(saved.capture());
+        verify(credentialsRepository).save(saved.capture());
         assertThat(saved.getValue().getRole()).isEqualTo(Role.ADMIN);
         assertThat(saved.getValue().getPasswordHash()).isEqualTo("hashed-secret123");
         assertThat(created.email()).isEqualTo("jane@doe.be");
@@ -59,7 +59,7 @@ class CredentialsServiceTest {
     void givenUnusedEmail_whenCreating_thenSavesCredentialsWithHashedPasswordAndRole() {
         when(credentialsRepository.existsByEmail("jane@doe.be")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("hashed-secret123");
-        when(credentialsRepository.saveAndFlush(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(credentialsRepository.save(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Credentials created = credentialsService.create("jane@doe.be", "secret123", Role.CUSTOMER);
 
@@ -72,7 +72,7 @@ class CredentialsServiceTest {
     void givenEmailWithUppercaseAndSpaces_whenCreating_thenStoresItTrimmedInLowercase() {
         when(credentialsRepository.existsByEmail("jane@doe.be")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("hashed-secret123");
-        when(credentialsRepository.saveAndFlush(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(credentialsRepository.save(any(Credentials.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Credentials created = credentialsService.create("  Jane@Doe.BE ", "secret123", Role.CUSTOMER);
 
@@ -89,14 +89,14 @@ class CredentialsServiceTest {
                 .isInstanceOf(EmailAlreadyUsedException.class)
                 .hasMessage("Email jane@doe.be is already in use");
         verify(passwordEncoder, never()).encode(anyString());
-        verify(credentialsRepository, never()).saveAndFlush(any(Credentials.class));
+        verify(credentialsRepository, never()).save(any(Credentials.class));
     }
 
     @Test
     void givenEmailTakenConcurrentlyAfterTheCheck_whenSaving_thenThrowsEmailAlreadyUsed() {
         when(credentialsRepository.existsByEmail("jane@doe.be")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("hashed-secret123");
-        when(credentialsRepository.saveAndFlush(any(Credentials.class)))
+        when(credentialsRepository.save(any(Credentials.class)))
                 .thenThrow(new DataIntegrityViolationException("unique constraint violated on credentials.email"));
 
         Throwable thrown = catchThrowable(() -> credentialsService.create("jane@doe.be", "secret123", Role.CUSTOMER));

@@ -34,7 +34,7 @@ public class CredentialsService {
         }
         String passwordHash = passwordEncoder.encode(rawPassword);
         try {
-            return credentialsRepository.saveAndFlush(new Credentials(normalizedEmail, passwordHash, role));
+            return credentialsRepository.save(new Credentials(normalizedEmail, passwordHash, role));
         } catch (DataIntegrityViolationException e) {
             throw new EmailAlreadyUsedException(normalizedEmail, e);
         }
