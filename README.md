@@ -3,11 +3,12 @@
 Back-end REST API for Örder, an order management application (Switchfully self-evaluation project).
 Built as part of the Switchfully Java track.
 
+> **Branch `experiment/mongodb`:** this branch replaces PostgreSQL with MongoDB to compare the two. `main` stays on PostgreSQL, as the assignment requires.
+
 ## Tech stack
 
 - Java 17, Spring Boot 4.1, Maven
-- Spring Data JPA + PostgreSQL, schema managed by Flyway (`src/main/resources/db/migration`)
-- H2 in-memory database for the tests
+- Spring Data MongoDB, on a replica set (transactions need one, even with a single server)
 - Spring Security: HTTP Basic authentication, each endpoint authorized by a feature of the role (`@Secured`)
 - OpenAPI / Swagger UI (springdoc)
 - JUnit 5, AssertJ, Mockito, RestAssured, JaCoCo (≥ 80 % line coverage)
@@ -23,30 +24,28 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 
 ## Run it
 
-1. Start PostgreSQL with a database named `eurder`
-2. Copy `.env.example` to `.env` and fill in your database URL and credentials
-   (environment variables with the same names take precedence over `.env`)
+1. Start MongoDB as a replica set named `rs0`
+2. Copy `.env.example` to `.env` and adapt the connection string if needed
+   (an environment variable with the same name takes precedence over `.env`)
 3. `./mvnw spring-boot:run`
 4. Open the API documentation: http://localhost:8080/docs. Each operation states the feature and role it requires, its response codes with the `ProblemDetail` error format, and an example request.
 
 ## Configuration
 
-The application reads three required keys, with no default value:
+The application reads one required key, with no default value:
 
 | Key | Example |
 | --- | --- |
-| `DB_URL` | `jdbc:postgresql://localhost:5432/eurder` |
-| `DB_USERNAME` | `postgres` |
-| `DB_PASSWORD` | your database password |
+| `MONGODB_URI` | `mongodb://127.0.0.1:27017/eurder?replicaSet=rs0` |
 
-- They come from `.env` (a copy of `.env.example`, never committed) or from environment variables, which take precedence over `.env`.
-- `.env` uses the `.properties` format: write `DB_PASSWORD=abc`, without quotes.
-- A missing or blank key stops the startup with an `APPLICATION FAILED TO START` report that lists every missing key at once, without ever showing a value.
-- The tests do not need `.env`: they define the keys for their in-memory H2 database.
+- It comes from `.env` (a copy of `.env.example`, never committed) or from an environment variable, which takes precedence over `.env`.
+- `.env` uses the `.properties` format: write the value without quotes.
+- A missing or blank key stops the startup with an `APPLICATION FAILED TO START` report that names it, without ever showing a value.
+- The tests do not need `.env`: they define their own key, on the database `eurder_test`.
 
 ## Default admin
 
-The Flyway migration `V2__insert_default_admin.sql` creates an administrator account:
+`DefaultAdminInitializer` creates an administrator account at startup when it is missing:
 
 | Email | Password | Role |
 | --- | --- | --- |
@@ -65,7 +64,7 @@ Only the customer account creation (`POST /customers`) and the documentation are
 ./mvnw verify
 ```
 
-Tests run on in-memory H2 with the same Flyway scripts: no database needed.
+Tests need the MongoDB replica set running on `127.0.0.1:27017`. They use the database `eurder_test`, dropped once at the start of each run; any other database name is refused.
 
 Tests are independent and repeatable: they share the same database, so every test creates its own data (unique emails with `UniqueEmail`, unique item names), only asserts on that data, and never deletes data of others. They pass in any order, alone or together: classes and methods run in a random order (`src/test/resources/junit-platform.properties`), so a test depending on another one fails quickly. The seed of the order is in the test reports (`junit.jupiter.execution.order.random.seed` in `target/surefire-reports/TEST-*.xml`); replay the same order with `./mvnw test -Dtest.order.seed=<seed>`.
 
@@ -74,7 +73,7 @@ Tests are independent and repeatable: they share the same database, so every tes
 | Story | Description | Status |
 | --- | --- | --- |
 | 0 | Project setup | Done |
-| T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | Done |
+| T | Persistence: MongoDB and transactions on this branch; JPA, PostgreSQL and H2 on `main` (technical) | Done |
 | S | Security: roles, features, Basic authentication with Spring Security (technical) | Done |
 | 1 | Create a customer account | Done |
 | 2 | Add an item | Done |
@@ -115,7 +114,7 @@ At most 1000 units per state can be added in one request. A sold unit keeps the 
 - Item groups are handled in the order they are sent: ordering the same item twice, the second group sees the units left by the first.
 - Ordering links the available units to the item group, up to the ordered amount.
 - An item group copies the name, the state and the discounted price of the item, so later price changes do not affect past eurders.
-- Two requests changing the units of the same item at the same time: the last one to commit gets a `409` and can retry (each eurder increments the version of its items, `OPTIMISTIC_FORCE_INCREMENT`).
+- Two requests changing the units of the same item at the same time: the second one to write gets a `409` and can retry (each eurder writes the version of its items, and MongoDB refuses a second write on a document that an open transaction already changed).
 - The stock urgency of the overview counts the available units of all states; the overview also shows them per state.
 - The report of a customer lists their eurders oldest first, at the prices copied when they ordered.
 - What ships today is grouped by eurder, with the name and address of the customer and the state of each item group.
