@@ -3,12 +3,14 @@
 Back-end REST API for Örder, an order management application (Switchfully self-evaluation project).
 Built as part of the Switchfully Java track.
 
+> **Branch `feature/jwt-authentication`:** this branch explores JWT and refresh tokens instead of HTTP Basic. `main` stays on HTTP Basic.
+
 ## Tech stack
 
 - Java 17, Spring Boot 4.1, Maven
 - Spring Data JPA + PostgreSQL, schema managed by Flyway (`src/main/resources/db/migration`)
 - H2 in-memory database for the tests
-- Spring Security: HTTP Basic authentication, each endpoint authorized by a feature of the role (`@Secured`)
+- Spring Security: stateless JWT authentication with refresh tokens, each endpoint authorized by a feature of the role (`@Secured`)
 - OpenAPI / Swagger UI (springdoc)
 - JUnit 5, AssertJ, Mockito, RestAssured, JaCoCo (≥ 80 % line coverage)
 
@@ -31,17 +33,19 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 
 ## Configuration
 
-The application reads three required keys, with no default value:
+The application reads four required keys, with no default value:
 
 | Key | Example |
 | --- | --- |
 | `DB_URL` | `jdbc:postgresql://localhost:5432/eurder` |
 | `DB_USERNAME` | `postgres` |
 | `DB_PASSWORD` | your database password |
+| `JWT_SECRET` | a random value of at least 32 bytes (`openssl rand -hex 32`) |
 
 - They come from `.env` (a copy of `.env.example`, never committed) or from environment variables, which take precedence over `.env`.
 - `.env` uses the `.properties` format: write `DB_PASSWORD=abc`, without quotes.
 - A missing or blank key stops the startup with an `APPLICATION FAILED TO START` report that lists every missing key at once, without ever showing a value.
+- Changing `JWT_SECRET` invalidates every access token.
 - The tests do not need `.env`: they define the keys for their in-memory H2 database.
 
 ## Default admin
@@ -52,12 +56,40 @@ The Flyway migration `V2__insert_default_admin.sql` creates an administrator acc
 | --- | --- | --- |
 | `admin@eurder.be` | `admin` | `ADMIN` |
 
-The API uses HTTP Basic authentication: send `Authorization: Basic base64(email:password)` with every request,
-or use the **Authorize** button in Swagger UI. Change this password before any real deployment.
+Change this password before any real deployment.
 
 An admin creates another admin with `POST /administrators` and the body `{"email": "...", "password": "..."}`. An admin only has credentials: no address, no phone number, and it does not appear among the customers.
 
-Only the customer account creation (`POST /customers`) and the documentation are public. Every other request is authenticated before it reaches the API: a missing or wrong `Authorization` header gets a `401`, a role without the required feature gets a `403`.
+Only the customer account creation (`POST /customers`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
+
+## Authentication
+
+The API is stateless: there is no server session, and a request carrying an access token is authenticated from the token alone, without reading the database.
+
+| Endpoint | Body | Result |
+| --- | --- | --- |
+| `POST /auth/login` | `{"email": "...", "password": "..."}` | `200` with the tokens, `401` when the email or password is wrong |
+| `POST /auth/refresh` | `{"refreshToken": "..."}` | `200` with new tokens, `401` when the token is unknown, expired, revoked or already used |
+| `POST /auth/logout` | `{"refreshToken": "..."}` | `204`, even when the token is unknown |
+
+Send the access token with every other request: `Authorization: Bearer <accessToken>`, or use the **Authorize** button in Swagger UI.
+
+| | Access token | Refresh token |
+| --- | --- | --- |
+| Form | JWT signed with HS256, containing the credentials id and the role | Random value |
+| Lifetime | 15 minutes | 7 days, renewed by each refresh |
+| Stored on the server | No | Only its SHA-256 hash |
+
+- A refresh token works once: each refresh replaces it. Using an old one again revokes every token descending from the same login, since one of the two parties may have stolen it. Two simultaneous refreshes with the same token have the same effect, so a client must not send them in parallel.
+- Each login is independent: logging out or a compromised token on one device does not affect the others.
+- An access token cannot be revoked: after a logout, it stays valid until it expires.
+- The role is read from the access token, so a role change would only apply at the next refresh. The features of a role are read from the code, so they apply immediately.
+
+### Before a browser front end
+
+Tokens are sent in headers and JSON bodies, so CSRF protection is disabled on purpose. Moving the refresh token to a cookie requires, in the same change, an `HttpOnly; Secure; SameSite` cookie and CSRF protection.
+
+Not implemented yet: removing expired refresh tokens from the database, limiting login attempts, and CORS.
 
 ## Test it
 
@@ -75,7 +107,7 @@ Tests are independent and repeatable: they share the same database, so every tes
 | --- | --- | --- |
 | 0 | Project setup | Done |
 | T | Persistence: JPA, PostgreSQL, H2, transactions (technical) | Done |
-| S | Security: roles, features, Basic authentication with Spring Security (technical) | Done |
+| S | Security: roles, features, JWT authentication with Spring Security (technical) | Done |
 | 1 | Create a customer account | Done |
 | 2 | Add an item | Done |
 | 3 | Order items | Done |
