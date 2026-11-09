@@ -62,9 +62,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ProblemDetail handleAccessDenied(AuthorizationDeniedException e, Principal principal) {
-        String detail = "User " + principal.getName() + " has no access to " + requiredAuthorities(e);
-        log.warn("Forbidden: {}", detail);
-        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, detail);
+        String authorities = requiredAuthorities(e);
+        log.warn("Forbidden: user {} has no access to {}", principal.getName(), authorities);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "You have no access to " + authorities);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -107,7 +107,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static ResponseEntity<ProblemDetail> unauthorized() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"")
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"")
                 .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     }
 

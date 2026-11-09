@@ -142,7 +142,7 @@ class OpenApiEndToEndTest {
 
         assertThat(tags)
                 .extracting(tag -> tag.get("name"))
-                .containsExactlyInAnyOrder("Customers", "Items", "Eurders", "Administrators");
+                .containsExactlyInAnyOrder("Customers", "Items", "Eurders", "Administrators", "Authentication");
         assertThat(tags).allSatisfy(tag -> assertThat(tag.get("description")).isNotBlank());
     }
 
@@ -150,7 +150,7 @@ class OpenApiEndToEndTest {
     void givenTheApiDocumentation_whenReadingItsDescription_thenExplainsHowToAuthenticateAndTheErrorFormat() {
         String description = apiDocs.getString("info.description");
 
-        assertThat(description).contains("HTTP Basic").contains("ProblemDetail");
+        assertThat(description).contains("POST /auth/login").contains("ProblemDetail");
     }
 
     @Test

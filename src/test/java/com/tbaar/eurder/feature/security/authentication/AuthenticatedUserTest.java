@@ -5,6 +5,8 @@ import com.tbaar.eurder.feature.security.domain.Role;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AuthenticatedUserTest {
@@ -22,15 +24,24 @@ class AuthenticatedUserTest {
     }
 
     @Test
-    void givenCredentialsOfACustomer_whenAuthenticatingThem_thenUsesTheEmailAndHashAsUsernameAndPassword() {
+    void givenCredentialsOfACustomer_whenLoadingThemForALogin_thenUsesTheEmailAndHashAsUsernameAndPassword() {
         Credentials credentials = new Credentials("jane@doe.be", "hash", Role.CUSTOMER);
 
-        AuthenticatedUser user = AuthenticatedUser.from(credentials);
+        CredentialsUserDetails details = CredentialsUserDetails.from(credentials);
 
-        assertThat(user.getUsername()).isEqualTo("jane@doe.be");
-        assertThat(user.getPassword()).isEqualTo("hash");
-        assertThat(user.getAuthorities())
+        assertThat(details.getUsername()).isEqualTo("jane@doe.be");
+        assertThat(details.getPassword()).isEqualTo("hash");
+        assertThat(details.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("ORDER_ITEMS", "VIEW_OWN_EURDERS");
+    }
+
+    @Test
+    void givenAUser_whenAskingItsName_thenReturnsItsIdSinceTokensCarryNoEmail() {
+        UUID id = UUID.randomUUID();
+
+        String name = new AuthenticatedUser(id, Role.CUSTOMER).getName();
+
+        assertThat(name).isEqualTo(id.toString());
     }
 }

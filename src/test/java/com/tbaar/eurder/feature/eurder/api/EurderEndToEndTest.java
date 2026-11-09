@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.eurder.api;
 
+import com.tbaar.eurder.common.AccessTokens;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
@@ -175,12 +176,12 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User admin@eurder.be has no access to ORDER_ITEMS"));
+                .body("detail", equalTo("You have no access to ORDER_ITEMS"));
         assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
     @Test
-    void givenNoAuthorizationHeader_whenOrdering_thenReturns401WithABasicChallenge() {
+    void givenNoAuthorizationHeader_whenOrdering_thenReturns401WithABearerChallenge() {
         String chairId = createItem("Chair", "49.99", 10);
         RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body("""
                 {"itemGroups": [{"itemId": "%s", "amount": 1}]}
@@ -190,7 +191,7 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"");
         assertThat(availableUnits(chairId)).isEqualTo(10);
     }
 
@@ -238,7 +239,7 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User admin@eurder.be has no access to VIEW_OWN_EURDERS"));
+                .body("detail", equalTo("You have no access to VIEW_OWN_EURDERS"));
     }
 
     @Test
@@ -294,7 +295,7 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + janeEmail + " has no access to VIEW_SHIPPING_TODAY"));
+                .body("detail", equalTo("You have no access to VIEW_SHIPPING_TODAY"));
     }
 
     @Test
@@ -373,7 +374,7 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User admin@eurder.be has no access to ORDER_ITEMS"));
+                .body("detail", equalTo("You have no access to ORDER_ITEMS"));
     }
 
     @Test
@@ -457,6 +458,6 @@ class EurderEndToEndTest {
         return RestAssured.given()
                 .port(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
-                .auth().preemptive().basic(email, password);
+                .auth().oauth2(AccessTokens.of(port, email, password));
     }
 }

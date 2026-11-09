@@ -1,5 +1,6 @@
 package com.tbaar.eurder;
 
+import com.tbaar.eurder.common.AccessTokens;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -29,15 +30,15 @@ class ApplicationEndToEndTest {
     }
 
     @Test
-    void givenRunningApplication_whenRequestingOpenApiDocs_thenDeclaresBasicAuthentication() {
+    void givenRunningApplication_whenRequestingOpenApiDocs_thenDeclaresBearerAuthentication() {
         RequestSpecification request = RestAssured.given().port(port);
 
         Response response = request.get("/v3/api-docs");
 
         response.then()
                 .statusCode(HttpStatus.OK.value())
-                .body("components.securitySchemes.basicAuth.type", equalTo("http"))
-                .body("components.securitySchemes.basicAuth.scheme", equalTo("basic"));
+                .body("components.securitySchemes.bearerAuth.type", equalTo("http"))
+                .body("components.securitySchemes.bearerAuth.scheme", equalTo("bearer"));
     }
 
     @Test
@@ -52,7 +53,7 @@ class ApplicationEndToEndTest {
 
     @Test
     void givenUnknownUrl_whenAnAuthenticatedUserRequestsIt_thenReturns404ProblemDetail() {
-        RequestSpecification request = RestAssured.given().port(port).auth().preemptive().basic("admin@eurder.be", "admin");
+        RequestSpecification request = RestAssured.given().port(port).auth().oauth2(AccessTokens.of(port, "admin@eurder.be", "admin"));
 
         Response response = request.get("/does-not-exist");
 
@@ -69,6 +70,6 @@ class ApplicationEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"");
     }
 }

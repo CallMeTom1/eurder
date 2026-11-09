@@ -36,13 +36,13 @@ class GlobalExceptionHandlerTest {
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    void givenAFailedAuthentication_whenHandled_thenReturns401WithABasicChallengeWithoutLeakingTheReason() {
+    void givenAFailedAuthentication_whenHandled_thenReturns401WithABearerChallengeWithoutLeakingTheReason() {
         BadCredentialsException exception = new BadCredentialsException("Bad credentials for jane@doe.be");
 
         ResponseEntity<ProblemDetail> response = handler.handleAuthenticationFailure(exception);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Basic realm=\"Eurder\"");
+        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Bearer realm=\"Eurder\"");
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getDetail()).isEqualTo("Invalid credentials");
     }
@@ -68,7 +68,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void givenAccessDeniedByAMissingAuthority_whenHandled_thenReturns403NamingTheUserAndTheAuthority() {
+    void givenAccessDeniedByAMissingAuthority_whenHandled_thenReturns403NamingTheAuthority() {
         AuthorizationDeniedException exception = new AuthorizationDeniedException("Access Denied",
                 new AuthorityAuthorizationDecision(false, AuthorityUtils.createAuthorityList("ORDER_ITEMS")));
         Principal jane = () -> "jane@doe.be";
@@ -76,7 +76,7 @@ class GlobalExceptionHandlerTest {
         ProblemDetail response = handler.handleAccessDenied(exception, jane);
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.getDetail()).isEqualTo("User jane@doe.be has no access to ORDER_ITEMS");
+        assertThat(response.getDetail()).isEqualTo("You have no access to ORDER_ITEMS");
     }
 
     @Test

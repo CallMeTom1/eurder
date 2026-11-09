@@ -9,7 +9,7 @@ import java.util.List;
 
 public class RequiredConfigurationEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
-    private static final List<String> REQUIRED_KEYS = List.of("DB_URL", "DB_USERNAME", "DB_PASSWORD");
+    private static final List<String> REQUIRED_KEYS = List.of("DB_URL", "DB_USERNAME", "DB_PASSWORD", "JWT_SECRET");
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {

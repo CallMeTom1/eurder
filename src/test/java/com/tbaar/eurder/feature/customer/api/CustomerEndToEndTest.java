@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.customer.api;
 
+import com.tbaar.eurder.common.AccessTokens;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
@@ -209,23 +210,23 @@ class CustomerEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + janeEmail + " has no access to VIEW_CUSTOMERS"));
+                .body("detail", equalTo("You have no access to VIEW_CUSTOMERS"));
     }
 
     @Test
-    void givenNoAuthorizationHeader_whenListingCustomers_thenReturns401WithABasicChallenge() {
+    void givenNoAuthorizationHeader_whenListingCustomers_thenReturns401WithABearerChallenge() {
         RequestSpecification request = RestAssured.given().port(port);
 
         Response response = request.get("/customers");
 
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"");
     }
 
     @Test
-    void givenWrongAdminPassword_whenListingCustomers_thenReturns401() {
-        RequestSpecification request = authenticatedAs("admin@eurder.be", "not-admin");
+    void givenAnInvalidAccessToken_whenListingCustomers_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port).auth().oauth2("not-a-token");
 
         Response response = request.get("/customers");
 
@@ -304,7 +305,7 @@ class CustomerEndToEndTest {
     private RequestSpecification authenticatedAs(String email, String password) {
         return RestAssured.given()
                 .port(port)
-                .auth().preemptive().basic(email, password);
+                .auth().oauth2(AccessTokens.of(port, email, password));
     }
 
     private static String registrationOf(String email, String firstName, String lastName) {

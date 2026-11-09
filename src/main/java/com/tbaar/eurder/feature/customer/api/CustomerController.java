@@ -49,7 +49,7 @@ public class CustomerController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List all customers, sorted by last name then first name")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("VIEW_CUSTOMERS")
     public List<CustomerDto> findAll() {
         return customerService.findAll();
@@ -57,7 +57,7 @@ public class CustomerController {
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get the details of one customer")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("VIEW_CUSTOMERS")
     public CustomerDto findById(@PathVariable UUID id) {
         return customerService.findById(id);

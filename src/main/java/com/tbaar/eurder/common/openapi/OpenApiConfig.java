@@ -33,12 +33,12 @@ import java.util.Map;
 @OpenAPIDefinition(info = @Info(title = "Eurder", version = "1.0", description = """
         Order management back-end.
 
-        Authenticate with HTTP Basic (your email and password) through the Authorize button: \
+        Log in with POST /auth/login, then paste the access token in the Authorize button: \
         each operation states the feature it requires and the roles having it.
 
         Every error is a ProblemDetail (RFC 9457); validation errors also list the messages of each invalid field.
         """))
-@SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
+@SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class OpenApiConfig {
 
     private static final String PROBLEM_DETAIL = "ProblemDetail";
@@ -66,7 +66,7 @@ public class OpenApiConfig {
                 addIfAbsent(responses, "400", "Invalid request: a field, a parameter or the JSON body is invalid");
             }
             if (handlerMethod.hasMethodAnnotation(Secured.class)) {
-                addIfAbsent(responses, "401", "Missing or invalid credentials");
+                addIfAbsent(responses, "401", "Missing, invalid or expired access token");
                 addIfAbsent(responses, "403", "The role of the authenticated user lacks the required feature");
             }
             if (hasParameterAnnotatedWith(handlerMethod, PathVariable.class)) {
