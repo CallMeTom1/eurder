@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -48,14 +47,14 @@ class ItemEndToEndTest {
     private final String janeEmail = UniqueEmail.of("jane");
 
     @Test
-    void givenValidItemWithUnitsInTwoStates_whenTheAdminPostsIt_thenReturns201WithLocationAndItsAvailableUnitsPerState() {
+    void givenValidItemWithUnitsInTwoStates_whenTheAdminPostsIt_thenReturns201WithoutLocationAndWithItsAvailableUnitsPerState() {
         RequestSpecification request = asAdmin("""
                 {"name": "Chair", "description": "Wooden chair", "price": 49.9, "units": {"PRISTINE": 8, "DAMAGED": 2}}
                 """);
 
         Response response = request.post("/items");
 
-        String id = response.then()
+        response.then()
                 .statusCode(HttpStatus.CREATED.value())
                 .body("name", equalTo("Chair"))
                 .body("description", equalTo("Wooden chair"))
@@ -63,9 +62,8 @@ class ItemEndToEndTest {
                 .body("availableUnits.PRISTINE", equalTo(8))
                 .body("availableUnits.SLIGHTLY_DAMAGED", equalTo(0))
                 .body("availableUnits.DAMAGED", equalTo(2))
-                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits"))
-                .extract().path("id");
-        response.then().header(HttpHeaders.LOCATION, endsWith("/items/" + id));
+                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits"));
+        assertThat(response.getHeader(HttpHeaders.LOCATION)).isNull();
     }
 
     @Test

@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,10 +20,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,16 +42,12 @@ public class EurderController {
     @ApiResponse(responseCode = "201", description = "Eurder placed", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "404", description = "One of the items does not exist")
     @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
+    @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "basicAuth")
     @Secured("ORDER_ITEMS")
-    public ResponseEntity<EurderDto> order(@AuthenticationPrincipal AuthenticatedUser customer,
-                                           @Valid @RequestBody CreateEurderDto request) {
-        EurderDto ordered = eurderService.order(customer.id(), request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(ordered.id())
-                .toUri();
-        return ResponseEntity.created(location).body(ordered);
+    public EurderDto order(@AuthenticationPrincipal AuthenticatedUser customer,
+                           @Valid @RequestBody CreateEurderDto request) {
+        return eurderService.order(customer.id(), request);
     }
 
     @GetMapping(path = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -76,15 +71,11 @@ public class EurderController {
     @ApiResponse(responseCode = "201", description = "Eurder placed again at the current prices", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "404", description = "No such eurder among the customer's eurders, or one of its items no longer exists")
     @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
+    @ResponseStatus(HttpStatus.CREATED)
     @SecurityRequirement(name = "basicAuth")
     @Secured("ORDER_ITEMS")
-    public ResponseEntity<EurderDto> reorder(@AuthenticationPrincipal AuthenticatedUser customer,
-                                             @PathVariable UUID id) {
-        EurderDto reordered = eurderService.reorder(customer.id(), id);
-        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/eurders/{id}")
-                .buildAndExpand(reordered.id())
-                .toUri();
-        return ResponseEntity.created(location).body(reordered);
+    public EurderDto reorder(@AuthenticationPrincipal AuthenticatedUser customer,
+                             @PathVariable UUID id) {
+        return eurderService.reorder(customer.id(), id);
     }
 }
