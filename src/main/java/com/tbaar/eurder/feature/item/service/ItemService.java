@@ -45,7 +45,7 @@ public class ItemService {
         List<ItemUnit> units = request.units().entrySet().stream()
                 .flatMap(unitsOfAState -> item.newUnits(unitsOfAState.getKey(), unitsOfAState.getValue()).stream())
                 .toList();
-        itemUnitRepository.saveAll(units);
+        itemUnitRepository.insert(units);
         List<AvailableUnits> availableUnits = request.units().entrySet().stream()
                 .map(unitsOfAState -> new AvailableUnits(item.getId(), unitsOfAState.getKey(), unitsOfAState.getValue()))
                 .toList();
@@ -55,6 +55,7 @@ public class ItemService {
     public ItemDto update(UUID id, UpdateItemDto request) {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
         item.update(request.name(), request.description(), request.price());
+        itemRepository.save(item);
         return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(id)));
     }
 
@@ -76,7 +77,7 @@ public class ItemService {
 
     public ItemDto addUnits(UUID itemId, AddUnitsDto request) {
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new ItemNotFoundException(itemId));
-        itemUnitRepository.saveAll(item.newUnits(request.state(), request.amount()));
+        itemUnitRepository.insert(item.newUnits(request.state(), request.amount()));
         return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(itemId)));
     }
 
@@ -85,6 +86,7 @@ public class ItemService {
         ItemUnit unit = itemUnitRepository.findByIdAndItemId(unitId, itemId)
                 .orElseThrow(() -> new ItemUnitNotFoundException(itemId, unitId));
         unit.changeState(request.state());
+        itemUnitRepository.save(unit);
         return itemMapper.toUnitDto(unit);
     }
 

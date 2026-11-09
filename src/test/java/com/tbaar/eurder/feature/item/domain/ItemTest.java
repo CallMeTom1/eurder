@@ -37,7 +37,7 @@ class ItemTest {
         List<ItemUnit> units = item.newUnits(ItemState.DAMAGED, 3);
 
         assertThat(units).hasSize(3).allSatisfy(unit -> {
-            assertThat(unit.getItem()).isSameAs(item);
+            assertThat(unit.getItemId()).isEqualTo(item.getId());
             assertThat(unit.getState()).isEqualTo(ItemState.DAMAGED);
             assertThat(unit.isAvailable()).isTrue();
         });

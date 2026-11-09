@@ -1,9 +1,16 @@
 package com.tbaar.eurder.feature.item.domain;
 
+import com.tbaar.eurder.common.config.MongoConfig;
+import org.bson.Document;
+import org.bson.types.Decimal128;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,9 +19,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.tuple;
 
-@DataJpaTest
+@DataMongoTest
+@Import(MongoConfig.class)
 class ItemRepositoryIntegrationTest {
 
     @Autowired
@@ -24,12 +33,36 @@ class ItemRepositoryIntegrationTest {
     private ItemUnitRepository itemUnitRepository;
 
     @Autowired
-    private TestEntityManager entityManager;
+    private MongoTemplate mongoTemplate;
+
+    @Test
+    void givenSavedItem_whenReadingTheRawDocument_thenThePriceIsADecimal128() {
+        Item saved = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.90")));
+
+        Document document = mongoTemplate.findOne(Query.query(Criteria.where("_id").is(saved.getId())), Document.class, "items");
+
+        assertThat(document.get("price")).isEqualTo(new Decimal128(new BigDecimal("49.90")));
+    }
+
+    @Test
+    void givenAnItemChangedSinceItWasRead_whenSavingTheStaleCopy_thenFailsAndKeepsTheOtherChange() {
+        Item saved = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
+        Item stale = itemRepository.findById(saved.getId()).orElseThrow();
+        Item fresh = itemRepository.findById(saved.getId()).orElseThrow();
+        fresh.update("Chair", "Wooden chair", new BigDecimal("29.99"));
+        itemRepository.save(fresh);
+        stale.update("Chair", "Wooden chair", new BigDecimal("39.99"));
+
+        Throwable thrown = catchThrowable(() -> itemRepository.save(stale));
+
+        assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
+        assertThat(itemRepository.findById(saved.getId())).hasValueSatisfying(item ->
+                assertThat(item.getPrice()).isEqualTo(new BigDecimal("29.99")));
+    }
 
     @Test
     void givenSavedItem_whenReadingItBackFromTheDatabase_thenEveryFieldIsStored() {
-        Item saved = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
-        entityManager.clear();
+        Item saved = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
         Optional<Item> found = itemRepository.findById(saved.getId());
 
@@ -42,9 +75,9 @@ class ItemRepositoryIntegrationTest {
 
     @Test
     void givenItemWithTheNameOfAnExistingItem_whenSaving_thenBothItemsAreStored() {
-        Item wooden = itemRepository.saveAndFlush(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
+        Item wooden = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
-        Item plastic = itemRepository.saveAndFlush(new Item("Chair", "Plastic chair", new BigDecimal("19.99")));
+        Item plastic = itemRepository.save(new Item("Chair", "Plastic chair", new BigDecimal("19.99")));
 
         assertThat(itemRepository.findAllById(List.of(wooden.getId(), plastic.getId()))).hasSize(2);
     }
@@ -76,20 +109,19 @@ class ItemRepositoryIntegrationTest {
     private Set<UUID> saveItems() {
         Item table = saveItem("Table", ItemState.PRISTINE, 12);
         Item desk = saveItem("Desk", ItemState.PRISTINE, 3);
-        itemUnitRepository.saveAll(desk.newUnits(ItemState.DAMAGED, 1));
+        itemUnitRepository.insert(desk.newUnits(ItemState.DAMAGED, 1));
         Item lamp = saveItem("Lamp", ItemState.PRISTINE, 0);
         List<ItemUnit> soldLamps = lamp.newUnits(ItemState.PRISTINE, 2);
         soldLamps.forEach(unit -> unit.assignTo(UUID.randomUUID()));
-        itemUnitRepository.saveAll(soldLamps);
+        itemUnitRepository.insert(soldLamps);
         Item chair = saveItem("Chair", ItemState.PRISTINE, 7);
         Item bed = saveItem("Bed", ItemState.SLIGHTLY_DAMAGED, 4);
-        itemUnitRepository.flush();
         return Set.of(table.getId(), desk.getId(), lamp.getId(), chair.getId(), bed.getId());
     }
 
     private Item saveItem(String name, ItemState state, int units) {
         Item item = itemRepository.save(new Item(name, name + " description", new BigDecimal("49.99")));
-        itemUnitRepository.saveAll(item.newUnits(state, units));
+        itemUnitRepository.insert(item.newUnits(state, units));
         return item;
     }
 }

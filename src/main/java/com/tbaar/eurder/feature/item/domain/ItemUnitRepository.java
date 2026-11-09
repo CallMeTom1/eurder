@@ -1,16 +1,15 @@
 package com.tbaar.eurder.feature.item.domain;
 
 import org.springframework.data.domain.Limit;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ItemUnitRepository extends JpaRepository<ItemUnit, UUID> {
+public interface ItemUnitRepository extends MongoRepository<ItemUnit, UUID> {
 
     List<ItemUnit> findByItemIdOrderById(UUID itemId);
 
@@ -18,11 +17,10 @@ public interface ItemUnitRepository extends JpaRepository<ItemUnit, UUID> {
 
     List<ItemUnit> findByItemIdAndStateAndItemGroupIdIsNull(UUID itemId, ItemState state, Limit limit);
 
-    @Query("""
-            select new com.tbaar.eurder.feature.item.domain.AvailableUnits(u.item.id, u.state, count(u))
-            from ItemUnit u
-            where u.itemGroupId is null and u.item.id in :itemIds
-            group by u.item.id, u.state
-            """)
-    List<AvailableUnits> countAvailableUnits(@Param("itemIds") Collection<UUID> itemIds);
+    @Aggregation(pipeline = {
+            "{ $match: { itemId: { $in: ?0 }, itemGroupId: null } }",
+            "{ $group: { _id: { itemId: '$itemId', state: '$state' }, count: { $sum: 1 } } }",
+            "{ $project: { _id: 0, itemId: '$_id.itemId', state: '$_id.state', count: 1 } }"
+    })
+    List<AvailableUnits> countAvailableUnits(Collection<UUID> itemIds);
 }

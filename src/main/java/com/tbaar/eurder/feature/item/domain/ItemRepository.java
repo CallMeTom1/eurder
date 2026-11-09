@@ -1,27 +1,24 @@
 package com.tbaar.eurder.feature.item.domain;
 
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ItemRepository extends JpaRepository<Item, UUID> {
+public interface ItemRepository extends MongoRepository<Item, UUID> {
 
-    @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
-    Optional<Item> findLockedById(UUID id);
+    default Optional<Item> findLockedById(UUID id) {
+        return findById(id).map(this::save);
+    }
 
-    @Query("""
-            select new com.tbaar.eurder.feature.item.domain.ItemStock(i, count(u))
-            from Item i
-            left join ItemUnit u on u.item = i and u.itemGroupId is null
-            group by i
-            having count(u) between :minUnits and :maxUnits
-            order by count(u), i.name
-            """)
-    List<ItemStock> findStockBetween(@Param("minUnits") long minUnits, @Param("maxUnits") long maxUnits);
+    @Aggregation(pipeline = {
+            "{ $lookup: { from: 'item_units', localField: '_id', foreignField: 'itemId', pipeline: [ { $match: { itemGroupId: null } }, { $project: { _id: 1 } } ], as: 'availableUnits' } }",
+            "{ $addFields: { availableUnits: { $size: '$availableUnits' } } }",
+            "{ $match: { availableUnits: { $gte: ?0, $lte: ?1 } } }",
+            "{ $sort: { availableUnits: 1, name: 1 } }",
+            "{ $project: { _id: 0, availableUnits: 1, item: { _id: '$_id', name: '$name', description: '$description', price: '$price', version: '$version' } } }"
+    })
+    List<ItemStock> findStockBetween(long minUnits, long maxUnits);
 }

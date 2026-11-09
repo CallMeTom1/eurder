@@ -15,7 +15,7 @@ import com.tbaar.eurder.feature.item.exception.ItemUnitAlreadySoldException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -63,7 +63,7 @@ class ItemServiceIntegrationTest {
     }
 
     @Test
-    void givenExistingItem_whenUpdating_thenTheNewValuesAreStoredWithoutAnExplicitSave() {
+    void givenExistingItem_whenUpdating_thenTheNewValuesAreStored() {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
         itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
@@ -76,27 +76,27 @@ class ItemServiceIntegrationTest {
     }
 
     @Test
-    void givenTheItemChangedByAnotherTransactionMeanwhile_whenTheUpdateCommits_thenFailsAndKeepsTheOtherChange() {
+    void givenTheItemWrittenByATransactionStillOpen_whenAnotherOneUpdatesIt_thenTheSecondFailsAtOnceAndTheFirstKeepsItsChange() {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
-        TransactionTemplate updateTransaction = new TransactionTemplate(transactionManager);
-        TransactionTemplate concurrentTransaction = new TransactionTemplate(transactionManager);
-        concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        TransactionTemplate firstTransaction = new TransactionTemplate(transactionManager);
+        TransactionTemplate secondTransaction = new TransactionTemplate(transactionManager);
+        secondTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-        Throwable thrown = catchThrowable(() -> updateTransaction.executeWithoutResult(updateStatus -> {
+        Throwable thrown = firstTransaction.execute(firstStatus -> {
             itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("39.99")));
-            concurrentTransaction.executeWithoutResult(concurrentStatus ->
-                    itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("29.99"))));
-        }));
+            return catchThrowable(() -> secondTransaction.executeWithoutResult(secondStatus ->
+                    itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("29.99")))));
+        });
 
-        assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
+        assertThat(thrown).isInstanceOf(DataIntegrityViolationException.class).hasMessageContaining("WriteConflict");
         assertThat(itemRepository.findById(chair.getId())).hasValueSatisfying(item ->
-                assertThat(item.getPrice()).isEqualTo(new BigDecimal("29.99")));
+                assertThat(item.getPrice()).isEqualTo(new BigDecimal("39.99")));
     }
 
     @Test
     void givenExistingItem_whenAddingUnits_thenTheyAreStoredAsAvailableUnitsOfThatState() {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
-        itemUnitRepository.saveAll(chair.newUnits(ItemState.PRISTINE, 2));
+        itemUnitRepository.insert(chair.newUnits(ItemState.PRISTINE, 2));
 
         itemService.addUnits(chair.getId(), new AddUnitsDto(ItemState.SLIGHTLY_DAMAGED, 3));
 

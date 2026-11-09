@@ -1,32 +1,21 @@
 package com.tbaar.eurder.feature.item.domain;
 
 import com.tbaar.eurder.feature.item.exception.ItemUnitAlreadySoldException;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "item_unit")
+@Document(collection = "item_units")
+@CompoundIndex(def = "{'itemId': 1, 'state': 1, 'itemGroupId': 1}")
 public class ItemUnit {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id = UUID.randomUUID();
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id")
-    private Item item;
+    private UUID itemId;
 
-    @Enumerated(EnumType.STRING)
     private ItemState state;
 
     private UUID itemGroupId;
@@ -35,7 +24,7 @@ public class ItemUnit {
     }
 
     public ItemUnit(Item item, ItemState state) {
-        this.item = item;
+        this.itemId = item.getId();
         this.state = state;
     }
 
@@ -43,8 +32,8 @@ public class ItemUnit {
         return id;
     }
 
-    public Item getItem() {
-        return item;
+    public UUID getItemId() {
+        return itemId;
     }
 
     public ItemState getState() {

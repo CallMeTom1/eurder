@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,7 +68,7 @@ class ItemServiceTest {
         verify(itemRepository).save(savedItem.capture());
         assertThat(savedItem.getValue().getName()).isEqualTo("Chair");
         ArgumentCaptor<List<ItemUnit>> savedUnits = ArgumentCaptor.captor();
-        verify(itemUnitRepository).saveAll(savedUnits.capture());
+        verify(itemUnitRepository).insert(savedUnits.capture());
         assertThat(savedUnits.getValue())
                 .extracting(ItemUnit::getState)
                 .containsExactlyInAnyOrder(ItemState.PRISTINE, ItemState.PRISTINE, ItemState.DAMAGED);
@@ -162,7 +163,7 @@ class ItemServiceTest {
         ItemDto item = itemService.addUnits(id, new AddUnitsDto(ItemState.DAMAGED, 3));
 
         ArgumentCaptor<List<ItemUnit>> savedUnits = ArgumentCaptor.captor();
-        verify(itemUnitRepository).saveAll(savedUnits.capture());
+        verify(itemUnitRepository).insert(savedUnits.capture());
         assertThat(savedUnits.getValue()).hasSize(3).extracting(ItemUnit::getState).containsOnly(ItemState.DAMAGED);
         assertThat(item.availableUnits()).containsEntry(ItemState.DAMAGED, 3L);
     }
@@ -175,7 +176,7 @@ class ItemServiceTest {
         Throwable thrown = catchThrowable(() -> itemService.addUnits(unknownId, new AddUnitsDto(ItemState.PRISTINE, 1)));
 
         assertThat(thrown).isInstanceOf(ItemNotFoundException.class);
-        verify(itemUnitRepository, never()).saveAll(any());
+        verify(itemUnitRepository, never()).insert(anyList());
     }
 
     @Test
