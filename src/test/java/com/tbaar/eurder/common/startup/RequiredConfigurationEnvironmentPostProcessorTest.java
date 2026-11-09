@@ -16,7 +16,7 @@ class RequiredConfigurationEnvironmentPostProcessorTest {
 
     @Test
     void givenEveryRequiredKey_whenTheApplicationStarts_thenAcceptsTheConfiguration() {
-        MockEnvironment environment = completeEnvironment();
+        MockEnvironment environment = new MockEnvironment().withProperty("MONGODB_URI", "mongodb://127.0.0.1:27017/eurder");
 
         Throwable thrown = catchThrowable(() -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
 
@@ -25,41 +25,22 @@ class RequiredConfigurationEnvironmentPostProcessorTest {
 
     @Test
     void givenAMissingKey_whenTheApplicationStarts_thenRefusesNamingThatKey() {
-        MockEnvironment environment = new MockEnvironment()
-                .withProperty("DB_URL", "jdbc:postgresql://localhost:5432/eurder")
-                .withProperty("DB_USERNAME", "eurder");
+        MockEnvironment environment = new MockEnvironment();
 
         MissingConfigurationException thrown = catchThrowableOfType(MissingConfigurationException.class,
                 () -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
 
-        assertThat(thrown).hasMessage("Missing required configuration: DB_PASSWORD");
+        assertThat(thrown).hasMessage("Missing required configuration: MONGODB_URI");
     }
 
-    @Test
-    void givenSeveralMissingKeys_whenTheApplicationStarts_thenListsThemAllAtOnce() {
-        MockEnvironment environment = new MockEnvironment().withProperty("DB_USERNAME", "eurder");
-
-        MissingConfigurationException thrown = catchThrowableOfType(MissingConfigurationException.class,
-                () -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
-
-        assertThat(thrown.getMissingKeys()).containsExactly("DB_URL", "DB_PASSWORD");
-    }
-
-    @ParameterizedTest(name = "DB_PASSWORD = \"{0}\" counts as missing")
+    @ParameterizedTest(name = "MONGODB_URI = \"{0}\" counts as missing")
     @ValueSource(strings = {"", "   "})
-    void givenABlankKey_whenTheApplicationStarts_thenTreatsItAsMissingWithoutShowingItsValue(String blankPassword) {
-        MockEnvironment environment = completeEnvironment().withProperty("DB_PASSWORD", blankPassword);
+    void givenABlankKey_whenTheApplicationStarts_thenTreatsItAsMissingWithoutShowingItsValue(String blankUri) {
+        MockEnvironment environment = new MockEnvironment().withProperty("MONGODB_URI", blankUri);
 
         MissingConfigurationException thrown = catchThrowableOfType(MissingConfigurationException.class,
                 () -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
 
-        assertThat(thrown).hasMessage("Missing required configuration: DB_PASSWORD");
-    }
-
-    private static MockEnvironment completeEnvironment() {
-        return new MockEnvironment()
-                .withProperty("DB_URL", "jdbc:postgresql://localhost:5432/eurder")
-                .withProperty("DB_USERNAME", "eurder")
-                .withProperty("DB_PASSWORD", "s3cret");
+        assertThat(thrown).hasMessage("Missing required configuration: MONGODB_URI");
     }
 }

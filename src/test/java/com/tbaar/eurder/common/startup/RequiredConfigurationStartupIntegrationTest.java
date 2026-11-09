@@ -14,15 +14,15 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 class RequiredConfigurationStartupIntegrationTest {
 
     @Test
-    void givenABlankPassword_whenStartingTheApplication_thenItStopsAndLogsWhichKeyIsMissing(CapturedOutput output) {
+    void givenABlankUri_whenStartingTheApplication_thenItStopsAndLogsWhichKeyIsMissing(CapturedOutput output) {
         SpringApplication application = new SpringApplication(EurderApplication.class);
 
-        Throwable thrown = catchThrowable(() -> application.run("--DB_PASSWORD="));
+        Throwable thrown = catchThrowable(() -> application.run("--MONGODB_URI="));
 
         assertThat(thrown).isInstanceOf(MissingConfigurationException.class);
         assertThat(output)
                 .contains("APPLICATION FAILED TO START")
-                .contains("Missing required configuration: DB_PASSWORD")
+                .contains("Missing required configuration: MONGODB_URI")
                 .contains("Copy .env.example to .env");
     }
 }
