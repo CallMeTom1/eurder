@@ -4,6 +4,7 @@ import com.tbaar.eurder.common.exception.ConflictException;
 import com.tbaar.eurder.common.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -130,6 +131,16 @@ class GlobalExceptionHandlerTest {
     @Test
     void givenOptimisticLockingFailure_whenHandled_thenReturns409AskingTheClientToRetry() {
         OptimisticLockingFailureException exception = new OptimisticLockingFailureException("Row was updated by another transaction");
+
+        ProblemDetail response = handler.handleConcurrentModification(exception);
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
+        assertThat(response.getDetail()).isEqualTo("The data was modified by another request, please retry");
+    }
+
+    @Test
+    void givenAWriteConflictOfMongoDb_whenHandled_thenReturns409AskingTheClientToRetry() {
+        DataIntegrityViolationException exception = new DataIntegrityViolationException("Command failed with error 112 (WriteConflict)");
 
         ProblemDetail response = handler.handleConcurrentModification(exception);
 

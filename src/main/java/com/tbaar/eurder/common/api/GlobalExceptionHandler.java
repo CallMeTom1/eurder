@@ -4,6 +4,8 @@ import com.tbaar.eurder.common.exception.ConflictException;
 import com.tbaar.eurder.common.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -54,8 +56,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 
-    @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ProblemDetail handleConcurrentModification(OptimisticLockingFailureException e) {
+    @ExceptionHandler({OptimisticLockingFailureException.class, DataIntegrityViolationException.class})
+    public ProblemDetail handleConcurrentModification(DataAccessException e) {
         log.warn("Concurrent modification: {}", e.getMessage());
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "The data was modified by another request, please retry");
     }
