@@ -23,7 +23,7 @@ public class CustomerMapper {
         return new CustomerDto(customer.getId(),
                 customer.getFirstName(),
                 customer.getLastName(),
-                customer.getCredentials().getEmail(),
+                customer.getEmail(),
                 addressMapper.toDto(customer.getAddress()),
                 customer.getPhoneNumber());
     }

@@ -1,8 +1,5 @@
 package com.tbaar.eurder.feature.customer.domain;
 
-import jakarta.persistence.Embeddable;
-
-@Embeddable
 public class Address {
 
     private String street;

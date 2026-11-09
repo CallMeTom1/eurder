@@ -23,7 +23,8 @@ class CustomerMapperTest {
 
         Customer customer = customerMapper.toEntity(dto, credentials);
 
-        assertThat(customer.getCredentials()).isSameAs(credentials);
+        assertThat(customer.getCredentialsId()).isEqualTo(credentials.getId());
+        assertThat(customer.getEmail()).isEqualTo("jane@doe.be");
         assertThat(customer.getFirstName()).isEqualTo("Jane");
         assertThat(customer.getLastName()).isEqualTo("Doe");
         assertThat(customer.getPhoneNumber()).isEqualTo("0470123456");

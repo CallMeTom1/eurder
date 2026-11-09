@@ -1,36 +1,27 @@
 package com.tbaar.eurder.feature.customer.domain;
 
 import com.tbaar.eurder.feature.security.domain.Credentials;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "customer")
+@Document(collection = "customers")
 public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id = UUID.randomUUID();
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "credentials_id")
-    private Credentials credentials;
+    @Indexed(unique = true)
+    private UUID credentialsId;
+
+    private String email;
 
     private String firstName;
 
     private String lastName;
 
-    @Embedded
     private Address address;
 
     private String phoneNumber;
@@ -39,7 +30,8 @@ public class Customer {
     }
 
     public Customer(Credentials credentials, String firstName, String lastName, Address address, String phoneNumber) {
-        this.credentials = credentials;
+        this.credentialsId = credentials.getId();
+        this.email = credentials.getEmail();
         this.firstName = firstName;
         this.lastName = lastName;
         this.address = address;
@@ -50,8 +42,12 @@ public class Customer {
         return id;
     }
 
-    public Credentials getCredentials() {
-        return credentials;
+    public UUID getCredentialsId() {
+        return credentialsId;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getFirstName() {

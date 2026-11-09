@@ -4,6 +4,7 @@ import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +22,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 
 @SpringBootTest
 class CustomerServiceIntegrationTest {
@@ -33,7 +37,7 @@ class CustomerServiceIntegrationTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
+    @MockitoSpyBean
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -54,12 +58,12 @@ class CustomerServiceIntegrationTest {
     }
 
     @Test
-    void givenCustomerRejectedByTheDatabase_whenRegistering_thenNoCredentialsAreLeftBehind() {
-        CreateCustomerDto registrationWithTooLongHouseNumber = registration("1".repeat(21));
+    void givenCustomerNotSaved_whenRegistering_thenNoCredentialsAreLeftBehind() {
+        doThrow(new IllegalStateException("Customer not saved")).when(customerRepository).save(any(Customer.class));
 
-        Throwable thrown = catchThrowable(() -> customerService.register(registrationWithTooLongHouseNumber));
+        Throwable thrown = catchThrowable(() -> customerService.register(registration("1")));
 
-        assertThat(thrown).isNotNull();
+        assertThat(thrown).hasMessage("Customer not saved");
         assertThat(credentialsRepository.findByEmail(janeEmail)).isEmpty();
     }
 
