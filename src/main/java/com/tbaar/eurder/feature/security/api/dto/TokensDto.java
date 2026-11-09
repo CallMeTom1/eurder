@@ -6,6 +6,9 @@ public record TokensDto(
         @Schema(description = "JWT to send as Authorization: Bearer <token>")
         String accessToken,
 
+        @Schema(description = "Single-use token to get new tokens from POST /auth/refresh")
+        String refreshToken,
+
         @Schema(example = "Bearer")
         String tokenType,
 

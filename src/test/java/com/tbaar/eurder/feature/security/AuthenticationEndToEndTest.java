@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.security;
 import com.tbaar.eurder.common.AccessTokens;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.common.UniqueEmail;
+import com.tbaar.eurder.feature.security.domain.RefreshTokenRepository;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -28,11 +29,16 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Base64;
+import java.util.HexFormat;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -64,6 +70,9 @@ class AuthenticationEndToEndTest {
     @Autowired
     private JwtEncoder jwtEncoder;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     private final String email = UniqueEmail.of("jane");
 
     @BeforeEach
@@ -92,6 +101,7 @@ class AuthenticationEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .header(HttpHeaders.CACHE_CONTROL, org.hamcrest.Matchers.containsString("no-store"))
                 .body("accessToken", notNullValue())
+                .body("refreshToken", notNullValue())
                 .body("tokenType", equalTo("Bearer"))
                 .body("expiresIn", equalTo(900));
         withAccessToken(response.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
@@ -202,6 +212,126 @@ class AuthenticationEndToEndTest {
         withAccessToken(token).get("/customers").then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @Test
+    void givenARefreshToken_whenRefreshing_thenReturnsNewTokensThatWork() {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        clock.setTo(NOON.plusHours(1));
+
+        Response response = refresh(refreshToken);
+
+        response.then().statusCode(HttpStatus.OK.value()).body("tokenType", equalTo("Bearer"));
+        assertThat(response.<String>path("refreshToken")).isNotEqualTo(refreshToken);
+        withAccessToken(response.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenAnExpiredAccessTokenSentAlong_whenRefreshing_thenTheRefreshStillWorks() {
+        Response tokens = login(ADMIN, ADMIN_PASSWORD);
+        clock.setTo(NOON.plusHours(1));
+
+        Response response = jsonWithBody(refreshBody(tokens.path("refreshToken")))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.<String>path("accessToken"))
+                .post("/auth/refresh");
+
+        response.then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenAnAlreadyUsedRefreshToken_whenReusingIt_thenReturns401AndRevokesTheWholeLogin() {
+        String stolen = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String latest = refresh(stolen).path("refreshToken");
+
+        Response reuse = refresh(stolen);
+
+        reuse.then().statusCode(HttpStatus.UNAUTHORIZED.value());
+        refresh(latest).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenTwoLogins_whenOneIsCompromised_thenTheOtherKeepsWorking() {
+        String compromised = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String otherDevice = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        refresh(compromised).then().statusCode(HttpStatus.OK.value());
+
+        refresh(compromised).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+
+        refresh(otherDevice).then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenTheSameRefreshTokenSentTwiceAtOnce_whenRefreshing_thenOnlyOneSucceedsAndTheLoginIsRevoked() {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        CountDownLatch start = new CountDownLatch(1);
+
+        List<CompletableFuture<Response>> requests = List.of(refreshOnceReleased(refreshToken, start), refreshOnceReleased(refreshToken, start));
+        start.countDown();
+        List<Response> responses = requests.stream().map(CompletableFuture::join).toList();
+
+        assertThat(responses).extracting(Response::statusCode)
+                .containsExactlyInAnyOrder(HttpStatus.OK.value(), HttpStatus.UNAUTHORIZED.value());
+        String winner = responses.stream().filter(response -> response.statusCode() == HttpStatus.OK.value()).findFirst().orElseThrow().path("refreshToken");
+        refresh(winner).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenAnUnknownRefreshToken_whenRefreshing_thenReturns401() {
+        refresh("unknown-token").then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("detail", equalTo("Invalid credentials"));
+    }
+
+    @Test
+    void givenABlankRefreshToken_whenRefreshing_thenReturns400() {
+        refresh(" ").then().statusCode(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @Test
+    void givenAnExpiredRefreshToken_whenRefreshing_thenReturns401() {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+
+        clock.setTo(NOON.plusDays(7));
+
+        refresh(refreshToken).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    @Test
+    void givenARefreshToken_whenLookingInTheDatabase_thenOnlyItsHashIsStored() throws Exception {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+
+        String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(refreshToken.getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(refreshTokenRepository.findByTokenHash(refreshToken)).isEmpty();
+        assertThat(refreshTokenRepository.findByTokenHash(hash)).isPresent();
+    }
+
+    @Test
+    void givenALogin_whenLoggingOut_thenTheRefreshTokenIsRefusedButTheAccessTokenLivesUntilItExpires() {
+        Response tokens = login(ADMIN, ADMIN_PASSWORD);
+
+        Response logout = logout(tokens.path("refreshToken"));
+
+        logout.then().statusCode(HttpStatus.NO_CONTENT.value());
+        refresh(tokens.path("refreshToken")).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+        withAccessToken(tokens.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenAnUnknownRefreshToken_whenLoggingOut_thenReturns204WithoutRevealingAnything() {
+        logout("unknown-token").then().statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    private CompletableFuture<Response> refreshOnceReleased(String refreshToken, CountDownLatch start) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                start.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException(e);
+            }
+            return refresh(refreshToken);
+        });
+    }
+
     private void registerCustomer(String customerEmail, String password) {
         jsonWithBody("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "%s",
@@ -214,6 +344,20 @@ class AuthenticationEndToEndTest {
         return jsonWithBody("""
                 {"email": "%s", "password": "%s"}
                 """.formatted(loginEmail, password)).post("/auth/login");
+    }
+
+    private Response refresh(String refreshToken) {
+        return jsonWithBody(refreshBody(refreshToken)).post("/auth/refresh");
+    }
+
+    private Response logout(String refreshToken) {
+        return jsonWithBody(refreshBody(refreshToken)).post("/auth/logout");
+    }
+
+    private static String refreshBody(String refreshToken) {
+        return """
+                {"refreshToken": "%s"}
+                """.formatted(refreshToken);
     }
 
     private RequestSpecification jsonWithBody(String body) {
