@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.eurder.api.dto;
 
 import com.tbaar.eurder.feature.item.domain.ItemState;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -14,7 +15,8 @@ public record ItemGroupRequestDto(
 
         @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be greater than 0")
-        @Schema(description = "Number of units to order; ships the next day if enough units of that state are available, otherwise a week later", example = "2")
+        @Max(value = 1000, message = "Amount must be at most 1000")
+        @Schema(description = "Number of units to order, from 1 to 1000; ships the next day if enough units of that state are available, otherwise a week later", example = "2")
         Integer amount,
 
         @Schema(description = "State of the units to order, PRISTINE when left out (PRISTINE: full price, SLIGHTLY_DAMAGED: 5% discount, DAMAGED: 10% discount)", example = "PRISTINE")

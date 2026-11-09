@@ -49,6 +49,15 @@ class CreateEurderDtoValidationTest {
         assertThat(violations).isEmpty();
     }
 
+    @Test
+    void givenTheMaximumAmount_whenValidating_thenHasNoViolation() {
+        CreateEurderDto dto = withItemGroups(new ItemGroupRequestDto(CHAIR_ID, 1000));
+
+        Set<ConstraintViolation<CreateEurderDto>> violations = validator.validate(dto);
+
+        assertThat(violations).isEmpty();
+    }
+
     @ParameterizedTest(name = "{0} is rejected with \"{2}\"")
     @MethodSource("invalidEurders")
     void givenInvalidEurder_whenValidating_thenReportsTheFieldWithItsMessage(String field, CreateEurderDto dto, String expectedMessage) {
@@ -65,6 +74,7 @@ class CreateEurderDtoValidationTest {
                 Arguments.of("itemGroups[0].itemId", withItemGroups(new ItemGroupRequestDto(null, 2)), "Item id is required"),
                 Arguments.of("itemGroups[0].amount", withItemGroups(new ItemGroupRequestDto(CHAIR_ID, null)), "Amount is required"),
                 Arguments.of("itemGroups[0].amount", withItemGroups(new ItemGroupRequestDto(CHAIR_ID, 0)), "Amount must be greater than 0"),
+                Arguments.of("itemGroups[0].amount", withItemGroups(new ItemGroupRequestDto(CHAIR_ID, 1001)), "Amount must be at most 1000"),
                 Arguments.of("itemGroups[1].amount", withItemGroups(new ItemGroupRequestDto(CHAIR_ID, 2), new ItemGroupRequestDto(CHAIR_ID, -1)), "Amount must be greater than 0"),
                 Arguments.of("itemGroups[0].<list element>", withItemGroups((ItemGroupRequestDto) null), "Item group is required")
         );
