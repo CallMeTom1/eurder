@@ -28,6 +28,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static com.tbaar.eurder.common.ValidationErrors.FIELDS;
+import static com.tbaar.eurder.common.ValidationErrors.codesOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -120,7 +122,7 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.itemGroups", contains("At least one item group is required"));
+                .body(codesOf("itemGroups"), contains("validation.required"));
     }
 
     @Test
@@ -133,10 +135,10 @@ class EurderEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.keySet()", containsInAnyOrder("itemGroups[1].itemId", "itemGroups[1].amount", "itemGroups[2]"))
-                .body("errors.'itemGroups[1].itemId'", contains("Item id is required"))
-                .body("errors.'itemGroups[1].amount'", contains("Amount must be greater than 0"))
-                .body("errors.'itemGroups[2]'", contains("Item group is required"));
+                .body(FIELDS, containsInAnyOrder("itemGroups[1].itemId", "itemGroups[1].amount", "itemGroups[2]"))
+                .body(codesOf("itemGroups[1].itemId"), contains("validation.required"))
+                .body(codesOf("itemGroups[1].amount"), contains("validation.must-be-positive"))
+                .body(codesOf("itemGroups[2]"), contains("validation.required"));
     }
 
     @Test

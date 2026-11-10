@@ -1,11 +1,14 @@
 package com.tbaar.eurder.common.exception;
 
-public class ConflictException extends RuntimeException {
-    public ConflictException(String message) {
-        super(message);
+import java.util.Map;
+
+public abstract class ConflictException extends EurderException {
+
+    protected ConflictException(ErrorCode code, Map<String, Object> params, String message) {
+        super(code, params, message);
     }
 
-    public ConflictException(String message, Throwable cause) {
-        super(message, cause);
+    protected ConflictException(ErrorCode code, Map<String, Object> params, String message, Throwable cause) {
+        super(code, params, message, cause);
     }
 }

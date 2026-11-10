@@ -22,6 +22,8 @@ import org.springframework.http.HttpStatus;
 import java.util.Locale;
 import java.util.Optional;
 
+import static com.tbaar.eurder.common.ValidationErrors.codesOf;
+import static com.tbaar.eurder.common.ValidationErrors.paramsOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -177,7 +179,8 @@ class AdminEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", equalTo("Validation failed"))
-                .body("errors.email", contains("Email must be valid"));
+                .body("code", equalTo("error.common.validation-failed"))
+                .body(codesOf("email"), contains("validation.invalid-format"));
     }
 
     @Test
@@ -188,7 +191,8 @@ class AdminEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.password", contains("Password is required", "Password must be between 8 and 72 characters"));
+                .body(codesOf("password"), contains("validation.required", "validation.too-short"))
+                .body(paramsOf("password", "validation.too-short") + ".min", equalTo(8));
     }
 
     @Test
