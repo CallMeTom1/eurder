@@ -3,8 +3,6 @@
 Back-end REST API for Örder, an order management application (Switchfully self-evaluation project).
 Built as part of the Switchfully Java track.
 
-> **Branch `feature/jwt-authentication`:** this branch explores JWT and refresh tokens instead of HTTP Basic. `main` stays on HTTP Basic.
-
 ## Tech stack
 
 - Java 17, Spring Boot 4.1, Maven
