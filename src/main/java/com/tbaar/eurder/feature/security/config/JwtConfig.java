@@ -53,7 +53,6 @@ public class JwtConfig {
         return decoder;
     }
 
-    // JwtTimestampValidator reports an expiry like any invalid token: this error tells the front end to refresh it.
     static OAuth2TokenValidator<Jwt> expiryReportedToTheFrontEnd(Clock clock) {
         OAuth2Error expired = new OAuth2Error(ErrorCode.ACCESS_TOKEN_EXPIRED.key(), "The access token has expired", null);
         return jwt -> jwt.getExpiresAt() != null && clock.instant().isAfter(jwt.getExpiresAt())

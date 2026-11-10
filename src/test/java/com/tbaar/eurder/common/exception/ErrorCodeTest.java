@@ -22,7 +22,6 @@ class ErrorCodeTest {
                 "is error.<feature>.<problem> or validation.<problem> in kebab-case");
     }
 
-    // A translation file nests the keys: "error.item" cannot be both a text and the parent of "error.item.not-found".
     @Test
     void givenAllErrorCodes_whenNestingTheirKeys_thenNoKeyIsTheParentOfAnother() {
         assertThat(KEYS).noneMatch(key -> KEYS.stream().anyMatch(other -> other.startsWith(key + ".")));

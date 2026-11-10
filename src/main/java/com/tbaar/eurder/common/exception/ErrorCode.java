@@ -1,12 +1,7 @@
 package com.tbaar.eurder.common.exception;
 
-/**
- * Every error key the API can return, in the {@code code} of an error response or of a validation error.
- * The front end translates these keys; their {@code params} hold the values to insert in the translation.
- */
 public enum ErrorCode {
 
-    // common
     UNEXPECTED("error.common.unexpected"),
     BAD_REQUEST("error.common.bad-request"),
     VALIDATION_FAILED("error.common.validation-failed"),
@@ -19,7 +14,6 @@ public enum ErrorCode {
     UNSUPPORTED_MEDIA_TYPE("error.common.unsupported-media-type"),
     CONCURRENT_MODIFICATION("error.common.concurrent-modification"),
 
-    // security
     AUTHENTICATION_REQUIRED("error.security.authentication-required"),
     INVALID_CREDENTIALS("error.security.invalid-credentials"),
     INVALID_ACCESS_TOKEN("error.security.invalid-access-token"),
@@ -28,18 +22,14 @@ public enum ErrorCode {
     FORBIDDEN("error.security.forbidden"),
     EMAIL_ALREADY_USED("error.security.email-already-used"),
 
-    // customer
     CUSTOMER_NOT_FOUND("error.customer.not-found"),
 
-    // eurder
     EURDER_NOT_FOUND("error.eurder.not-found"),
 
-    // item
     ITEM_NOT_FOUND("error.item.not-found"),
     ITEM_UNIT_NOT_FOUND("error.item.unit-not-found"),
     ITEM_UNIT_ALREADY_SOLD("error.item.unit-already-sold"),
 
-    // validation: one key per kind of constraint, the front end adds the name of the field
     VALIDATION_REQUIRED("validation.required"),
     VALIDATION_TOO_SHORT("validation.too-short"),
     VALIDATION_TOO_LONG("validation.too-long"),

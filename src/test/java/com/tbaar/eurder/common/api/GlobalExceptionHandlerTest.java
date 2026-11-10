@@ -3,7 +3,6 @@ package com.tbaar.eurder.common.api;
 import com.tbaar.eurder.common.exception.ErrorCode;
 import com.tbaar.eurder.feature.item.exception.ItemNotFoundException;
 import com.tbaar.eurder.feature.security.exception.EmailAlreadyUsedException;
-import com.tbaar.eurder.feature.security.exception.InvalidRefreshTokenException;
 import jakarta.validation.Validation;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.Test;
@@ -17,16 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.authorization.AuthorityAuthorizationDecision;
-import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.jwt.JwtValidationException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -39,11 +28,11 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.tbaar.eurder.common.api.ProblemDetailAssertions.assertCode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
@@ -53,57 +42,6 @@ class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
     private final WebRequest request = new ServletWebRequest(new MockHttpServletRequest());
-
-    @Test
-    void givenAFailedAuthentication_whenHandled_thenReturns401WithABearerChallengeWithoutLeakingTheReason() {
-        BadCredentialsException exception = new BadCredentialsException("Bad credentials for jane@doe.be");
-
-        ResponseEntity<ProblemDetail> response = handler.handleAuthenticationFailure(exception);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(response.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).isEqualTo("Bearer realm=\"Eurder\"");
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).isEqualTo("Invalid credentials");
-        assertCode(response.getBody(), ErrorCode.INVALID_CREDENTIALS, Map.of());
-    }
-
-    @Test
-    void givenNoAccessToken_whenHandled_thenTellsTheFrontEndToAuthenticate() {
-        assertCode(authenticationFailure(new InsufficientAuthenticationException("Full authentication is required")),
-                ErrorCode.AUTHENTICATION_REQUIRED, Map.of());
-    }
-
-    @Test
-    void givenAnInvalidAccessToken_whenHandled_thenReturnsTheInvalidAccessTokenCode() {
-        assertCode(authenticationFailure(new InvalidBearerTokenException("Malformed token")), ErrorCode.INVALID_ACCESS_TOKEN, Map.of());
-    }
-
-    @Test
-    void givenAMalformedBearerHeader_whenHandled_thenReturnsTheInvalidAccessTokenCode() {
-        OAuth2AuthenticationException malformed = new OAuth2AuthenticationException(new OAuth2Error("invalid_token"), "Bearer token is malformed");
-
-        assertCode(authenticationFailure(malformed), ErrorCode.INVALID_ACCESS_TOKEN, Map.of());
-    }
-
-    @Test
-    void givenAnExpiredAccessToken_whenHandled_thenTellsTheFrontEndToRefreshIt() {
-        JwtValidationException expired = new JwtValidationException("Jwt expired",
-                List.of(new OAuth2Error(ErrorCode.ACCESS_TOKEN_EXPIRED.key(), "The access token has expired", null)));
-
-        assertCode(authenticationFailure(new InvalidBearerTokenException("Jwt expired", expired)), ErrorCode.ACCESS_TOKEN_EXPIRED, Map.of());
-    }
-
-    @Test
-    void givenAnAccessTokenOfAnotherIssuer_whenHandled_thenReturnsTheInvalidAccessTokenCode() {
-        JwtValidationException wrongIssuer = new JwtValidationException("Wrong issuer", List.of(new OAuth2Error("invalid_token")));
-
-        assertCode(authenticationFailure(new InvalidBearerTokenException("Wrong issuer", wrongIssuer)), ErrorCode.INVALID_ACCESS_TOKEN, Map.of());
-    }
-
-    @Test
-    void givenAnInvalidRefreshToken_whenHandled_thenUsesTheCodeOfTheException() {
-        assertCode(authenticationFailure(new InvalidRefreshTokenException()), ErrorCode.INVALID_REFRESH_TOKEN, Map.of());
-    }
 
     @Test
     void givenANotFoundException_whenHandled_thenReturns404WithItsMessageCodeAndParams() {
@@ -121,19 +59,6 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.CONFLICT.value());
         assertThat(response.getDetail()).isEqualTo("Email jane@doe.be is already in use");
         assertCode(response, ErrorCode.EMAIL_ALREADY_USED, Map.of("email", "jane@doe.be"));
-    }
-
-    @Test
-    void givenAccessDeniedByAMissingAuthority_whenHandled_thenReturns403NamingTheAuthority() {
-        AuthorizationDeniedException exception = new AuthorizationDeniedException("Access Denied",
-                new AuthorityAuthorizationDecision(false, AuthorityUtils.createAuthorityList("ORDER_ITEMS")));
-        Principal jane = () -> "jane@doe.be";
-
-        ProblemDetail response = handler.handleAccessDenied(exception, jane);
-
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
-        assertThat(response.getDetail()).isEqualTo("You have no access to ORDER_ITEMS");
-        assertCode(response, ErrorCode.FORBIDDEN, Map.of("features", List.of("ORDER_ITEMS")));
     }
 
     @Test
@@ -171,7 +96,7 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(body.getDetail()).isEqualTo("Validation failed");
         assertCode(body, ErrorCode.VALIDATION_FAILED, Map.of());
-        assertThat(body.getProperties()).containsEntry(GlobalExceptionHandler.ERRORS, List.of(
+        assertThat(body.getProperties()).containsEntry(ProblemDetails.ERRORS, List.of(
                 new ValidationErrorMapper.ValidationError("email", ErrorCode.VALIDATION_REQUIRED.key(), Map.of()),
                 new ValidationErrorMapper.ValidationError("password", ErrorCode.VALIDATION_REQUIRED.key(), Map.of())));
     }
@@ -235,18 +160,6 @@ class GlobalExceptionHandlerTest {
         assertThat(response).isNotNull();
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
         assertCode(bodyOf(response), ErrorCode.METHOD_NOT_ALLOWED, Map.of());
-    }
-
-    private ProblemDetail authenticationFailure(AuthenticationException exception) {
-        ProblemDetail body = handler.handleAuthenticationFailure(exception).getBody();
-        assertThat(body).isNotNull();
-        return body;
-    }
-
-    private static void assertCode(ProblemDetail problem, ErrorCode code, Map<String, Object> params) {
-        assertThat(problem.getProperties())
-                .containsEntry(GlobalExceptionHandler.CODE, code.key())
-                .containsEntry(GlobalExceptionHandler.PARAMS, params);
     }
 
     private static ProblemDetail bodyOf(ResponseEntity<Object> response) {

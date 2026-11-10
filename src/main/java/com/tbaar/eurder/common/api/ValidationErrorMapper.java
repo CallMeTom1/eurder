@@ -24,15 +24,8 @@ import java.util.Optional;
 
 import static java.util.Map.entry;
 
-/**
- * Turns each invalid field into a translatable {@link ErrorCode}: the key depends on the kind of constraint,
- * so the DTOs keep their annotations as they are and a new DTO needs no extra work.
- */
 final class ValidationErrorMapper {
 
-    /**
-     * Constraints whose key needs no value of the annotation. {@link Size}, {@link Max} and {@link Digits} are mapped apart.
-     */
     static final Map<Class<? extends Annotation>, ErrorCode> CODES_BY_CONSTRAINT = Map.ofEntries(
             entry(NotNull.class, ErrorCode.VALIDATION_REQUIRED),
             entry(NotBlank.class, ErrorCode.VALIDATION_REQUIRED),
@@ -103,9 +96,6 @@ final class ValidationErrorMapper {
         return value != null && value.getClass().isArray() ? Array.getLength(value) : 0;
     }
 
-    /**
-     * One invalid field: its path in the body, the key of the broken constraint and the values the translation needs.
-     */
     record ValidationError(String field, String code, Map<String, Object> params) {
 
         static ValidationError of(String field, ErrorCode code, Map<String, Object> params) {

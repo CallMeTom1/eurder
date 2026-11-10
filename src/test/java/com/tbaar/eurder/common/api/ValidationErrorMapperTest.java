@@ -114,7 +114,6 @@ class ValidationErrorMapperTest {
                 .map(name -> ClassUtils.resolveClassName(name, ValidationErrorMapperTest.class.getClassLoader()));
     }
 
-    // A constraint can sit on the field or inside its type, such as List<@NotNull ItemGroupRequestDto>.
     private static Stream<Class<? extends Annotation>> constraintsOf(Field field) {
         return Stream.concat(Arrays.stream(field.getAnnotations()), annotationsInside(field.getAnnotatedType()))
                 .map(Annotation::annotationType)

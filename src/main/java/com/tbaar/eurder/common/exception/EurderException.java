@@ -4,10 +4,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Base of the business exceptions. Its subclass decides the HTTP status, its {@link ErrorCode} the translated message.
- * The message stays in English, for the logs and the {@code detail} of the response.
- */
 public abstract class EurderException extends RuntimeException implements HasErrorCode {
 
     private final ErrorCode code;
@@ -16,17 +12,16 @@ public abstract class EurderException extends RuntimeException implements HasErr
     protected EurderException(ErrorCode code, Map<String, Object> params, String message) {
         super(message);
         this.code = code;
-        this.params = copyOf(params);
+        this.params = copyKeepingNullValues(params);
     }
 
     protected EurderException(ErrorCode code, Map<String, Object> params, String message, Throwable cause) {
         super(message, cause);
         this.code = code;
-        this.params = copyOf(params);
+        this.params = copyKeepingNullValues(params);
     }
 
-    // Unlike Map.copyOf, keeps a null value instead of hiding the business error behind a NullPointerException.
-    private static Map<String, Object> copyOf(Map<String, Object> params) {
+    private static Map<String, Object> copyKeepingNullValues(Map<String, Object> params) {
         return Collections.unmodifiableMap(new LinkedHashMap<>(params));
     }
 

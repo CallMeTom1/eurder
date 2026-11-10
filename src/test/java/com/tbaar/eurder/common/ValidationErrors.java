@@ -1,8 +1,5 @@
 package com.tbaar.eurder.common;
 
-/**
- * JSON paths into the {@code errors} of a validation failure, a list of {"field", "code", "params"}.
- */
 public final class ValidationErrors {
 
     public static final String FIELDS = "errors.field.toSet()";
