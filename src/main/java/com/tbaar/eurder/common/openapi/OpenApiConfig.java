@@ -1,5 +1,6 @@
 package com.tbaar.eurder.common.openapi;
 
+import com.tbaar.eurder.common.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -26,7 +27,6 @@ import org.springframework.web.method.HandlerMethod;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -36,7 +36,8 @@ import java.util.Map;
         Log in with POST /auth/login, then paste the access token in the Authorize button: \
         each operation states the feature it requires and the roles having it.
 
-        Every error is a ProblemDetail (RFC 9457); validation errors also list the messages of each invalid field.
+        Every error is a ProblemDetail (RFC 9457) with a translatable `code` and the `params` to insert in its translation; \
+        validation errors also list the code of each invalid field.
         """))
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class OpenApiConfig {
@@ -52,10 +53,27 @@ public class OpenApiConfig {
                 .addProperty("status", new IntegerSchema().example(400))
                 .addProperty("detail", new StringSchema().example("Validation failed"))
                 .addProperty("instance", new StringSchema().example("/items"))
-                .addProperty("errors", new MapSchema()
-                        .additionalProperties(new ArraySchema().items(new StringSchema()))
-                        .description("Only for validation errors: the messages of each invalid field, sorted")
-                        .example(Map.of("price", List.of("Price must be greater than 0")))));
+                .addProperty("code", errorCodeSchema("Translatable key of the error").example(ErrorCode.VALIDATION_FAILED.key()))
+                .addProperty("params", paramsSchema())
+                .addProperty("errors", new ArraySchema()
+                        .description("Only for validation errors: one entry per broken constraint, sorted by field")
+                        .items(new ObjectSchema()
+                                .addProperty("field", new StringSchema().example("name"))
+                                .addProperty("code", errorCodeSchema("Translatable key of the broken constraint")
+                                        .example(ErrorCode.VALIDATION_TOO_LONG.key()))
+                                .addProperty("params", paramsSchema()))));
+    }
+
+    private static Schema<String> errorCodeSchema(String description) {
+        StringSchema schema = new StringSchema();
+        schema.setEnum(Arrays.stream(ErrorCode.values()).map(ErrorCode::key).toList());
+        return schema.description(description);
+    }
+
+    private static Schema<Object> paramsSchema() {
+        return new MapSchema()
+                .description("Values to insert in the translation, such as an id or a maximum length")
+                .example(Map.of("max", 255));
     }
 
     @Bean

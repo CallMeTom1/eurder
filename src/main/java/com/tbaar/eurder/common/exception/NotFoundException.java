@@ -1,7 +1,10 @@
 package com.tbaar.eurder.common.exception;
 
-public class NotFoundException extends RuntimeException {
-    public NotFoundException(String message) {
-        super(message);
+import java.util.Map;
+
+public abstract class NotFoundException extends EurderException {
+
+    protected NotFoundException(ErrorCode code, Map<String, Object> params, String message) {
+        super(code, params, message);
     }
 }

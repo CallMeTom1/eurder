@@ -11,7 +11,7 @@ import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -40,7 +40,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
+import static com.tbaar.eurder.common.ValidationErrors.codesOf;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -80,9 +82,13 @@ class AuthenticationEndToEndTest {
         clock.setTo(NOON);
     }
 
-    @ParameterizedTest(name = "Authorization: \"{0}\" is rejected")
-    @ValueSource(strings = {"", "Bearer some-token", "Bearer !!!", "Basic YWRtaW5AZXVyZGVyLmJlOmFkbWlu"})
-    void givenAMissingOrInvalidHeader_whenCallingAProtectedEndpoint_thenReturns401WithABearerChallenge(String authorization) {
+    @ParameterizedTest(name = "Authorization: \"{0}\" is rejected with {1}")
+    @CsvSource(delimiter = '|', value = {
+            "''                                       | error.security.authentication-required",
+            "Bearer some-token                        | error.security.invalid-access-token",
+            "Bearer !!!                               | error.security.invalid-access-token",
+            "Basic YWRtaW5AZXVyZGVyLmJlOmFkbWlu       | error.security.authentication-required"})
+    void givenAMissingOrInvalidHeader_whenCallingAProtectedEndpoint_thenReturns401WithABearerChallenge(String authorization, String code) {
         RequestSpecification request = RestAssured.given().port(port).header(HttpHeaders.AUTHORIZATION, authorization);
 
         Response response = request.get("/customers");
@@ -90,7 +96,8 @@ class AuthenticationEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
                 .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"")
-                .body("detail", equalTo("Invalid credentials"));
+                .body("detail", equalTo("Invalid credentials"))
+                .body("code", equalTo(code));
     }
 
     @Test
@@ -112,8 +119,12 @@ class AuthenticationEndToEndTest {
         Response wrongPassword = login(ADMIN, "not-admin");
         Response unknownEmail = login("nobody@eurder.be", ADMIN_PASSWORD);
 
-        wrongPassword.then().statusCode(HttpStatus.UNAUTHORIZED.value()).body("detail", equalTo("Invalid credentials"));
-        unknownEmail.then().statusCode(HttpStatus.UNAUTHORIZED.value()).body("detail", equalTo("Invalid credentials"));
+        wrongPassword.then().statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("detail", equalTo("Invalid credentials"))
+                .body("code", equalTo("error.security.invalid-credentials"));
+        unknownEmail.then().statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("detail", equalTo("Invalid credentials"))
+                .body("code", equalTo("error.security.invalid-credentials"));
     }
 
     @Test
@@ -129,7 +140,7 @@ class AuthenticationEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.password[0]", equalTo("Password is required"));
+                .body(codesOf("password"), contains("validation.required"));
     }
 
     @Test
@@ -149,7 +160,9 @@ class AuthenticationEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("You have no access to VIEW_OWN_EURDERS"));
+                .body("detail", equalTo("You have no access to VIEW_OWN_EURDERS"))
+                .body("code", equalTo("error.security.forbidden"))
+                .body("params.features", contains("VIEW_OWN_EURDERS"));
     }
 
     @Test
@@ -162,14 +175,16 @@ class AuthenticationEndToEndTest {
     }
 
     @Test
-    void givenAnAccessToken_whenItsLifetimeEnds_thenItIsNoLongerAccepted() {
+    void givenAnAccessToken_whenItsLifetimeEnds_thenItIsNoLongerAcceptedAndTheFrontEndIsToldToRefreshIt() {
         String accessToken = AccessTokens.of(port, ADMIN, ADMIN_PASSWORD);
 
         clock.setTo(NOON.plusMinutes(15));
         withAccessToken(accessToken).get("/customers").then().statusCode(HttpStatus.OK.value());
 
         clock.setTo(NOON.plusMinutes(15).plusSeconds(1));
-        withAccessToken(accessToken).get("/customers").then().statusCode(HttpStatus.UNAUTHORIZED.value());
+        withAccessToken(accessToken).get("/customers").then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.access-token-expired"));
     }
 
     @Test
@@ -277,7 +292,8 @@ class AuthenticationEndToEndTest {
     void givenAnUnknownRefreshToken_whenRefreshing_thenReturns401() {
         refresh("unknown-token").then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .body("detail", equalTo("Invalid credentials"));
+                .body("detail", equalTo("Invalid credentials"))
+                .body("code", equalTo("error.security.invalid-refresh-token"));
     }
 
     @Test

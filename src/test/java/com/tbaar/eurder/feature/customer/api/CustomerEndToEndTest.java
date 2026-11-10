@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.tbaar.eurder.common.ValidationErrors.codesOf;
+import static com.tbaar.eurder.common.ValidationErrors.paramsOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -91,9 +93,10 @@ class CustomerEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", equalTo("Validation failed"))
-                .body("errors.firstName", contains("First name is required"))
-                .body("errors.email", contains("Email must be valid"))
-                .body("errors.'address.city'", contains("City is required"));
+                .body("code", equalTo("error.common.validation-failed"))
+                .body(codesOf("firstName"), contains("validation.required"))
+                .body(codesOf("email"), contains("validation.invalid-format"))
+                .body(codesOf("address.city"), contains("validation.required"));
     }
 
     @Test
@@ -104,7 +107,8 @@ class CustomerEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.password", contains("Password is required", "Password must be between 8 and 72 characters"));
+                .body(codesOf("password"), contains("validation.required", "validation.too-short"))
+                .body(paramsOf("password", "validation.too-short") + ".min", equalTo(8));
     }
 
     @Test
@@ -280,7 +284,9 @@ class CustomerEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("detail", equalTo("Failed to convert 'id' with value: 'abc'"));
+                .body("detail", equalTo("Failed to convert 'id' with value: 'abc'"))
+                .body("code", equalTo("error.common.invalid-parameter"))
+                .body("params.parameter", equalTo("id"));
     }
 
     @Test

@@ -59,7 +59,8 @@ class ApplicationEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value())
-                .body("status", equalTo(404));
+                .body("status", equalTo(404))
+                .body("code", equalTo("error.common.route-not-found"));
     }
 
     @Test

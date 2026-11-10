@@ -1,5 +1,6 @@
 package com.tbaar.eurder.common.openapi;
 
+import com.tbaar.eurder.common.exception.ErrorCode;
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +33,10 @@ class OpenApiEndToEndTest {
 
         Map<String, Object> properties = apiDocs.getMap(problemDetail);
 
-        assertThat(properties).containsKeys("type", "title", "status", "detail", "instance", "errors");
+        assertThat(properties).containsKeys("type", "title", "status", "detail", "instance", "code", "params", "errors");
+        assertThat(apiDocs.getList(problemDetail + ".code.enum", String.class))
+                .containsExactlyInAnyOrderElementsOf(Arrays.stream(ErrorCode.values()).map(ErrorCode::key).toList());
+        assertThat(apiDocs.getMap(problemDetail + ".errors.items.properties")).containsOnlyKeys("field", "code", "params");
     }
 
     @Test

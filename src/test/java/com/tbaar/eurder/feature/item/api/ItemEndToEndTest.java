@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.tbaar.eurder.common.ValidationErrors.FIELDS;
+import static com.tbaar.eurder.common.ValidationErrors.codesOf;
+import static com.tbaar.eurder.common.ValidationErrors.paramsOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -86,7 +89,8 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.'units[PRISTINE]'", contains("Units per state must be at most 1000"));
+                .body(codesOf("units[PRISTINE]"), contains("validation.too-large"))
+                .body(paramsOf("units[PRISTINE]", "validation.too-large") + ".max", equalTo(1000));
         assertThat(itemsNamed(named("Chair"))).isZero();
     }
 
@@ -125,10 +129,10 @@ class ItemEndToEndTest {
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
                 .body("detail", equalTo("Validation failed"))
-                .body("errors.keySet()", containsInAnyOrder("name", "price", "units[PRISTINE]"))
-                .body("errors.name", contains("Name is required"))
-                .body("errors.price", contains("Price must be greater than 0"))
-                .body("errors.'units[PRISTINE]'", contains("Units per state must be 0 or more"));
+                .body(FIELDS, containsInAnyOrder("name", "price", "units[PRISTINE]"))
+                .body(codesOf("name"), contains("validation.required"))
+                .body(codesOf("price"), contains("validation.must-be-positive"))
+                .body(codesOf("units[PRISTINE]"), contains("validation.must-not-be-negative"));
     }
 
     @Test
@@ -139,7 +143,8 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.price", contains("Price must have at most 8 digits before and 2 after the decimal point"));
+                .body(codesOf("price"), contains("validation.too-many-digits"))
+                .body(paramsOf("price", "validation.too-many-digits") + ".fraction", equalTo(2));
         assertThat(itemsNamed(named("Chair"))).isZero();
     }
 
@@ -153,8 +158,8 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.price", contains("Price is required"))
-                .body("errors.units", contains("Units are required"));
+                .body(codesOf("price"), contains("validation.required"))
+                .body(codesOf("units"), contains("validation.required"));
     }
 
     @Test
@@ -230,7 +235,9 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.NOT_FOUND.value())
-                .body("detail", equalTo("No item found for id " + unknownId));
+                .body("detail", equalTo("No item found for id " + unknownId))
+                .body("code", equalTo("error.item.not-found"))
+                .body("params.id", equalTo(unknownId));
     }
 
     @Test
@@ -244,7 +251,7 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.keySet()", containsInAnyOrder("name", "price"));
+                .body(FIELDS, containsInAnyOrder("name", "price"));
         assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
     }
 
@@ -400,7 +407,7 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                .body("errors.amount", contains("Amount must be greater than 0"));
+                .body(codesOf("amount"), contains("validation.must-be-positive"));
     }
 
     @Test
