@@ -33,7 +33,7 @@ public class AdminController {
     @ApiResponse(responseCode = "201", description = "Admin account created", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "409", description = "Email already in use")
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("REGISTER_ADMIN")
     public AdminDto registerAsAnAdmin(@Valid @RequestBody CreateAdminDto request) {
         return credentialsService.createAdmin(request);

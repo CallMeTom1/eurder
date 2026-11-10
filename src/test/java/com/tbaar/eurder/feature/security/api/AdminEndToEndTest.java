@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.security.api;
 
+import com.tbaar.eurder.common.AccessTokens;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
@@ -136,12 +137,12 @@ class AdminEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + customerEmail + " has no access to REGISTER_ADMIN"));
+                .body("detail", equalTo("You have no access to REGISTER_ADMIN"));
         assertThat(credentialsRepository.findByEmail(janeEmail)).isEmpty();
     }
 
     @Test
-    void givenNoAuthorizationHeader_whenPostingAnAdmin_thenReturns401WithABasicChallenge() {
+    void givenNoAuthorizationHeader_whenPostingAnAdmin_thenReturns401WithABearerChallenge() {
         RequestSpecification request = RestAssured.given()
                 .port(port)
                 .contentType(ContentType.JSON)
@@ -151,12 +152,12 @@ class AdminEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"");
     }
 
     @Test
-    void givenWrongAdminPassword_whenPostingAnAdmin_thenReturns401() {
-        RequestSpecification request = authenticatedAs(DEFAULT_ADMIN_EMAIL, "not-admin")
+    void givenAnInvalidAccessToken_whenPostingAnAdmin_thenReturns401() {
+        RequestSpecification request = RestAssured.given().port(port).auth().oauth2("not-a-token")
                 .contentType(ContentType.JSON)
                 .body(registration(janeEmail, PASSWORD));
 
@@ -252,7 +253,7 @@ class AdminEndToEndTest {
     private RequestSpecification authenticatedAs(String email, String password) {
         return RestAssured.given()
                 .port(port)
-                .auth().preemptive().basic(email, password);
+                .auth().oauth2(AccessTokens.of(port, email, password));
     }
 
     private static String registration(String email, String password) {

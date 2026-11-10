@@ -1,0 +1,8 @@
+package com.tbaar.eurder.feature.security.api.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public record RefreshTokenDto(
+        @NotBlank(message = "Refresh token is required")
+        String refreshToken) {
+}

@@ -27,7 +27,8 @@ class RequiredConfigurationEnvironmentPostProcessorTest {
     void givenAMissingKey_whenTheApplicationStarts_thenRefusesNamingThatKey() {
         MockEnvironment environment = new MockEnvironment()
                 .withProperty("DB_URL", "jdbc:postgresql://localhost:5432/eurder")
-                .withProperty("DB_USERNAME", "eurder");
+                .withProperty("DB_USERNAME", "eurder")
+                .withProperty("JWT_SECRET", "a-secret");
 
         MissingConfigurationException thrown = catchThrowableOfType(MissingConfigurationException.class,
                 () -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
@@ -37,7 +38,9 @@ class RequiredConfigurationEnvironmentPostProcessorTest {
 
     @Test
     void givenSeveralMissingKeys_whenTheApplicationStarts_thenListsThemAllAtOnce() {
-        MockEnvironment environment = new MockEnvironment().withProperty("DB_USERNAME", "eurder");
+        MockEnvironment environment = new MockEnvironment()
+                .withProperty("DB_USERNAME", "eurder")
+                .withProperty("JWT_SECRET", "a-secret");
 
         MissingConfigurationException thrown = catchThrowableOfType(MissingConfigurationException.class,
                 () -> postProcessor.postProcessEnvironment(environment, new SpringApplication()));
@@ -60,6 +63,7 @@ class RequiredConfigurationEnvironmentPostProcessorTest {
         return new MockEnvironment()
                 .withProperty("DB_URL", "jdbc:postgresql://localhost:5432/eurder")
                 .withProperty("DB_USERNAME", "eurder")
-                .withProperty("DB_PASSWORD", "s3cret");
+                .withProperty("DB_PASSWORD", "s3cret")
+                .withProperty("JWT_SECRET", "a-secret");
     }
 }

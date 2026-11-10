@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.item.api;
 
+import com.tbaar.eurder.common.AccessTokens;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.item.domain.ItemRepository;
 import com.tbaar.eurder.feature.item.domain.ItemUnitRepository;
@@ -176,19 +177,19 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + janeEmail + " has no access to MANAGE_ITEMS"));
+                .body("detail", equalTo("You have no access to MANAGE_ITEMS"));
         assertThat(itemsNamed(named("Chair"))).isZero();
     }
 
     @Test
-    void givenNoAuthorizationHeader_whenPostingAnItem_thenReturns401WithABasicChallenge() {
+    void givenNoAuthorizationHeader_whenPostingAnItem_thenReturns401WithABearerChallenge() {
         RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body(newItem(named("Chair"), "49.99", 10));
 
         Response response = request.post("/items");
 
         response.then()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Basic realm=\"Eurder\"");
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Eurder\"");
         assertThat(itemsNamed(named("Chair"))).isZero();
     }
 
@@ -266,7 +267,7 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + janeEmail + " has no access to MANAGE_ITEMS"));
+                .body("detail", equalTo("You have no access to MANAGE_ITEMS"));
         assertThat(itemRepository.findById(UUID.fromString(id)).orElseThrow().getName()).isEqualTo("Chair");
     }
 
@@ -331,7 +332,7 @@ class ItemEndToEndTest {
 
         response.then()
                 .statusCode(HttpStatus.FORBIDDEN.value())
-                .body("detail", equalTo("User " + janeEmail + " has no access to VIEW_ITEM_OVERVIEW"));
+                .body("detail", equalTo("You have no access to VIEW_ITEM_OVERVIEW"));
     }
 
     @Test
@@ -526,7 +527,7 @@ class ItemEndToEndTest {
         return RestAssured.given()
                 .port(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
-                .auth().preemptive().basic(email, password);
+                .auth().oauth2(AccessTokens.of(port, email, password));
     }
 
     private static String newItem(String name, String price, int pristineUnits) {

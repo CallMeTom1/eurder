@@ -46,7 +46,7 @@ public class ItemController {
     @Operation(summary = "Add an item to the catalog")
     @ApiResponse(responseCode = "201", description = "Item created with its units", useReturnTypeSchema = true)
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("MANAGE_ITEMS")
     public ItemDto create(@Valid @RequestBody CreateItemDto request) {
         return itemService.create(request);
@@ -56,7 +56,7 @@ public class ItemController {
     @Operation(summary = "Replace the name, description and price of an item")
     @ApiResponse(responseCode = "200", description = "Item updated", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "409", description = "The item was changed by another request meanwhile: retry")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("MANAGE_ITEMS")
     public ItemDto update(@PathVariable UUID id, @Valid @RequestBody UpdateItemDto request) {
         return itemService.update(id, request);
@@ -64,7 +64,7 @@ public class ItemController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List items with their stock urgency, from most to least urgent")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("VIEW_ITEM_OVERVIEW")
     public List<ItemOverviewDto> findOverview(@RequestParam(required = false) StockUrgency urgency) {
         return itemService.findOverview(urgency);
@@ -72,7 +72,7 @@ public class ItemController {
 
     @GetMapping(path = "/{id}/units", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List the units of an item, by state, available ones first")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("MANAGE_ITEMS")
     public List<ItemUnitDto> findUnits(@PathVariable UUID id) {
         return itemService.findUnits(id);
@@ -80,7 +80,7 @@ public class ItemController {
 
     @PostMapping(path = "/{id}/units", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add units of a state to the stock of an item")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("MANAGE_ITEMS")
     public ItemDto addUnits(@PathVariable UUID id, @Valid @RequestBody AddUnitsDto request) {
         return itemService.addUnits(id, request);
@@ -90,7 +90,7 @@ public class ItemController {
     @Operation(summary = "Change the state of an available unit of an item")
     @ApiResponse(responseCode = "200", description = "Unit in its new state", useReturnTypeSchema = true)
     @ApiResponse(responseCode = "409", description = "The unit is already sold, or the item was changed by another request meanwhile")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("MANAGE_ITEMS")
     public ItemUnitDto changeUnitState(@PathVariable UUID id, @PathVariable UUID unitId, @Valid @RequestBody ChangeUnitStateDto request) {
         return itemService.changeUnitState(id, unitId, request);

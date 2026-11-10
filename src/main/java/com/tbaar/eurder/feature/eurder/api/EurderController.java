@@ -43,7 +43,7 @@ public class EurderController {
     @ApiResponse(responseCode = "404", description = "One of the items does not exist")
     @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("ORDER_ITEMS")
     public EurderDto order(@AuthenticationPrincipal AuthenticatedUser customer,
                            @Valid @RequestBody CreateEurderDto request) {
@@ -52,7 +52,7 @@ public class EurderController {
 
     @GetMapping(path = "/report", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Report of the authenticated customer's eurders with their totals, oldest first")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("VIEW_OWN_EURDERS")
     public ReportDto findReport(@AuthenticationPrincipal AuthenticatedUser customer) {
         return eurderService.findReport(customer.id());
@@ -60,7 +60,7 @@ public class EurderController {
 
     @GetMapping(path = "/shipping-today", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Eurders with item groups to ship today, with the customer's address")
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("VIEW_SHIPPING_TODAY")
     public List<ShippingEurderDto> findShippingToday() {
         return eurderService.findShippingToday();
@@ -72,7 +72,7 @@ public class EurderController {
     @ApiResponse(responseCode = "404", description = "No such eurder among the customer's eurders, or one of its items no longer exists")
     @ApiResponse(responseCode = "409", description = "The items were changed by another request meanwhile: retry")
     @ResponseStatus(HttpStatus.CREATED)
-    @SecurityRequirement(name = "basicAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @Secured("ORDER_ITEMS")
     public EurderDto reorder(@AuthenticationPrincipal AuthenticatedUser customer,
                              @PathVariable UUID id) {
