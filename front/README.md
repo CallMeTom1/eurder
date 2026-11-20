@@ -44,7 +44,7 @@ One primary color drives everything:
 - To change the brand: run the schematic again with another `--primary-color` and `--directory=src/styles/`.
 - Material for the components, Tailwind for the layout. Never restyle a Material component with Tailwind classes.
 - Tailwind only knows the colors of the theme (`--color-*: initial`): no hard-coded color.
-- `color-scheme: light dark` on `<html>`: the browser picks the palette with `light-dark()`.
+- `color-scheme: light dark` on `<html>`: the browser picks the palette with `light-dark()`. `ThemeService` (`@core/theme`) stores the choice of the user (`light`, `dark` or `system`) in `localStorage` under `eurder.theme` and sets `data-theme` on `<html>`, which `_theme.scss` turns into `color-scheme`. `ThemeToggle` (`@shared/ui`) is its menu.
 - Font: Inter, served from `node_modules` (`@fontsource-variable/inter`), not from Google.
 
 `/design-system` shows the colors and the shared components. It only exists in development: the production build replaces `dev-only.routes.ts` with an empty list.

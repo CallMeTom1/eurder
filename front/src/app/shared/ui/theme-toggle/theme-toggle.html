@@ -1,0 +1,18 @@
+<button mat-icon-button [matMenuTriggerFor]="menu">
+  <mat-icon aria-hidden="true">{{ currentIcon() }}</mat-icon>
+  <span class="sr-only">Theme</span>
+</button>
+
+<mat-menu #menu="matMenu">
+  @for (option of options; track option.preference) {
+    <button
+      mat-menu-item
+      role="menuitemradio"
+      [attr.aria-checked]="theme.preference() === option.preference"
+      (click)="theme.choose(option.preference)"
+    >
+      <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+      <span>{{ option.label }}</span>
+    </button>
+  }
+</mat-menu>

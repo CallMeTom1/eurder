@@ -14,3 +14,13 @@
     )
   );
 }
+
+@mixin chosen-scheme {
+  &[data-theme='light'] {
+    color-scheme: light;
+  }
+
+  &[data-theme='dark'] {
+    color-scheme: dark;
+  }
+}
