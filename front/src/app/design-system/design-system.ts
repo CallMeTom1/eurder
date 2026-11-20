@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { LanguageSwitcher } from '@shared/ui/language-switcher/language-switcher';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 
 interface Swatch {
@@ -9,7 +10,7 @@ interface Swatch {
 
 @Component({
   selector: 'app-design-system',
-  imports: [MatButtonModule, ThemeToggle],
+  imports: [MatButtonModule, LanguageSwitcher, ThemeToggle],
   templateUrl: './design-system.html',
 })
 export class DesignSystem {

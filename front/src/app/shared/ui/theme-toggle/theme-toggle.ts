@@ -3,25 +3,26 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { ThemePreference, ThemeService } from '@core/theme/theme.service';
+import { TranslatePipe } from '@ngx-translate/core';
 
 interface ThemeOption {
   preference: ThemePreference;
-  label: string;
+  labelKey: string;
   icon: string;
 }
 
 @Component({
   selector: 'app-theme-toggle',
-  imports: [MatButtonModule, MatIconModule, MatMenuModule],
+  imports: [MatButtonModule, MatIconModule, MatMenuModule, TranslatePipe],
   templateUrl: './theme-toggle.html',
 })
 export class ThemeToggle {
   protected readonly theme = inject(ThemeService);
 
   protected readonly options: ThemeOption[] = [
-    { preference: 'light', label: 'Light', icon: 'light_mode' },
-    { preference: 'dark', label: 'Dark', icon: 'dark_mode' },
-    { preference: 'system', label: 'System', icon: 'contrast' },
+    { preference: 'light', labelKey: 'common.theme.light', icon: 'light_mode' },
+    { preference: 'dark', labelKey: 'common.theme.dark', icon: 'dark_mode' },
+    { preference: 'system', labelKey: 'common.theme.system', icon: 'contrast' },
   ];
 
   protected readonly currentIcon = computed(

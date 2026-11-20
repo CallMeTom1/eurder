@@ -48,3 +48,14 @@ One primary color drives everything:
 - Font: Inter, served from `node_modules` (`@fontsource-variable/inter`), not from Google.
 
 `/design-system` shows the colors and the shared components. It only exists in development: the production build replaces `dev-only.routes.ts` with an empty list.
+
+## Languages
+
+French, English and Dutch, with [ngx-translate](https://ngx-translate.org): one file per language in `public/i18n/`, loaded at runtime.
+
+- `LanguageService` (`@core/i18n`) picks the stored choice (`localStorage`, `eurder.lang`), else the first supported browser language, else English. It sets `<html lang>`. The app waits for the texts before showing anything, so no raw key flashes on screen.
+- `LanguageSwitcher` (`@shared/ui`) names each language in its own language.
+- In a template: `{{ 'common.theme.dark' | translate }}`. Keys are grouped by area: `common.*` now, then `catalog.*`, `admin.*`...
+- The error codes of the API (`error.*`, `validation.*`) will be translated from the same files.
+- `translations.spec.ts` fails when a key is missing in one language, or a text is empty.
+- In unit tests, `provideTestTranslations()` (`@core/i18n/testing`) loads the real files.

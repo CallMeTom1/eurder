@@ -1,0 +1,11 @@
+{
+  "common": {
+    "language": "Langue",
+    "theme": {
+      "title": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
+  }
+}

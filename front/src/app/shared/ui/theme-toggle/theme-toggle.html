@@ -1,6 +1,6 @@
 <button mat-icon-button [matMenuTriggerFor]="menu">
   <mat-icon aria-hidden="true">{{ currentIcon() }}</mat-icon>
-  <span class="sr-only">Theme</span>
+  <span class="sr-only">{{ 'common.theme.title' | translate }}</span>
 </button>
 
 <mat-menu #menu="matMenu">
@@ -12,7 +12,7 @@
       (click)="theme.choose(option.preference)"
     >
       <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
-      <span>{{ option.label }}</span>
+      <span>{{ option.labelKey | translate }}</span>
     </button>
   }
 </mat-menu>

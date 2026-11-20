@@ -1,0 +1,11 @@
+{
+  "common": {
+    "language": "Taal",
+    "theme": {
+      "title": "Thema",
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeem"
+    }
+  }
+}
