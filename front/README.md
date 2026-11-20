@@ -59,3 +59,25 @@ French, English and Dutch, with [ngx-translate](https://ngx-translate.org): one 
 - The error codes of the API (`error.*`, `validation.*`) will be translated from the same files.
 - `translations.spec.ts` fails when a key is missing in one language, or a text is empty.
 - In unit tests, `provideTestTranslations()` (`@core/i18n/testing`) loads the real files.
+
+## API layer
+
+`src/app/core/api/eurder-api.ts` holds the types of every DTO of the API, generated from its OpenAPI description. Never edit it by hand.
+
+```bash
+npm run api:types   # the API must run on http://localhost:8080
+```
+
+- Run it again when the API changes: the compiler then points at every place to adapt, and the diff of the file shows what changed.
+- Types only exist at compile time: nothing of this file reaches the production bundle. The one runtime value used, the list of error codes (`problemDetailCodeValues`), is only imported by a test.
+- The script calls `openapi-typescript` through `npx`, with a pinned version: it needs TypeScript 5 while Angular 22 uses TypeScript 6, so it stays out of the dependencies.
+- `--properties-required-by-default`: a response field is always present unless the API says it can be `null` or missing.
+
+Conventions:
+
+| Piece            | Where                                                                      | Rule                                                                                                                                           |
+| ---------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| URLs             | `ApiRoutes` (`@core/api/api-routes`)                                       | Every URL of the API in one place                                                                                                              |
+| DTO              | `import type { CatalogItemDto } from '@core/api/eurder-api'`               | Exactly what the API sends, used with `HttpClient`                                                                                             |
+| Model and mapper | Next to the feature (`current-user.ts`: `CurrentUser` and `toCurrentUser`) | Only when the mapping adds something: a computed field, cents instead of decimal prices, `Date` instead of ISO strings. Otherwise, use the DTO |
+| Errors           | An interceptor (next step)                                                 | They stay errors, typed as `ApiProblem`. No `{ result, data }` envelope                                                                        |

@@ -10,7 +10,8 @@
     "test:ci": "ng test --watch=false",
     "e2e": "playwright test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "api:types": "npx -y openapi-typescript@7.13.0 http://localhost:8080/api/v3/api-docs --output src/app/core/api/eurder-api.ts --root-types --root-types-no-schema-prefix --enum-values --alphabetize --properties-required-by-default && prettier --write src/app/core/api/eurder-api.ts"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

@@ -1,3 +1,4 @@
+import { problemDetailCodeValues } from '@core/api/eurder-api';
 import en from '../../../../public/i18n/en.json';
 import fr from '../../../../public/i18n/fr.json';
 import nl from '../../../../public/i18n/nl.json';
@@ -35,5 +36,15 @@ describe('Translations', () => {
     );
 
     expect(texts.filter((text) => typeof text !== 'string' || text.trim() === '')).toEqual([]);
+  });
+});
+
+describe('Translations of the API error codes', () => {
+  it('given every error code the API can send, when looking for its English text, then each one has a text', () => {
+    const english = keysOf(en);
+
+    const untranslated = problemDetailCodeValues.filter((code) => !english.includes(code));
+
+    expect(untranslated).toEqual([]);
   });
 });

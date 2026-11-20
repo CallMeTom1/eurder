@@ -7,5 +7,52 @@
       "dark": "Dark",
       "system": "System"
     }
+  },
+  "error": {
+    "common": {
+      "unexpected": "Something went wrong. Please try again later.",
+      "bad-request": "The request is not valid.",
+      "validation-failed": "Some fields are not valid.",
+      "malformed-body": "The request could not be read.",
+      "invalid-value": "The value of {{field}} is not valid.",
+      "invalid-parameter": "The parameter {{parameter}} is not valid.",
+      "route-not-found": "This page does not exist.",
+      "method-not-allowed": "This action is not allowed here.",
+      "not-acceptable": "The server cannot answer in the requested format.",
+      "unsupported-media-type": "This format is not supported.",
+      "concurrent-modification": "Someone else changed this in the meantime. Reload and try again."
+    },
+    "security": {
+      "authentication-required": "Please log in to continue.",
+      "invalid-credentials": "Wrong email or password.",
+      "invalid-access-token": "Your session is not valid. Please log in again.",
+      "access-token-expired": "Your session has expired. Please log in again.",
+      "invalid-refresh-token": "Your session has ended. Please log in again.",
+      "forbidden": "You are not allowed to do this.",
+      "invalid-csrf-token": "Your session needs to be refreshed. Reload the page and try again.",
+      "email-already-used": "An account already exists for {{email}}."
+    },
+    "customer": {
+      "not-found": "This customer does not exist."
+    },
+    "eurder": {
+      "not-found": "This order does not exist."
+    },
+    "item": {
+      "not-found": "This item does not exist.",
+      "unit-not-found": "This unit of the item does not exist.",
+      "unit-already-sold": "This unit is already sold."
+    }
+  },
+  "validation": {
+    "required": "This field is required.",
+    "too-short": "At least {{min}} characters.",
+    "too-long": "At most {{max}} characters.",
+    "too-large": "At most {{max}}.",
+    "too-many-digits": "At most {{integer}} digits before the decimal point and {{fraction}} after.",
+    "invalid-format": "The format is not valid.",
+    "must-be-positive": "Must be greater than 0.",
+    "must-not-be-negative": "Must not be negative.",
+    "invalid": "This value is not valid."
   }
 }

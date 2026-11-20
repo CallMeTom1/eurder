@@ -7,5 +7,52 @@
       "dark": "Donker",
       "system": "Systeem"
     }
+  },
+  "error": {
+    "common": {
+      "unexpected": "Er ging iets mis. Probeer het later opnieuw.",
+      "bad-request": "Het verzoek is ongeldig.",
+      "validation-failed": "Sommige velden zijn ongeldig.",
+      "malformed-body": "Het verzoek kon niet worden gelezen.",
+      "invalid-value": "De waarde van {{field}} is ongeldig.",
+      "invalid-parameter": "De parameter {{parameter}} is ongeldig.",
+      "route-not-found": "Deze pagina bestaat niet.",
+      "method-not-allowed": "Deze actie is hier niet toegestaan.",
+      "not-acceptable": "De server kan niet antwoorden in het gevraagde formaat.",
+      "unsupported-media-type": "Dit formaat wordt niet ondersteund.",
+      "concurrent-modification": "Iemand anders heeft dit intussen gewijzigd. Herlaad en probeer opnieuw."
+    },
+    "security": {
+      "authentication-required": "Meld je aan om verder te gaan.",
+      "invalid-credentials": "Verkeerd e-mailadres of wachtwoord.",
+      "invalid-access-token": "Je sessie is ongeldig. Meld je opnieuw aan.",
+      "access-token-expired": "Je sessie is verlopen. Meld je opnieuw aan.",
+      "invalid-refresh-token": "Je sessie is beëindigd. Meld je opnieuw aan.",
+      "forbidden": "Je hebt geen toestemming om dit te doen.",
+      "invalid-csrf-token": "Je sessie moet worden vernieuwd. Herlaad de pagina en probeer opnieuw.",
+      "email-already-used": "Er bestaat al een account voor {{email}}."
+    },
+    "customer": {
+      "not-found": "Deze klant bestaat niet."
+    },
+    "eurder": {
+      "not-found": "Deze bestelling bestaat niet."
+    },
+    "item": {
+      "not-found": "Dit artikel bestaat niet.",
+      "unit-not-found": "Deze eenheid van het artikel bestaat niet.",
+      "unit-already-sold": "Deze eenheid is al verkocht."
+    }
+  },
+  "validation": {
+    "required": "Dit veld is verplicht.",
+    "too-short": "Minstens {{min}} tekens.",
+    "too-long": "Maximaal {{max}} tekens.",
+    "too-large": "Maximaal {{max}}.",
+    "too-many-digits": "Maximaal {{integer}} cijfers voor de komma en {{fraction}} erna.",
+    "invalid-format": "Het formaat is ongeldig.",
+    "must-be-positive": "Moet groter zijn dan 0.",
+    "must-not-be-negative": "Mag niet negatief zijn.",
+    "invalid": "Deze waarde is ongeldig."
   }
 }

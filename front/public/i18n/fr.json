@@ -7,5 +7,52 @@
       "dark": "Sombre",
       "system": "Système"
     }
+  },
+  "error": {
+    "common": {
+      "unexpected": "Une erreur est survenue. Réessayez plus tard.",
+      "bad-request": "La requête n'est pas valide.",
+      "validation-failed": "Certains champs ne sont pas valides.",
+      "malformed-body": "La requête n'a pas pu être lue.",
+      "invalid-value": "La valeur de {{field}} n'est pas valide.",
+      "invalid-parameter": "Le paramètre {{parameter}} n'est pas valide.",
+      "route-not-found": "Cette page n'existe pas.",
+      "method-not-allowed": "Cette action n'est pas permise ici.",
+      "not-acceptable": "Le serveur ne peut pas répondre dans le format demandé.",
+      "unsupported-media-type": "Ce format n'est pas pris en charge.",
+      "concurrent-modification": "Quelqu'un d'autre a modifié ces données entre-temps. Rechargez et réessayez."
+    },
+    "security": {
+      "authentication-required": "Connectez-vous pour continuer.",
+      "invalid-credentials": "Email ou mot de passe incorrect.",
+      "invalid-access-token": "Votre session n'est pas valide. Reconnectez-vous.",
+      "access-token-expired": "Votre session a expiré. Reconnectez-vous.",
+      "invalid-refresh-token": "Votre session est terminée. Reconnectez-vous.",
+      "forbidden": "Vous n'avez pas le droit de faire cela.",
+      "invalid-csrf-token": "Votre session doit être actualisée. Rechargez la page et réessayez.",
+      "email-already-used": "Un compte existe déjà pour {{email}}."
+    },
+    "customer": {
+      "not-found": "Ce client n'existe pas."
+    },
+    "eurder": {
+      "not-found": "Cette commande n'existe pas."
+    },
+    "item": {
+      "not-found": "Cet article n'existe pas.",
+      "unit-not-found": "Cette unité de l'article n'existe pas.",
+      "unit-already-sold": "Cette unité est déjà vendue."
+    }
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire.",
+    "too-short": "Au moins {{min}} caractères.",
+    "too-long": "Au maximum {{max}} caractères.",
+    "too-large": "Au maximum {{max}}.",
+    "too-many-digits": "Au maximum {{integer}} chiffres avant la virgule et {{fraction}} après.",
+    "invalid-format": "Le format n'est pas valide.",
+    "must-be-positive": "Doit être supérieur à 0.",
+    "must-not-be-negative": "Ne peut pas être négatif.",
+    "invalid": "Cette valeur n'est pas valide."
   }
 }
