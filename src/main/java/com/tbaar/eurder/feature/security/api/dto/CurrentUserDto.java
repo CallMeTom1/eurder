@@ -15,9 +15,9 @@ public record CurrentUserDto(
         @Schema(example = "jane@doe.be")
         String email,
 
-        @Schema(description = "Null for an admin, who has no customer profile", example = "Jane")
+        @Schema(types = {"string", "null"}, description = "Null for an admin, who has no customer profile", example = "Jane")
         String firstName,
 
-        @Schema(description = "Null for an admin, who has no customer profile", example = "Doe")
+        @Schema(types = {"string", "null"}, description = "Null for an admin, who has no customer profile", example = "Doe")
         String lastName) {
 }

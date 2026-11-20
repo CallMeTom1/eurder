@@ -40,6 +40,27 @@ class OpenApiEndToEndTest {
     }
 
     @Test
+    void givenTheProblemDetailSchema_whenReadingItsRequiredFields_thenOnlyTheValidationErrorsAndTheTypeMayBeMissing() {
+        String schema = "components.schemas.ProblemDetail";
+
+        List<String> required = apiDocs.getList(schema + ".required", String.class);
+
+        assertThat(required).containsExactlyInAnyOrder("title", "status", "detail", "instance", "code", "params");
+        assertThat(apiDocs.getList(schema + ".properties.errors.items.required", String.class))
+                .containsExactlyInAnyOrder("field", "code", "params");
+    }
+
+    @Test
+    void givenTheCurrentUserSchema_whenReadingTheNames_thenTheyMayBeNullForAnAdmin() {
+        String properties = "components.schemas.CurrentUserDto.properties";
+
+        List<String> firstNameTypes = apiDocs.getList(properties + ".firstName.type", String.class);
+
+        assertThat(firstNameTypes).containsExactlyInAnyOrder("string", "null");
+        assertThat(apiDocs.getList(properties + ".lastName.type", String.class)).containsExactlyInAnyOrder("string", "null");
+    }
+
+    @Test
     void givenASecuredEndpointWithABody_whenReadingItsResponses_thenListsTheValidationAndSecurityErrors() {
         String responses = "paths.'/items'.post.responses";
 

@@ -27,6 +27,7 @@ import org.springframework.web.method.HandlerMethod;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -62,7 +63,9 @@ public class OpenApiConfig {
                                 .addProperty("field", new StringSchema().example("name"))
                                 .addProperty("code", errorCodeSchema("Translatable key of the broken constraint")
                                         .example(ErrorCode.VALIDATION_TOO_LONG.key()))
-                                .addProperty("params", paramsSchema()))));
+                                .addProperty("params", paramsSchema())
+                                .required(List.of("field", "code", "params"))))
+                .required(List.of("title", "status", "detail", "instance", "code", "params")));
     }
 
     private static Schema<String> errorCodeSchema(String description) {
