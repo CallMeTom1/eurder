@@ -18,6 +18,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -47,6 +48,12 @@ public class SecurityExceptionHandler {
         String required = missingFeatures.isEmpty() ? "this resource" : String.join(", ", missingFeatures);
         log.warn("Forbidden: user {} has no access to {}", principal.getName(), required);
         return problem(HttpStatus.FORBIDDEN, "You have no access to " + required, ErrorCode.FORBIDDEN, Map.of("features", missingFeatures));
+    }
+
+    @ExceptionHandler(CsrfException.class)
+    public ProblemDetail handleCsrfFailure(CsrfException e) {
+        log.warn("Forbidden: {}", e.getMessage());
+        return problem(HttpStatus.FORBIDDEN, "Missing or invalid CSRF token", ErrorCode.INVALID_CSRF_TOKEN, Map.of());
     }
 
     private static ErrorCode authenticationFailureCode(AuthenticationException e) {

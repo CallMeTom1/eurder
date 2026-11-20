@@ -91,11 +91,21 @@ The access token cookie is kept as long as the refresh token, longer than the JW
 - An access token cannot be revoked: after a logout, it stays valid until it expires.
 - The role is read from the access token, so a role change would only apply at the next refresh. The features of a role are read from the code, so they apply immediately.
 
-### Before a browser front end
+### CSRF protection
 
-The API reads the access token cookie, but CSRF protection is still disabled: it comes next, before a front end uses the cookies.
+A browser sends the token cookies by itself, even when another site triggers the request. So every `POST`, `PUT`, `PATCH` and `DELETE` must also carry a CSRF token (double-submit cookie):
 
-Not implemented yet: removing expired refresh tokens from the database, limiting login attempts, and CORS.
+1. Every response sets an `XSRF-TOKEN` cookie, readable by JavaScript (`Path=/; Secure; SameSite=Strict`), including a `401`, so a front end has it before logging in.
+2. The front end copies its value in the `X-XSRF-TOKEN` header. Angular does it by itself, and so does Swagger UI.
+3. The API compares both. Missing or different: `403` with `code: error.security.invalid-csrf-token`.
+
+Another site can neither read our cookies nor add this header. `GET` requests need no token.
+
+A request with an `Authorization: Bearer` header needs no CSRF token either (Spring Security exempts it): a browser never adds that header by itself, so it cannot be forged. To keep that exemption away from the cookie, the access token cookie becomes a `Bearer` header only after the CSRF check (`AccessTokenCookieFilter`).
+
+With `curl` and the cookies, send any value twice: `-b "XSRF-TOKEN=abc" -H "X-XSRF-TOKEN: abc"`.
+
+Not implemented yet: removing expired refresh tokens from the database, limiting login attempts, and CORS (a front end on another origin goes through a proxy).
 
 ## Test it
 

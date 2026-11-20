@@ -20,6 +20,7 @@ public enum ErrorCode {
     ACCESS_TOKEN_EXPIRED("error.security.access-token-expired"),
     INVALID_REFRESH_TOKEN("error.security.invalid-refresh-token"),
     FORBIDDEN("error.security.forbidden"),
+    INVALID_CSRF_TOKEN("error.security.invalid-csrf-token"),
     EMAIL_ALREADY_USED("error.security.email-already-used"),
 
     CUSTOMER_NOT_FOUND("error.customer.not-found"),

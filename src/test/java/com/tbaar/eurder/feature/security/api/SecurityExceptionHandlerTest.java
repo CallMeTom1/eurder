@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
+import org.springframework.security.web.csrf.MissingCsrfTokenException;
 
 import java.security.Principal;
 import java.util.List;
@@ -91,6 +92,17 @@ class SecurityExceptionHandlerTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
         assertThat(response.getDetail()).isEqualTo("You have no access to ORDER_ITEMS");
         assertCode(response, ErrorCode.FORBIDDEN, Map.of("features", List.of("ORDER_ITEMS")));
+    }
+
+    @Test
+    void givenAMissingCsrfToken_whenHandled_thenReturns403WithTheCsrfCode() {
+        MissingCsrfTokenException exception = new MissingCsrfTokenException("the-expected-token");
+
+        ProblemDetail response = handler.handleCsrfFailure(exception);
+
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.FORBIDDEN.value());
+        assertThat(response.getDetail()).isEqualTo("Missing or invalid CSRF token");
+        assertCode(response, ErrorCode.INVALID_CSRF_TOKEN, Map.of());
     }
 
     private ProblemDetail authenticationFailure(AuthenticationException exception) {
