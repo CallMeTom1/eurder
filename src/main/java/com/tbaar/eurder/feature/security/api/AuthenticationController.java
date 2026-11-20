@@ -2,16 +2,20 @@ package com.tbaar.eurder.feature.security.api;
 
 import com.tbaar.eurder.feature.security.api.dto.CurrentUserDto;
 import com.tbaar.eurder.feature.security.api.dto.LoginDto;
+import com.tbaar.eurder.feature.security.authentication.AuthenticatedUser;
 import com.tbaar.eurder.feature.security.service.AuthenticationResult;
 import com.tbaar.eurder.feature.security.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Authentication", description = "Getting, renewing and revoking the token cookies")
+@Tag(name = "Authentication", description = "Getting, renewing and revoking the token cookies, and the logged-in user")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -47,6 +51,16 @@ public class AuthenticationController {
     public ResponseEntity<CurrentUserDto> refresh(
             @Parameter(hidden = true) @CookieValue(name = AuthCookies.REFRESH_TOKEN, required = false) String refreshToken) {
         return withTokenCookies(authenticationService.refresh(refreshToken));
+    }
+
+    @GetMapping(path = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Describe the logged-in user",
+            description = "A front end calls it at startup: it cannot read the HttpOnly cookies, so it asks who they belong to.")
+    @ApiResponse(responseCode = "200", description = "The logged-in user", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "401", description = "Missing, invalid or expired access token")
+    @SecurityRequirement(name = "bearerAuth")
+    public CurrentUserDto me(@AuthenticationPrincipal AuthenticatedUser user) {
+        return authenticationService.findCurrentUser(user);
     }
 
     @PostMapping(path = "/logout")

@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.security.config;
 
 import com.tbaar.eurder.feature.security.domain.Feature;
 import com.tbaar.eurder.feature.security.domain.Role;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +18,14 @@ public class SecurityOpenApiConfig {
     public OperationCustomizer requiredFeatureDescription() {
         return (operation, handlerMethod) -> {
             Secured secured = handlerMethod.getMethodAnnotation(Secured.class);
-            String access = secured == null
-                    ? "Public: no authentication needed."
-                    : Arrays.stream(secured.value()).map(SecurityOpenApiConfig::requirement).collect(Collectors.joining(" "));
+            String access;
+            if (secured != null) {
+                access = Arrays.stream(secured.value()).map(SecurityOpenApiConfig::requirement).collect(Collectors.joining(" "));
+            } else if (handlerMethod.hasMethodAnnotation(SecurityRequirement.class)) {
+                access = "Requires an access token, any role.";
+            } else {
+                access = "Public: no authentication needed.";
+            }
             operation.setDescription(operation.getDescription() == null ? access : operation.getDescription() + "\n\n" + access);
             return operation;
         };

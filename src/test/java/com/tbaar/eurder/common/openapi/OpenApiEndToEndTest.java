@@ -142,6 +142,16 @@ class OpenApiEndToEndTest {
     }
 
     @Test
+    void givenAnEndpointOpenToAnyLoggedInUser_whenReadingItsDocumentation_thenStatesThatAnAccessTokenIsNeeded() {
+        String operation = "paths.'/auth/me'.get";
+
+        String description = apiDocs.getString(operation + ".description");
+
+        assertThat(description).contains("Requires an access token, any role.").doesNotContain("Public");
+        assertThat(apiDocs.getMap(operation + ".responses")).containsKeys("200", "401");
+    }
+
+    @Test
     void givenTheApiDocumentation_whenReadingTheTags_thenEachTagHasADescription() {
         List<Map<String, String>> tags = apiDocs.getList("tags");
 
@@ -155,7 +165,7 @@ class OpenApiEndToEndTest {
     void givenTheApiDocumentation_whenReadingItsDescription_thenExplainsHowToAuthenticateAndTheErrorFormat() {
         String description = apiDocs.getString("info.description");
 
-        assertThat(description).contains("POST /auth/login").contains("ProblemDetail");
+        assertThat(description).contains("POST /auth/login", "HttpOnly cookies", "Authorization: Bearer", "ProblemDetail");
     }
 
     @Test

@@ -233,6 +233,99 @@ class AuthenticationEndToEndTest {
     }
 
     @Test
+    void givenTheAccessTokenCookie_whenCallingAProtectedEndpoint_thenItOpensTheApi() {
+        RequestSpecification request = withAccessTokenCookie(AccessTokens.of(port, ADMIN, ADMIN_PASSWORD));
+
+        Response response = request.get("/customers");
+
+        response.then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenAnExpiredAccessTokenCookie_whenCallingTheApi_thenTheFrontEndIsToldToRefreshIt() {
+        RequestSpecification request = withAccessTokenCookie(AccessTokens.of(port, ADMIN, ADMIN_PASSWORD));
+        clock.setTo(NOON.plusMinutes(16));
+
+        Response response = request.get("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.access-token-expired"));
+    }
+
+    @Test
+    void givenAValidHeaderAndAnInvalidCookie_whenCallingTheApi_thenTheHeaderWins() {
+        RequestSpecification request = withAccessToken(AccessTokens.of(port, ADMIN, ADMIN_PASSWORD)).cookie(ACCESS_TOKEN, "not-a-token");
+
+        Response response = request.get("/customers");
+
+        response.then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenACustomerCookie_whenAskingWhoIsLoggedIn_thenDescribesTheCustomer() {
+        registerCustomer(email, "secret123");
+        RequestSpecification request = withAccessTokenCookie(AccessTokens.of(port, email, "secret123"));
+
+        Response response = request.get("/auth/me");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", notNullValue())
+                .body("role", equalTo("CUSTOMER"))
+                .body("email", equalTo(email))
+                .body("firstName", equalTo("Jane"))
+                .body("lastName", equalTo("Doe"));
+    }
+
+    @Test
+    void givenTheAdminCookie_whenAskingWhoIsLoggedIn_thenDescribesTheAdminWithoutAName() {
+        RequestSpecification request = withAccessTokenCookie(AccessTokens.of(port, ADMIN, ADMIN_PASSWORD));
+
+        Response response = request.get("/auth/me");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("role", equalTo("ADMIN"))
+                .body("email", equalTo(ADMIN))
+                .body("firstName", nullValue());
+    }
+
+    @Test
+    void givenNoToken_whenAskingWhoIsLoggedIn_thenReturns401AuthenticationRequired() {
+        RequestSpecification request = EurderApi.given(port);
+
+        Response response = request.get("/auth/me");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.authentication-required"));
+    }
+
+    @Test
+    void givenAnExpiredAccessTokenCookie_whenAskingWhoIsLoggedIn_thenReturns401AccessTokenExpired() {
+        RequestSpecification request = withAccessTokenCookie(AccessTokens.of(port, ADMIN, ADMIN_PASSWORD));
+        clock.setTo(NOON.plusMinutes(16));
+
+        Response response = request.get("/auth/me");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.access-token-expired"));
+    }
+
+    @Test
+    void givenTheCredentialsOfATokenNoLongerExist_whenAskingWhoIsLoggedIn_thenReturns401InvalidAccessToken() {
+        String token = sign(jwtEncoder, "eurder", UUID.randomUUID().toString(), "CUSTOMER");
+
+        Response response = withAccessTokenCookie(token).get("/auth/me");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.invalid-access-token"));
+    }
+
+    @Test
     void givenAnAccessTokenSignedWithAnotherSecret_whenCallingTheApi_thenReturns401() {
         JwtEncoder otherEncoder = NimbusJwtEncoder.withSecretKey(new SecretKeySpec(
                 "another-secret-that-is-long-enough-for-hs256".getBytes(StandardCharsets.UTF_8), "HmacSHA256")).build();
@@ -296,6 +389,22 @@ class AuthenticationEndToEndTest {
                 .post("/auth/refresh");
 
         response.then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenAnExpiredAccessTokenCookieSentAlong_whenRefreshingOrLoggingOut_thenBothStillWork() {
+        Response tokens = login(ADMIN, ADMIN_PASSWORD);
+        clock.setTo(NOON.plusHours(1));
+
+        Response refresh = withAccessTokenCookie(tokens.getCookie(ACCESS_TOKEN))
+                .cookie(REFRESH_TOKEN, tokens.getCookie(REFRESH_TOKEN))
+                .post("/auth/refresh");
+        Response logout = withAccessTokenCookie(tokens.getCookie(ACCESS_TOKEN))
+                .cookie(REFRESH_TOKEN, refresh.getCookie(REFRESH_TOKEN))
+                .post("/auth/logout");
+
+        refresh.then().statusCode(HttpStatus.OK.value());
+        logout.then().statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     @Test
@@ -456,6 +565,10 @@ class AuthenticationEndToEndTest {
 
     private RequestSpecification withAccessToken(String accessToken) {
         return EurderApi.given(port).auth().oauth2(accessToken);
+    }
+
+    private RequestSpecification withAccessTokenCookie(String accessToken) {
+        return EurderApi.given(port).cookie(ACCESS_TOKEN, accessToken);
     }
 
     private String sign(JwtEncoder encoder, String issuer, String subject, String role) {

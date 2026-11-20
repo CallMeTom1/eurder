@@ -70,9 +70,12 @@ The API is stateless: there is no server session, and a request carrying an acce
 | --- | --- | --- |
 | `POST /auth/login` | `{"email": "...", "password": "..."}` | `200`, sets both token cookies, body `{"id", "role", "email", "firstName", "lastName"}` (no name for an admin). `401` when the email or password is wrong |
 | `POST /auth/refresh` | The `refresh_token` cookie | `200`, sets new token cookies, same body as the login. `401` when the cookie is missing, or the token unknown, expired, revoked or already used |
+| `GET /auth/me` | The access token | `200` with the same body as the login, `401` without a valid access token |
 | `POST /auth/logout` | The `refresh_token` cookie | `204` and both cookies cleared, even without a cookie or with an unknown token |
 
-The tokens are never in a response body, only in `HttpOnly` cookies that the JavaScript of a page cannot read. Send the access token with every other request: `Authorization: Bearer <access token>`.
+The tokens are never in a response body, only in `HttpOnly` cookies that the JavaScript of a page cannot read. A browser sends the `access_token` cookie by itself. Other clients send the access token as `Authorization: Bearer <access token>`, which wins when both are present. `login`, `refresh` and `logout` ignore the access token, so an expired one does not block them.
+
+A front end cannot read these cookies: it calls `GET /auth/me` at startup to know who is logged in.
 
 | | Access token | Refresh token |
 | --- | --- | --- |
@@ -90,7 +93,7 @@ The access token cookie is kept as long as the refresh token, longer than the JW
 
 ### Before a browser front end
 
-The token cookies are set, but the API does not read the access token cookie yet, and CSRF protection is still disabled: both come next, before a front end uses the cookies.
+The API reads the access token cookie, but CSRF protection is still disabled: it comes next, before a front end uses the cookies.
 
 Not implemented yet: removing expired refresh tokens from the database, limiting login attempts, and CORS.
 

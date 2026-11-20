@@ -33,8 +33,9 @@ import java.util.Map;
 @OpenAPIDefinition(info = @Info(title = "Eurder", version = "1.0", description = """
         Order management back-end.
 
-        Log in with POST /auth/login, then paste the access token in the Authorize button: \
-        each operation states the feature it requires and the roles having it.
+        Log in with POST /auth/login: the tokens come back in HttpOnly cookies, that this page then sends by itself. \
+        Other clients can send the access token as Authorization: Bearer <token>. \
+        Each operation states the feature it requires and the roles having it.
 
         Every error is a ProblemDetail (RFC 9457) with a translatable `code` and the `params` to insert in its translation; \
         validation errors also list the code of each invalid field.

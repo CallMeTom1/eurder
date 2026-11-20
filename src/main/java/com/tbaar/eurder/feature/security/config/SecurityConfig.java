@@ -1,6 +1,9 @@
 package com.tbaar.eurder.feature.security.config;
 
+import com.tbaar.eurder.feature.security.api.AuthCookies;
 import com.tbaar.eurder.feature.security.authentication.AccessTokenAuthenticationConverter;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,8 +23,10 @@ import org.springframework.security.oauth2.server.resource.web.DefaultBearerToke
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import org.springframework.web.util.WebUtils;
 
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
@@ -66,7 +71,21 @@ public class SecurityConfig {
     // An expired access token sent along must not block the very requests that replace it.
     private static BearerTokenResolver bearerTokenResolver() {
         BearerTokenResolver headerResolver = new DefaultBearerTokenResolver();
-        RequestMatcher authenticationEndpoints = PathPatternRequestMatcher.pathPattern("/auth/**");
-        return request -> authenticationEndpoints.matches(request) ? null : headerResolver.resolve(request);
+        RequestMatcher tokenEndpoints = new OrRequestMatcher(
+                PathPatternRequestMatcher.pathPattern("/auth/login"),
+                PathPatternRequestMatcher.pathPattern("/auth/refresh"),
+                PathPatternRequestMatcher.pathPattern("/auth/logout"));
+        return request -> {
+            if (tokenEndpoints.matches(request)) {
+                return null;
+            }
+            String fromHeader = headerResolver.resolve(request);
+            return fromHeader != null ? fromHeader : accessTokenCookie(request);
+        };
+    }
+
+    private static String accessTokenCookie(HttpServletRequest request) {
+        Cookie cookie = WebUtils.getCookie(request, AuthCookies.ACCESS_TOKEN);
+        return cookie == null || cookie.getValue().isBlank() ? null : cookie.getValue();
     }
 }
