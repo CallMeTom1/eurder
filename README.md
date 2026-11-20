@@ -31,6 +31,8 @@ Maven is pinned to **3.9.16**: IntelliJ IDEA 2026.2 cannot import the project wi
 
 Every endpoint lives under `/api` (`server.servlet.context-path`), so that a front end and its proxy see the same paths as the API. The paths in this README are relative to it: `POST /auth/login` is `http://localhost:8080/api/auth/login`.
 
+The Angular front end lives in [`front/`](front/README.md): with the API running, `npm start` there and open http://localhost:4200.
+
 ## Configuration
 
 The application reads four required keys, with no default value:
