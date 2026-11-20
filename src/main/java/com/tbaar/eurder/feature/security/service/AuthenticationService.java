@@ -1,7 +1,7 @@
 package com.tbaar.eurder.feature.security.service;
 
+import com.tbaar.eurder.feature.security.api.dto.CurrentUserDto;
 import com.tbaar.eurder.feature.security.api.dto.LoginDto;
-import com.tbaar.eurder.feature.security.api.dto.TokensDto;
 import com.tbaar.eurder.feature.security.authentication.AccessTokenIssuer;
 import com.tbaar.eurder.feature.security.authentication.AuthenticatedUser;
 import com.tbaar.eurder.feature.security.authentication.CredentialsUserDetails;
@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,30 +39,37 @@ public class AuthenticationService {
     private final AccessTokenIssuer accessTokenIssuer;
     private final CredentialsRepository credentialsRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final DisplayNames displayNames;
     private final Clock clock;
     private final Duration refreshTokenTimeToLive;
 
     public AuthenticationService(AuthenticationManager authenticationManager, AccessTokenIssuer accessTokenIssuer,
                                  CredentialsRepository credentialsRepository, RefreshTokenRepository refreshTokenRepository,
-                                 Clock clock, @Value("${eurder.jwt.refresh-token-ttl}") Duration refreshTokenTimeToLive) {
+                                 DisplayNames displayNames, Clock clock,
+                                 @Value("${eurder.jwt.refresh-token-ttl}") Duration refreshTokenTimeToLive) {
         this.authenticationManager = authenticationManager;
         this.accessTokenIssuer = accessTokenIssuer;
         this.credentialsRepository = credentialsRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.displayNames = displayNames;
         this.clock = clock;
         this.refreshTokenTimeToLive = refreshTokenTimeToLive;
     }
 
-    public TokensDto login(LoginDto request) {
+    public AuthenticationResult login(LoginDto request) {
         Authentication authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken.unauthenticated(request.email(), request.password()));
-        AuthenticatedUser user = ((CredentialsUserDetails) authentication.getPrincipal()).user();
-        return issueTokens(user, credentialsRepository.getReferenceById(user.id()), UUID.randomUUID());
+        CredentialsUserDetails userDetails = (CredentialsUserDetails) authentication.getPrincipal();
+        AuthenticatedUser user = userDetails.user();
+        return issueTokens(user, credentialsRepository.getReferenceById(user.id()), userDetails.email(), UUID.randomUUID());
     }
 
     // The revocation of a reused token must survive the exception that refuses the request.
     @Transactional(noRollbackFor = InvalidRefreshTokenException.class)
-    public TokensDto refresh(String rawToken) {
+    public AuthenticationResult refresh(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new InvalidRefreshTokenException();
+        }
         RefreshToken current = refreshTokenRepository.findByTokenHash(hash(rawToken)).orElseThrow(InvalidRefreshTokenException::new);
         Instant now = clock.instant();
         if (current.isExpiredAt(now)) {
@@ -72,19 +80,28 @@ public class AuthenticationService {
             throw new InvalidRefreshTokenException();
         }
         Credentials credentials = current.getCredentials();
-        return issueTokens(AuthenticatedUser.from(credentials), credentials, current.getFamilyId());
+        return issueTokens(AuthenticatedUser.from(credentials), credentials, credentials.getEmail(), current.getFamilyId());
     }
 
     @Transactional
     public void logout(String rawToken) {
+        if (rawToken == null) {
+            return;
+        }
         refreshTokenRepository.findByTokenHash(hash(rawToken))
                 .ifPresent(token -> refreshTokenRepository.revokeFamily(token.getFamilyId(), clock.instant()));
     }
 
-    private TokensDto issueTokens(AuthenticatedUser user, Credentials credentials, UUID familyId) {
+    private AuthenticationResult issueTokens(AuthenticatedUser user, Credentials credentials, String email, UUID familyId) {
         String rawRefreshToken = newRefreshToken();
         refreshTokenRepository.save(new RefreshToken(credentials, familyId, hash(rawRefreshToken), clock.instant().plus(refreshTokenTimeToLive)));
-        return new TokensDto(accessTokenIssuer.issue(user), rawRefreshToken, "Bearer", accessTokenIssuer.timeToLiveInSeconds());
+        return new AuthenticationResult(accessTokenIssuer.issue(user), rawRefreshToken, currentUser(user, email));
+    }
+
+    private CurrentUserDto currentUser(AuthenticatedUser user, String email) {
+        Optional<DisplayName> name = displayNames.findByCredentialsId(user.id());
+        return new CurrentUserDto(user.id(), user.role(), email,
+                name.map(DisplayName::firstName).orElse(null), name.map(DisplayName::lastName).orElse(null));
     }
 
     private static String newRefreshToken() {

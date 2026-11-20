@@ -66,19 +66,22 @@ Only the customer account creation (`POST /customers`), the `/auth` endpoints an
 
 The API is stateless: there is no server session, and a request carrying an access token is authenticated from the token alone, without reading the database.
 
-| Endpoint | Body | Result |
+| Endpoint | Request | Result |
 | --- | --- | --- |
-| `POST /auth/login` | `{"email": "...", "password": "..."}` | `200` with the tokens, `401` when the email or password is wrong |
-| `POST /auth/refresh` | `{"refreshToken": "..."}` | `200` with new tokens, `401` when the token is unknown, expired, revoked or already used |
-| `POST /auth/logout` | `{"refreshToken": "..."}` | `204`, even when the token is unknown |
+| `POST /auth/login` | `{"email": "...", "password": "..."}` | `200`, sets both token cookies, body `{"id", "role", "email", "firstName", "lastName"}` (no name for an admin). `401` when the email or password is wrong |
+| `POST /auth/refresh` | The `refresh_token` cookie | `200`, sets new token cookies, same body as the login. `401` when the cookie is missing, or the token unknown, expired, revoked or already used |
+| `POST /auth/logout` | The `refresh_token` cookie | `204` and both cookies cleared, even without a cookie or with an unknown token |
 
-Send the access token with every other request: `Authorization: Bearer <accessToken>`, or use the **Authorize** button in Swagger UI.
+The tokens are never in a response body, only in `HttpOnly` cookies that the JavaScript of a page cannot read. Send the access token with every other request: `Authorization: Bearer <access token>`.
 
 | | Access token | Refresh token |
 | --- | --- | --- |
 | Form | JWT signed with HS256, containing the credentials id and the role | Random value |
 | Lifetime | 15 minutes | 7 days, renewed by each refresh |
 | Stored on the server | No | Only its SHA-256 hash |
+| Cookie | `access_token; HttpOnly; Secure; SameSite=Strict; Path=/api`, kept 7 days | `refresh_token; HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, kept 7 days |
+
+The access token cookie is kept as long as the refresh token, longer than the JWT it holds: an expired JWT still reaches the API, which answers `error.security.access-token-expired`, so a front end knows it must refresh rather than log in again.
 
 - A refresh token works once: each refresh replaces it. Using an old one again revokes every token descending from the same login, since one of the two parties may have stolen it. Two simultaneous refreshes with the same token have the same effect, so a client must not send them in parallel.
 - Each login is independent: logging out or a compromised token on one device does not affect the others.
@@ -87,7 +90,7 @@ Send the access token with every other request: `Authorization: Bearer <accessTo
 
 ### Before a browser front end
 
-Tokens are sent in headers and JSON bodies, so CSRF protection is disabled on purpose. Moving the refresh token to a cookie requires, in the same change, an `HttpOnly; Secure; SameSite` cookie and CSRF protection.
+The token cookies are set, but the API does not read the access token cookie yet, and CSRF protection is still disabled: both come next, before a front end uses the cookies.
 
 Not implemented yet: removing expired refresh tokens from the database, limiting login attempts, and CORS.
 

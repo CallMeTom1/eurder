@@ -44,7 +44,10 @@ import static com.tbaar.eurder.common.ValidationErrors.codesOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AuthenticationEndToEndTest {
@@ -52,6 +55,9 @@ class AuthenticationEndToEndTest {
     private static final ZonedDateTime NOON = ZonedDateTime.of(2026, 6, 15, 12, 0, 0, 0, ZoneId.of("Europe/Brussels"));
     private static final String ADMIN = "admin@eurder.be";
     private static final String ADMIN_PASSWORD = "admin";
+    private static final String ACCESS_TOKEN = "access_token";
+    private static final String REFRESH_TOKEN = "refresh_token";
+    private static final long SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 
     @TestConfiguration
     static class MutableClockConfig {
@@ -101,17 +107,56 @@ class AuthenticationEndToEndTest {
     }
 
     @Test
-    void givenTheRightPassword_whenLoggingIn_thenReturnsUncacheableTokensThatOpenTheApi() {
+    void givenTheRightPassword_whenLoggingIn_thenSetsTheTokensInUncacheableCookiesThatOpenTheApi() {
         Response response = login(ADMIN, ADMIN_PASSWORD);
 
         response.then()
                 .statusCode(HttpStatus.OK.value())
-                .header(HttpHeaders.CACHE_CONTROL, org.hamcrest.Matchers.containsString("no-store"))
-                .body("accessToken", notNullValue())
-                .body("refreshToken", notNullValue())
-                .body("tokenType", equalTo("Bearer"))
-                .body("expiresIn", equalTo(900));
-        withAccessToken(response.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
+                .header(HttpHeaders.CACHE_CONTROL, org.hamcrest.Matchers.containsString("no-store"));
+        assertThat(response.getDetailedCookie(ACCESS_TOKEN)).satisfies(cookie -> {
+            assertThat(cookie.getPath()).isEqualTo("/api");
+            assertThat(cookie.isHttpOnly()).isTrue();
+            assertThat(cookie.isSecured()).isTrue();
+            assertThat(cookie.getSameSite()).isEqualTo("Strict");
+            assertThat(cookie.getMaxAge()).isEqualTo(SEVEN_DAYS_IN_SECONDS);
+        });
+        assertThat(response.getDetailedCookie(REFRESH_TOKEN)).satisfies(cookie -> {
+            assertThat(cookie.getPath()).isEqualTo("/api/auth");
+            assertThat(cookie.isHttpOnly()).isTrue();
+            assertThat(cookie.isSecured()).isTrue();
+            assertThat(cookie.getSameSite()).isEqualTo("Strict");
+            assertThat(cookie.getMaxAge()).isEqualTo(SEVEN_DAYS_IN_SECONDS);
+        });
+        withAccessToken(response.getCookie(ACCESS_TOKEN)).get("/customers").then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenTheAdmin_whenLoggingIn_thenTheBodyDescribesTheUserWithoutAnyToken() {
+        Response response = login(ADMIN, ADMIN_PASSWORD);
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", notNullValue())
+                .body("role", equalTo("ADMIN"))
+                .body("email", equalTo(ADMIN))
+                .body("firstName", nullValue())
+                .body("lastName", nullValue())
+                .body("$", not(hasKey("accessToken")))
+                .body("$", not(hasKey("refreshToken")));
+    }
+
+    @Test
+    void givenACustomer_whenLoggingIn_thenTheBodyCarriesTheirName() {
+        registerCustomer(email, "secret123");
+
+        Response response = login(email, "secret123");
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("role", equalTo("CUSTOMER"))
+                .body("email", equalTo(email))
+                .body("firstName", equalTo("Jane"))
+                .body("lastName", equalTo("Doe"));
     }
 
     @Test
@@ -228,15 +273,16 @@ class AuthenticationEndToEndTest {
     }
 
     @Test
-    void givenARefreshToken_whenRefreshing_thenReturnsNewTokensThatWork() {
-        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+    void givenARefreshTokenCookie_whenRefreshing_thenSetsNewTokenCookiesThatWork() {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
         clock.setTo(NOON.plusHours(1));
 
         Response response = refresh(refreshToken);
 
-        response.then().statusCode(HttpStatus.OK.value()).body("tokenType", equalTo("Bearer"));
-        assertThat(response.<String>path("refreshToken")).isNotEqualTo(refreshToken);
-        withAccessToken(response.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
+        response.then().statusCode(HttpStatus.OK.value()).body("email", equalTo(ADMIN));
+        assertThat(response.getCookie(REFRESH_TOKEN)).isNotEqualTo(refreshToken);
+        assertThat(response.getDetailedCookie(REFRESH_TOKEN).getPath()).isEqualTo("/api/auth");
+        withAccessToken(response.getCookie(ACCESS_TOKEN)).get("/customers").then().statusCode(HttpStatus.OK.value());
     }
 
     @Test
@@ -244,8 +290,9 @@ class AuthenticationEndToEndTest {
         Response tokens = login(ADMIN, ADMIN_PASSWORD);
         clock.setTo(NOON.plusHours(1));
 
-        Response response = jsonWithBody(refreshBody(tokens.path("refreshToken")))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.<String>path("accessToken"))
+        Response response = EurderApi.given(port)
+                .cookie(REFRESH_TOKEN, tokens.getCookie(REFRESH_TOKEN))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokens.getCookie(ACCESS_TOKEN))
                 .post("/auth/refresh");
 
         response.then().statusCode(HttpStatus.OK.value());
@@ -253,8 +300,8 @@ class AuthenticationEndToEndTest {
 
     @Test
     void givenAnAlreadyUsedRefreshToken_whenReusingIt_thenReturns401AndRevokesTheWholeLogin() {
-        String stolen = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
-        String latest = refresh(stolen).path("refreshToken");
+        String stolen = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
+        String latest = refresh(stolen).getCookie(REFRESH_TOKEN);
 
         Response reuse = refresh(stolen);
 
@@ -264,8 +311,8 @@ class AuthenticationEndToEndTest {
 
     @Test
     void givenTwoLogins_whenOneIsCompromised_thenTheOtherKeepsWorking() {
-        String compromised = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
-        String otherDevice = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String compromised = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
+        String otherDevice = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
         refresh(compromised).then().statusCode(HttpStatus.OK.value());
 
         refresh(compromised).then().statusCode(HttpStatus.UNAUTHORIZED.value());
@@ -275,7 +322,7 @@ class AuthenticationEndToEndTest {
 
     @Test
     void givenTheSameRefreshTokenSentTwiceAtOnce_whenRefreshing_thenOnlyOneSucceedsAndTheLoginIsRevoked() {
-        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
         CountDownLatch start = new CountDownLatch(1);
 
         List<CompletableFuture<Response>> requests = List.of(refreshOnceReleased(refreshToken, start), refreshOnceReleased(refreshToken, start));
@@ -284,7 +331,7 @@ class AuthenticationEndToEndTest {
 
         assertThat(responses).extracting(Response::statusCode)
                 .containsExactlyInAnyOrder(HttpStatus.OK.value(), HttpStatus.UNAUTHORIZED.value());
-        String winner = responses.stream().filter(response -> response.statusCode() == HttpStatus.OK.value()).findFirst().orElseThrow().path("refreshToken");
+        String winner = responses.stream().filter(response -> response.statusCode() == HttpStatus.OK.value()).findFirst().orElseThrow().getCookie(REFRESH_TOKEN);
         refresh(winner).then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
@@ -297,13 +344,19 @@ class AuthenticationEndToEndTest {
     }
 
     @Test
-    void givenABlankRefreshToken_whenRefreshing_thenReturns400() {
-        refresh(" ").then().statusCode(HttpStatus.BAD_REQUEST.value());
+    void givenNoRefreshTokenCookie_whenRefreshing_thenReturns401() {
+        RequestSpecification request = EurderApi.given(port);
+
+        Response response = request.post("/auth/refresh");
+
+        response.then()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .body("code", equalTo("error.security.invalid-refresh-token"));
     }
 
     @Test
     void givenAnExpiredRefreshToken_whenRefreshing_thenReturns401() {
-        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
 
         clock.setTo(NOON.plusDays(7));
 
@@ -312,7 +365,7 @@ class AuthenticationEndToEndTest {
 
     @Test
     void givenARefreshToken_whenLookingInTheDatabase_thenOnlyItsHashIsStored() throws Exception {
-        String refreshToken = login(ADMIN, ADMIN_PASSWORD).path("refreshToken");
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
 
         String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(refreshToken.getBytes(StandardCharsets.UTF_8)));
 
@@ -324,16 +377,43 @@ class AuthenticationEndToEndTest {
     void givenALogin_whenLoggingOut_thenTheRefreshTokenIsRefusedButTheAccessTokenLivesUntilItExpires() {
         Response tokens = login(ADMIN, ADMIN_PASSWORD);
 
-        Response logout = logout(tokens.path("refreshToken"));
+        Response logout = logout(tokens.getCookie(REFRESH_TOKEN));
 
         logout.then().statusCode(HttpStatus.NO_CONTENT.value());
-        refresh(tokens.path("refreshToken")).then().statusCode(HttpStatus.UNAUTHORIZED.value());
-        withAccessToken(tokens.path("accessToken")).get("/customers").then().statusCode(HttpStatus.OK.value());
+        refresh(tokens.getCookie(REFRESH_TOKEN)).then().statusCode(HttpStatus.UNAUTHORIZED.value());
+        withAccessToken(tokens.getCookie(ACCESS_TOKEN)).get("/customers").then().statusCode(HttpStatus.OK.value());
+    }
+
+    @Test
+    void givenALogin_whenLoggingOut_thenBothCookiesAreCleared() {
+        String refreshToken = login(ADMIN, ADMIN_PASSWORD).getCookie(REFRESH_TOKEN);
+
+        Response logout = logout(refreshToken);
+
+        assertThat(logout.getDetailedCookie(ACCESS_TOKEN)).satisfies(cookie -> {
+            assertThat(cookie.getValue()).isEmpty();
+            assertThat(cookie.getPath()).isEqualTo("/api");
+            assertThat(cookie.getMaxAge()).isZero();
+        });
+        assertThat(logout.getDetailedCookie(REFRESH_TOKEN)).satisfies(cookie -> {
+            assertThat(cookie.getValue()).isEmpty();
+            assertThat(cookie.getPath()).isEqualTo("/api/auth");
+            assertThat(cookie.getMaxAge()).isZero();
+        });
     }
 
     @Test
     void givenAnUnknownRefreshToken_whenLoggingOut_thenReturns204WithoutRevealingAnything() {
         logout("unknown-token").then().statusCode(HttpStatus.NO_CONTENT.value());
+    }
+
+    @Test
+    void givenNoRefreshTokenCookie_whenLoggingOut_thenReturns204() {
+        RequestSpecification request = EurderApi.given(port);
+
+        Response response = request.post("/auth/logout");
+
+        response.then().statusCode(HttpStatus.NO_CONTENT.value());
     }
 
     private CompletableFuture<Response> refreshOnceReleased(String refreshToken, CountDownLatch start) {
@@ -363,17 +443,11 @@ class AuthenticationEndToEndTest {
     }
 
     private Response refresh(String refreshToken) {
-        return jsonWithBody(refreshBody(refreshToken)).post("/auth/refresh");
+        return EurderApi.given(port).cookie(REFRESH_TOKEN, refreshToken).post("/auth/refresh");
     }
 
     private Response logout(String refreshToken) {
-        return jsonWithBody(refreshBody(refreshToken)).post("/auth/logout");
-    }
-
-    private static String refreshBody(String refreshToken) {
-        return """
-                {"refreshToken": "%s"}
-                """.formatted(refreshToken);
+        return EurderApi.given(port).cookie(REFRESH_TOKEN, refreshToken).post("/auth/logout");
     }
 
     private RequestSpecification jsonWithBody(String body) {

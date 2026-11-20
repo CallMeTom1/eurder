@@ -40,8 +40,4 @@ public class AccessTokenIssuer {
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
     }
-
-    public long timeToLiveInSeconds() {
-        return timeToLive.toSeconds();
-    }
 }

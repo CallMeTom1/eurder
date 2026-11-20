@@ -18,6 +18,6 @@ public final class AccessTokens {
                 .then()
                 .statusCode(HttpStatus.OK.value())
                 .extract()
-                .path("accessToken");
+                .cookie("access_token");
     }
 }
