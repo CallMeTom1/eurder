@@ -29,3 +29,22 @@ TypeScript aliases avoid `../../../`:
 | `@shared/*`   | `src/app/shared/*`: reusable components, directives, pipes        |
 | `@layout/*`   | `src/app/layout/*`: front office and back office layouts          |
 | `@features/*` | `src/app/features/*`: the pages, per feature                      |
+
+## Styles
+
+One primary color drives everything:
+
+```text
+#3F5A7A ──ng generate @angular/material:theme-color──► src/styles/_theme-colors.scss (generated, never edited)
+        ──mat.theme() in src/styles/_theme.scss──────► --mat-sys-* CSS variables, light and dark
+        ├─► Angular Material components
+        └─► Tailwind colors in src/styles/tailwind.css (bg-primary, text-on-surface...)
+```
+
+- To change the brand: run the schematic again with another `--primary-color` and `--directory=src/styles/`.
+- Material for the components, Tailwind for the layout. Never restyle a Material component with Tailwind classes.
+- Tailwind only knows the colors of the theme (`--color-*: initial`): no hard-coded color.
+- `color-scheme: light dark` on `<html>`: the browser picks the palette with `light-dark()`.
+- Font: Inter, served from `node_modules` (`@fontsource-variable/inter`), not from Google.
+
+`/design-system` shows the colors and the shared components. It only exists in development: the production build replaces `dev-only.routes.ts` with an empty list.

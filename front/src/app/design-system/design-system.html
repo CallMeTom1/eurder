@@ -1,0 +1,27 @@
+<main class="mx-auto flex max-w-5xl flex-col gap-10 p-8">
+  <h1 class="[font:var(--mat-sys-headline-medium)]">Design system</h1>
+
+  <section class="flex flex-col gap-4" aria-labelledby="colors-title">
+    <h2 id="colors-title" class="[font:var(--mat-sys-title-large)]">Colors</h2>
+    <ul class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      @for (swatch of swatches; track swatch.name) {
+        <li
+          class="flex h-20 items-end rounded-md p-3"
+          [class]="swatch.colors"
+          [attr.data-testid]="'swatch-' + swatch.name"
+        >
+          {{ swatch.name }}
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="flex flex-col gap-4" aria-labelledby="buttons-title">
+    <h2 id="buttons-title" class="[font:var(--mat-sys-title-large)]">Buttons</h2>
+    <div class="flex flex-wrap gap-4">
+      <button mat-flat-button>Primary action</button>
+      <button mat-stroked-button>Secondary action</button>
+      <button mat-button>Text action</button>
+    </div>
+  </section>
+</main>
