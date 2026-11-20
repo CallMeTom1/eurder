@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.item.api;
 
+import com.tbaar.eurder.feature.item.api.dto.CatalogItemDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
@@ -31,6 +32,10 @@ public class ItemMapper {
         Item item = stock.item();
         return new ItemOverviewDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits),
                 StockUrgency.from(Math.toIntExact(stock.availableUnits())));
+    }
+
+    public CatalogItemDto toCatalogDto(Item item) {
+        return new CatalogItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice());
     }
 
     public ItemUnitDto toUnitDto(ItemUnit unit) {

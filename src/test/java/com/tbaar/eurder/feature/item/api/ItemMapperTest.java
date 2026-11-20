@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.item.api;
 
+import com.tbaar.eurder.feature.item.api.dto.CatalogItemDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemOverviewDto;
@@ -60,5 +61,14 @@ class ItemMapperTest {
         assertThat(dto.availableUnits()).containsExactly(
                 entry(ItemState.PRISTINE, 3L), entry(ItemState.SLIGHTLY_DAMAGED, 0L), entry(ItemState.DAMAGED, 4L));
         assertThat(dto.urgency()).isEqualTo(StockUrgency.STOCK_MEDIUM);
+    }
+
+    @Test
+    void givenItem_whenMappingToCatalogDto_thenCopiesTheProductFieldsOnly() {
+        Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
+
+        CatalogItemDto dto = itemMapper.toCatalogDto(item);
+
+        assertThat(dto).isEqualTo(new CatalogItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99")));
     }
 }

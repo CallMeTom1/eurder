@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
 import com.tbaar.eurder.feature.item.api.dto.AddUnitsDto;
+import com.tbaar.eurder.feature.item.api.dto.CatalogItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
@@ -108,6 +109,31 @@ class ItemServiceTest {
         when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
 
         Throwable thrown = catchThrowable(() -> itemService.update(unknownId, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"))));
+
+        assertThat(thrown)
+                .isInstanceOf(ItemNotFoundException.class)
+                .hasMessage("No item found for id " + unknownId);
+    }
+
+    @Test
+    void givenItemsSortedByTheRepository_whenFindingTheCatalog_thenReturnsThemInThatOrderWithoutCountingTheUnits() {
+        when(itemRepository.findAllByOrderByNameAsc()).thenReturn(List.of(
+                new Item("Armchair", "Leather armchair", new BigDecimal("150")),
+                new Item("Lamp", "Desk lamp", new BigDecimal("29"))));
+
+        List<CatalogItemDto> catalog = itemService.findCatalog();
+
+        assertThat(catalog).extracting(CatalogItemDto::name, CatalogItemDto::price)
+                .containsExactly(tuple("Armchair", new BigDecimal("150.00")), tuple("Lamp", new BigDecimal("29.00")));
+        verify(itemUnitRepository, never()).countAvailableUnits(any());
+    }
+
+    @Test
+    void givenUnknownItemId_whenFindingACatalogItem_thenThrowsItemNotFoundWithTheId() {
+        UUID unknownId = UUID.randomUUID();
+        when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+        Throwable thrown = catchThrowable(() -> itemService.findCatalogItem(unknownId));
 
         assertThat(thrown)
                 .isInstanceOf(ItemNotFoundException.class)

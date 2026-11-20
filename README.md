@@ -60,7 +60,7 @@ Change this password before any real deployment.
 
 An admin creates another admin with `POST /administrators` and the body `{"email": "...", "password": "..."}`. An admin only has credentials: no address, no phone number, and it does not appear among the customers.
 
-Only the customer account creation (`POST /customers`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
+Only the customer account creation (`POST /customers`), the catalog (`GET /catalog`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
 
 ## Authentication
 
@@ -155,6 +155,15 @@ Optional extension of the assignment: every piece in stock has a state, and dama
 | `PATCH /items/{id}/units/{unitId}` | Change the state of an available unit | `{"state": "DAMAGED"}` |
 
 At most 1000 units per state can be added in one request. A sold unit keeps the state it was sold in (`409`).
+
+## Public catalog
+
+What a visitor of the shop sees, without logging in. The stock and its urgency stay internal: they are only in the admin overview (`GET /items`).
+
+| Endpoint | Result |
+| --- | --- |
+| `GET /catalog` | Every item as `{"id", "name", "description", "price"}`, sorted by name |
+| `GET /catalog/{id}` | One item, `404` with `code: error.item.not-found` when it does not exist |
 
 ## Ordering rules
 

@@ -142,6 +142,17 @@ class OpenApiEndToEndTest {
     }
 
     @Test
+    void givenThePublicCatalog_whenReadingItsDocumentation_thenStatesThatNoAuthenticationIsNeeded() {
+        String detail = "paths.'/catalog/{id}'.get";
+
+        String listDescription = apiDocs.getString("paths.'/catalog'.get.description");
+
+        assertThat(listDescription).contains("Public: no authentication needed");
+        assertThat(apiDocs.getString(detail + ".description")).contains("Public: no authentication needed");
+        assertThat(apiDocs.getMap(detail + ".responses")).containsKeys("200", "404").doesNotContainKeys("401", "403");
+    }
+
+    @Test
     void givenAnEndpointOpenToAnyLoggedInUser_whenReadingItsDocumentation_thenStatesThatAnAccessTokenIsNeeded() {
         String operation = "paths.'/auth/me'.get";
 
@@ -157,7 +168,7 @@ class OpenApiEndToEndTest {
 
         assertThat(tags)
                 .extracting(tag -> tag.get("name"))
-                .containsExactlyInAnyOrder("Customers", "Items", "Eurders", "Administrators", "Authentication");
+                .containsExactlyInAnyOrder("Catalog", "Customers", "Items", "Eurders", "Administrators", "Authentication");
         assertThat(tags).allSatisfy(tag -> assertThat(tag.get("description")).isNotBlank());
     }
 

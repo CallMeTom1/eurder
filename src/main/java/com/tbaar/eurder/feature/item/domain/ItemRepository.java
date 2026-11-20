@@ -15,6 +15,8 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
     @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
     Optional<Item> findLockedById(UUID id);
 
+    List<Item> findAllByOrderByNameAsc();
+
     @Query("""
             select new com.tbaar.eurder.feature.item.domain.ItemStock(i, count(u))
             from Item i

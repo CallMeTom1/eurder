@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.item.service;
 
 import com.tbaar.eurder.feature.item.api.ItemMapper;
 import com.tbaar.eurder.feature.item.api.dto.AddUnitsDto;
+import com.tbaar.eurder.feature.item.api.dto.CatalogItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ChangeUnitStateDto;
 import com.tbaar.eurder.feature.item.api.dto.CreateItemDto;
 import com.tbaar.eurder.feature.item.api.dto.ItemDto;
@@ -56,6 +57,20 @@ public class ItemService {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
         item.update(request.name(), request.description(), request.price());
         return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(id)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogItemDto> findCatalog() {
+        return itemRepository.findAllByOrderByNameAsc().stream()
+                .map(itemMapper::toCatalogDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CatalogItemDto findCatalogItem(UUID id) {
+        return itemRepository.findById(id)
+                .map(itemMapper::toCatalogDto)
+                .orElseThrow(() -> new ItemNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
