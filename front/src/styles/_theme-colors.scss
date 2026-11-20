@@ -4,7 +4,7 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
 
-// Note: Color palettes are generated from primary: #3F5A7A
+// Note: Color palettes are generated from primary: #3F5A7A, tertiary: #383E42
 $_palettes: (
   primary: (
     0: #000000,
@@ -44,20 +44,20 @@ $_palettes: (
   ),
   tertiary: (
     0: #000000,
-    10: #2b1031,
-    20: #422647,
-    25: #4e3153,
-    30: #5a3c5f,
-    35: #67476b,
-    40: #745378,
-    50: #8e6b91,
-    60: #a985ac,
-    70: #c59fc8,
-    80: #e2bae4,
-    90: #fed6ff,
-    95: #ffebfc,
-    98: #fff7fa,
-    99: #fffbff,
+    10: #161c20,
+    20: #2b3135,
+    25: #363c40,
+    30: #42484c,
+    35: #4d5357,
+    40: #595f63,
+    50: #72787c,
+    60: #8c9196,
+    70: #a6acb1,
+    80: #c1c7cc,
+    90: #dee3e8,
+    95: #ecf1f6,
+    98: #f5faff,
+    99: #fbfcff,
     100: #ffffff,
   ),
   neutral: (
