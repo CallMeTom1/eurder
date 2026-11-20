@@ -1,6 +1,7 @@
 package com.tbaar.eurder.feature.eurder.api;
 
 import com.tbaar.eurder.common.AccessTokens;
+import com.tbaar.eurder.common.EurderApi;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.item.domain.AvailableUnits;
@@ -185,7 +186,7 @@ class EurderEndToEndTest {
     @Test
     void givenNoAuthorizationHeader_whenOrdering_thenReturns401WithABearerChallenge() {
         String chairId = createItem("Chair", "49.99", 10);
-        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+        RequestSpecification request = EurderApi.given(port).contentType(ContentType.JSON).body("""
                 {"itemGroups": [{"itemId": "%s", "amount": 1}]}
                 """.formatted(chairId));
 
@@ -246,7 +247,7 @@ class EurderEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenGettingTheReport_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/eurders/report");
 
@@ -302,7 +303,7 @@ class EurderEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenGettingWhatShipsToday_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/eurders/shipping-today");
 
@@ -381,7 +382,7 @@ class EurderEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenReordering_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.post("/eurders/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90/reorder");
 
@@ -414,7 +415,7 @@ class EurderEndToEndTest {
     }
 
     private void registerCustomer(String email) {
-        RestAssured.given().port(port).contentType(ContentType.JSON).body("""
+        EurderApi.given(port).contentType(ContentType.JSON).body("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
                  "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
                  "phoneNumber": "0470123456"}
@@ -457,8 +458,7 @@ class EurderEndToEndTest {
     }
 
     private RequestSpecification authenticatedAs(String email, String password) {
-        return RestAssured.given()
-                .port(port)
+        return EurderApi.given(port)
                 .config(RestAssured.config().jsonConfig(JsonConfig.jsonConfig().numberReturnType(JsonPathConfig.NumberReturnType.BIG_DECIMAL)))
                 .auth().oauth2(AccessTokens.of(port, email, password));
     }

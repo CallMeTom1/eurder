@@ -1,6 +1,7 @@
 package com.tbaar.eurder;
 
 import com.tbaar.eurder.common.AccessTokens;
+import com.tbaar.eurder.common.EurderApi;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -20,7 +21,7 @@ class ApplicationEndToEndTest {
 
     @Test
     void givenRunningApplication_whenRequestingOpenApiDocs_thenReturnsEurderDocumentation() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/v3/api-docs");
 
@@ -31,7 +32,7 @@ class ApplicationEndToEndTest {
 
     @Test
     void givenRunningApplication_whenRequestingOpenApiDocs_thenDeclaresBearerAuthentication() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/v3/api-docs");
 
@@ -42,8 +43,18 @@ class ApplicationEndToEndTest {
     }
 
     @Test
-    void givenRunningApplication_whenRequestingSwaggerUi_thenReturns200() {
+    void givenAPathOutsideTheApiPrefix_whenRequestingTheOpenApiDocs_thenReturns404() {
         RequestSpecification request = RestAssured.given().port(port);
+
+        Response response = request.get("/v3/api-docs");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    void givenRunningApplication_whenRequestingSwaggerUi_thenReturns200() {
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/docs");
 
@@ -53,7 +64,7 @@ class ApplicationEndToEndTest {
 
     @Test
     void givenUnknownUrl_whenAnAuthenticatedUserRequestsIt_thenReturns404ProblemDetail() {
-        RequestSpecification request = RestAssured.given().port(port).auth().oauth2(AccessTokens.of(port, "admin@eurder.be", "admin"));
+        RequestSpecification request = EurderApi.given(port).auth().oauth2(AccessTokens.of(port, "admin@eurder.be", "admin"));
 
         Response response = request.get("/does-not-exist");
 
@@ -65,7 +76,7 @@ class ApplicationEndToEndTest {
 
     @Test
     void givenUnknownUrl_whenAnAnonymousUserRequestsIt_thenReturns401WithoutRevealingThatItDoesNotExist() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/does-not-exist");
 

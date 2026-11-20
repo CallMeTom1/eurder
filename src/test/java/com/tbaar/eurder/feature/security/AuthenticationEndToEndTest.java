@@ -1,10 +1,10 @@
 package com.tbaar.eurder.feature.security;
 
 import com.tbaar.eurder.common.AccessTokens;
+import com.tbaar.eurder.common.EurderApi;
 import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.RefreshTokenRepository;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -89,7 +89,7 @@ class AuthenticationEndToEndTest {
             "Bearer !!!                               | error.security.invalid-access-token",
             "Basic YWRtaW5AZXVyZGVyLmJlOmFkbWlu       | error.security.authentication-required"})
     void givenAMissingOrInvalidHeader_whenCallingAProtectedEndpoint_thenReturns401WithABearerChallenge(String authorization, String code) {
-        RequestSpecification request = RestAssured.given().port(port).header(HttpHeaders.AUTHORIZATION, authorization);
+        RequestSpecification request = EurderApi.given(port).header(HttpHeaders.AUTHORIZATION, authorization);
 
         Response response = request.get("/customers");
 
@@ -377,11 +377,11 @@ class AuthenticationEndToEndTest {
     }
 
     private RequestSpecification jsonWithBody(String body) {
-        return RestAssured.given().port(port).contentType(ContentType.JSON).body(body);
+        return EurderApi.given(port).contentType(ContentType.JSON).body(body);
     }
 
     private RequestSpecification withAccessToken(String accessToken) {
-        return RestAssured.given().port(port).auth().oauth2(accessToken);
+        return EurderApi.given(port).auth().oauth2(accessToken);
     }
 
     private String sign(JwtEncoder encoder, String issuer, String subject, String role) {

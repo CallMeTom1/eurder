@@ -1,7 +1,7 @@
 package com.tbaar.eurder.common.openapi;
 
+import com.tbaar.eurder.common.EurderApi;
 import com.tbaar.eurder.common.exception.ErrorCode;
-import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class OpenApiEndToEndTest {
 
     @BeforeEach
     void readTheApiDocumentation() {
-        apiDocs = RestAssured.given().port(port).get("/v3/api-docs").jsonPath();
+        apiDocs = EurderApi.given(port).get("/v3/api-docs").jsonPath();
     }
 
     @Test

@@ -1,11 +1,11 @@
 package com.tbaar.eurder.feature.security.api;
 
 import com.tbaar.eurder.common.AccessTokens;
+import com.tbaar.eurder.common.EurderApi;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -145,8 +145,7 @@ class AdminEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenPostingAnAdmin_thenReturns401WithABearerChallenge() {
-        RequestSpecification request = RestAssured.given()
-                .port(port)
+        RequestSpecification request = EurderApi.given(port)
                 .contentType(ContentType.JSON)
                 .body(registration(janeEmail, PASSWORD));
 
@@ -159,7 +158,7 @@ class AdminEndToEndTest {
 
     @Test
     void givenAnInvalidAccessToken_whenPostingAnAdmin_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port).auth().oauth2("not-a-token")
+        RequestSpecification request = EurderApi.given(port).auth().oauth2("not-a-token")
                 .contentType(ContentType.JSON)
                 .body(registration(janeEmail, PASSWORD));
 
@@ -236,8 +235,7 @@ class AdminEndToEndTest {
     }
 
     private void registerCustomer(String email) {
-        RestAssured.given()
-                .port(port)
+        EurderApi.given(port)
                 .contentType(ContentType.JSON)
                 .body("""
                         {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "%s",
@@ -255,8 +253,7 @@ class AdminEndToEndTest {
     }
 
     private RequestSpecification authenticatedAs(String email, String password) {
-        return RestAssured.given()
-                .port(port)
+        return EurderApi.given(port)
                 .auth().oauth2(AccessTokens.of(port, email, password));
     }
 

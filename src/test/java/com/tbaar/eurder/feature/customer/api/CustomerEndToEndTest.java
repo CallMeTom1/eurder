@@ -1,11 +1,11 @@
 package com.tbaar.eurder.feature.customer.api;
 
 import com.tbaar.eurder.common.AccessTokens;
+import com.tbaar.eurder.common.EurderApi;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import com.tbaar.eurder.feature.security.domain.Role;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -139,7 +139,7 @@ class CustomerEndToEndTest {
 
     @Test
     void givenNoBody_whenPostingCustomer_thenReturns400WithAGenericMessage() {
-        RequestSpecification request = RestAssured.given().port(port).contentType(ContentType.JSON);
+        RequestSpecification request = EurderApi.given(port).contentType(ContentType.JSON);
 
         Response response = request.post("/customers");
 
@@ -219,7 +219,7 @@ class CustomerEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenListingCustomers_thenReturns401WithABearerChallenge() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/customers");
 
@@ -230,7 +230,7 @@ class CustomerEndToEndTest {
 
     @Test
     void givenAnInvalidAccessToken_whenListingCustomers_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port).auth().oauth2("not-a-token");
+        RequestSpecification request = EurderApi.given(port).auth().oauth2("not-a-token");
 
         Response response = request.get("/customers");
 
@@ -301,7 +301,7 @@ class CustomerEndToEndTest {
 
     @Test
     void givenNoAuthorizationHeader_whenGettingACustomerById_thenReturns401() {
-        RequestSpecification request = RestAssured.given().port(port);
+        RequestSpecification request = EurderApi.given(port);
 
         Response response = request.get("/customers/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90");
 
@@ -309,8 +309,7 @@ class CustomerEndToEndTest {
     }
 
     private RequestSpecification authenticatedAs(String email, String password) {
-        return RestAssured.given()
-                .port(port)
+        return EurderApi.given(port)
                 .auth().oauth2(AccessTokens.of(port, email, password));
     }
 
@@ -323,8 +322,7 @@ class CustomerEndToEndTest {
     }
 
     private RequestSpecification jsonRequest(String body) {
-        return RestAssured.given()
-                .port(port)
+        return EurderApi.given(port)
                 .contentType(ContentType.JSON)
                 .body(body);
     }
