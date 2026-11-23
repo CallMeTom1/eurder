@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import type { CustomerDto } from '@core/api/eurder-api';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { providePaginatorTranslations } from '@shared/ui/pagination/pagination';
+import { providePaginatorTranslations } from '@core/i18n/paginator-intl';
 import { CustomersPage } from './customers-page';
 
 describe('CustomersPage', () => {

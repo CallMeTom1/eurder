@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { providePaginatorTranslations } from '@core/i18n/paginator-intl';
 import { NotFound } from '@features/not-found/not-found';
 import { BackOfficeLayout } from '@layout/back-office-layout/back-office-layout';
 
@@ -6,6 +7,7 @@ export const adminRoutes: Routes = [
   {
     path: '',
     component: BackOfficeLayout,
+    providers: [providePaginatorTranslations()],
     children: [
       { path: '', redirectTo: 'items', pathMatch: 'full' },
       {

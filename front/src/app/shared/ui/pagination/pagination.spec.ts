@@ -5,7 +5,8 @@ import { TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatPaginatorHarness } from '@angular/material/paginator/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { pageOf, Pagination, providePaginatorTranslations } from './pagination';
+import { providePaginatorTranslations } from '@core/i18n/paginator-intl';
+import { pageOf, Pagination } from './pagination';
 
 @Component({
   imports: [Pagination],
