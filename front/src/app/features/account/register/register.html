@@ -1,23 +1,25 @@
-<app-page-header [title]="'nav.register' | translate" />
+<div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+  <app-page-header [title]="'nav.register' | translate" />
 
-<form [formRoot]="registerForm" class="grid w-full max-w-2xl gap-x-4 gap-y-1 sm:grid-cols-2">
-  @if (problem(); as problem) {
-    <app-error-state class="sm:col-span-2" [message]="problem.code | translate: problem.params" />
-  }
+  <form [formRoot]="registerForm" class="grid w-full gap-x-4 gap-y-1 sm:grid-cols-2">
+    @if (problem(); as problem) {
+      <app-error-state class="sm:col-span-2" [message]="problem.code | translate: problem.params" />
+    }
 
-  <app-customer-form-fields
-    class="sm:col-span-2"
-    [form]="registerForm"
-    [password]="registerForm.password"
-  />
+    <app-customer-form-fields
+      class="sm:col-span-2"
+      [form]="registerForm"
+      [password]="registerForm.password"
+    />
 
-  <div class="mt-4 flex flex-col items-start gap-4 sm:col-span-2">
-    <button matButton="filled" type="submit" [disabled]="registerForm().submitting()">
-      {{ 'account.createAccount' | translate }}
-    </button>
-    <p class="text-on-surface-variant">
-      {{ 'account.alreadyCustomer' | translate }}
-      <a routerLink="/login" class="text-primary underline">{{ 'nav.login' | translate }}</a>
-    </p>
-  </div>
-</form>
+    <div class="mt-4 flex flex-col items-start gap-4 sm:col-span-2">
+      <button matButton="filled" type="submit" [disabled]="registerForm().submitting()">
+        {{ 'account.createAccount' | translate }}
+      </button>
+      <p class="text-on-surface-variant">
+        {{ 'account.alreadyCustomer' | translate }}
+        <a routerLink="/login" class="text-primary underline">{{ 'nav.login' | translate }}</a>
+      </p>
+    </div>
+  </form>
+</div>
