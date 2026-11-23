@@ -12,12 +12,31 @@ Angular 22 front end of the Eurder API: a public shop and an admin back office.
 
 ## Tests
 
-| Command                                   | What                                                                             |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `npm test`                                | Unit tests (Vitest), in watch mode                                               |
-| `npm run test:ci`                         | Unit tests, once                                                                 |
-| `npm run e2e`                             | End-to-end tests (Playwright, Chromium). Starts `npm start` if it is not running |
-| `npm run format` / `npm run format:check` | Prettier                                                                         |
+| Command                                   | What                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `npm test`                                | Unit tests (Vitest), in watch mode                                                                 |
+| `npm run test:ci`                         | Unit tests, once                                                                                   |
+| `npm run e2e`                             | End-to-end tests with a mocked API (Playwright, Chromium). Starts `npm start` if it is not running |
+| `npm run e2e:fullstack`                   | End-to-end tests against the real API and a real database                                          |
+| `npm run format` / `npm run format:check` | Prettier                                                                                           |
+
+### Two kinds of end-to-end tests
+
+|          | `e2e/mocked`                                                      | `e2e/fullstack`                                                              |
+| -------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| API      | Answers written in the test with `page.route`                     | The real API, started by Playwright                                          |
+| Needs    | Nothing                                                           | Java, PostgreSQL on `localhost:5432`                                         |
+| Good for | Cases hard to cause for real: API down, slow API, every role      | What a mock cannot show: cookies, CSRF, the proxy, the refresh, the database |
+| Visitor  | Anonymous by default (`fixtures.ts`), `loggedInAs(page, 'ADMIN')` | Real accounts, created by each test                                          |
+
+`npm run e2e:fullstack`:
+
+1. recreates the `eurder_e2e` database (`e2e/fullstack/reset-database.mjs`),
+2. starts its own API on port 8181 on that database, with access tokens lasting 5 seconds so that the refresh happens for real,
+3. starts its own dev server on port 4300 (`proxy.e2e.json` sends `/api` to port 8181),
+4. runs the tests in parallel: each one creates its own customer with a unique email, so they never share data.
+
+The development API (8080), dev server (4200) and database (`eurder`) are never touched. The database connection defaults to `postgres` / `postgres`: override it with `E2E_DB_HOST`, `E2E_DB_PORT`, `E2E_DB_USERNAME`, `E2E_DB_PASSWORD` or `E2E_DB_NAME`.
 
 ## Imports
 
