@@ -101,7 +101,12 @@
       "updateButton": "Mettre à jour",
       "urgency": "Urgence",
       "edit": "Modifier {{name}}",
-      "editTitle": "Modifier l’article"
+      "editTitle": "Modifier l’article",
+      "picture": "Photo",
+      "choosePicture": "Choisir une photo",
+      "changePicture": "Changer la photo",
+      "removePicture": "Retirer la photo",
+      "pictureHint": "PNG, JPEG ou WebP, 2 Mo au maximum."
     },
     "customers": {
       "search": "Rechercher un nom",

@@ -7,6 +7,7 @@ import type {
   ItemDto,
   ItemOverviewDto,
   UpdateItemDto,
+  UploadedImageDto,
 } from '@core/api/eurder-api';
 import { map, Observable } from 'rxjs';
 import { AdminItem, ItemDetails, NewItem, toAdminItem } from './admin-item';
@@ -29,6 +30,14 @@ export class AdminItemService {
   updateItem(id: string, details: ItemDetails): Observable<void> {
     const item: UpdateItemDto = details;
     return this.http.put<ItemDto>(ApiRoutes.items.one(id), item).pipe(map(() => undefined));
+  }
+
+  uploadImage(picture: File): Observable<string> {
+    const form = new FormData();
+    form.append('file', picture);
+    return this.http
+      .post<UploadedImageDto>(ApiRoutes.images.all, form)
+      .pipe(map((uploaded) => uploaded.path));
   }
 
   addUnits(id: string, amount: number): Observable<void> {

@@ -101,7 +101,12 @@
       "updateButton": "Update",
       "urgency": "Urgency",
       "edit": "Edit {{name}}",
-      "editTitle": "Edit item"
+      "editTitle": "Edit item",
+      "picture": "Picture",
+      "choosePicture": "Choose a picture",
+      "changePicture": "Change the picture",
+      "removePicture": "Remove the picture",
+      "pictureHint": "PNG, JPEG or WebP, 2 MB at most."
     },
     "customers": {
       "search": "Search a last name",

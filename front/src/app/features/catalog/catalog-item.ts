@@ -8,6 +8,7 @@ export interface CatalogItem {
   priceInCents: number;
   stock: number;
   urgency: CatalogItemDto['urgency'];
+  image: string | null;
   imageUrl: string | null;
 }
 
@@ -21,6 +22,7 @@ export function toCatalogItem(dto: CatalogItemDto): CatalogItem {
     priceInCents: Math.round(dto.price * CENTS_PER_EURO),
     stock: dto.stock,
     urgency: dto.urgency,
+    image: dto.image,
     imageUrl: imageUrlOf(dto.image),
   };
 }

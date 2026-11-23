@@ -40,6 +40,7 @@ describe('CatalogService', () => {
         priceInCents: 4999,
         stock: 12,
         urgency: 'STOCK_HIGH',
+        image: null,
         imageUrl: null,
       },
     ]);

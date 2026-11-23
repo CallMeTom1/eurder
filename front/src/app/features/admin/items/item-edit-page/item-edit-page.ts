@@ -55,6 +55,7 @@ export class ItemEditPage {
       description: item?.description ?? '',
       price: item ? item.priceInCents / CENTS_PER_EURO : null,
       stock: item?.stock ?? null,
+      image: item?.image ?? null,
     };
   });
   protected readonly problem = signal<ApiProblem | null>(null);
@@ -65,10 +66,12 @@ export class ItemEditPage {
   private async update(): Promise<TreeValidationResult> {
     this.problem.set(null);
     const id = this.id();
-    const { name, description, price, stock } = this.item();
+    const { name, description, price, stock, image } = this.item();
     const added = stock! - this.currentStock();
     try {
-      await firstValueFrom(this.adminItems.updateItem(id, { name, description, price: price! }));
+      await firstValueFrom(
+        this.adminItems.updateItem(id, { name, description, price: price!, image }),
+      );
       if (added > 0) {
         await firstValueFrom(this.adminItems.addUnits(id, added));
       }

@@ -61,3 +61,50 @@
     </mat-error>
   </mat-form-field>
 </div>
+
+<div class="field sm:col-span-3">
+  <span class="field-label" [id]="prefix + 'picture-label'">{{
+    'admin.items.picture' | translate
+  }}</span>
+  <div class="flex flex-wrap items-center gap-4">
+    @if (pictureUrl(); as url) {
+      <img
+        data-testid="picture-preview"
+        [src]="url"
+        alt=""
+        class="h-24 w-32 rounded-md bg-surface-container object-cover"
+      />
+    } @else {
+      <span
+        aria-hidden="true"
+        class="flex h-24 w-32 items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
+      >
+        <mat-icon>image</mat-icon>
+      </span>
+    }
+    <input
+      #picture
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      class="sr-only"
+      tabindex="-1"
+      [attr.aria-labelledby]="prefix + 'picture-label'"
+      (change)="choose(picture)"
+    />
+    <button matButton="tonal" type="button" [disabled]="uploading()" (click)="picture.click()">
+      <mat-icon>upload</mat-icon>
+      {{ (pictureUrl() ? 'admin.items.changePicture' : 'admin.items.choosePicture') | translate }}
+    </button>
+    @if (pictureUrl()) {
+      <button matButton type="button" (click)="remove()">
+        {{ 'admin.items.removePicture' | translate }}
+      </button>
+    }
+  </div>
+  <p class="text-sm text-on-surface-variant">{{ 'admin.items.pictureHint' | translate }}</p>
+  @if (pictureProblem(); as problem) {
+    <p data-testid="picture-error" role="alert" class="text-sm text-error">
+      {{ problem.code | translate: problem.params }}
+    </p>
+  }
+</div>

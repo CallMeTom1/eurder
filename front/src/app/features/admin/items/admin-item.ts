@@ -16,6 +16,7 @@ export interface ItemDetails {
   name: string;
   description: string;
   price: number;
+  image: string | null;
 }
 
 export interface NewItem extends ItemDetails {

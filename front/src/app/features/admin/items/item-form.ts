@@ -12,6 +12,7 @@ export interface ItemForm {
   description: string;
   price: number | null;
   stock: number | null;
+  image: string | null;
 }
 
 export const MAX_TEXT = 255;

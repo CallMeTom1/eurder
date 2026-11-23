@@ -35,6 +35,7 @@ export class ItemCreatePage {
     description: '',
     price: null,
     stock: null,
+    image: null,
   });
   protected readonly problem = signal<ApiProblem | null>(null);
   protected readonly itemForm = form(this.item, (path) => itemRules(path, () => 0), {
@@ -43,10 +44,10 @@ export class ItemCreatePage {
 
   private async create(): Promise<TreeValidationResult> {
     this.problem.set(null);
-    const { name, description, price, stock } = this.item();
+    const { name, description, price, stock, image } = this.item();
     try {
       const id = await firstValueFrom(
-        this.adminItems.addItem({ name, description, price: price!, stock: stock! }),
+        this.adminItems.addItem({ name, description, price: price!, stock: stock!, image }),
       );
       await this.router.navigate(['/admin/items', id]);
       return undefined;

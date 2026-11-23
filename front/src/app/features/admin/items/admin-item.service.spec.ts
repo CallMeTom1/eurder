@@ -48,7 +48,13 @@ describe('AdminItemService', () => {
 
   it('given a new item, when adding it, then its stock is created as pristine units and its id comes back', async () => {
     const added = firstValueFrom(
-      items.addItem({ name: 'Chair', description: 'Wooden chair', price: 49.99, stock: 15 }),
+      items.addItem({
+        name: 'Chair',
+        description: 'Wooden chair',
+        price: 49.99,
+        stock: 15,
+        image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
+      }),
     );
 
     const request = backend.expectOne({ method: 'POST', url: '/api/items' });
@@ -59,20 +65,37 @@ describe('AdminItemService', () => {
       description: 'Wooden chair',
       price: 49.99,
       units: { PRISTINE: 15 },
+      image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
     });
     expect(await added).toBe('i1');
   });
 
-  it('given changed details, when updating an item, then only the name, the description and the price are sent', async () => {
+  it('given changed details, when updating an item, then the name, the description, the price and the picture are sent', async () => {
     const updated = firstValueFrom(
-      items.updateItem('i1', { name: 'Chair', description: 'Oak chair', price: 59 }),
+      items.updateItem('i1', { name: 'Chair', description: 'Oak chair', price: 59, image: null }),
     );
 
     const request = backend.expectOne({ method: 'PUT', url: '/api/items/i1' });
     request.flush({ id: 'i1' });
 
-    expect(request.request.body).toEqual({ name: 'Chair', description: 'Oak chair', price: 59 });
+    expect(request.request.body).toEqual({
+      name: 'Chair',
+      description: 'Oak chair',
+      price: 59,
+      image: null,
+    });
     await updated;
+  });
+
+  it('given a picture, when uploading it, then it is sent as the file of a form and its path comes back', async () => {
+    const picture = new File(['jpeg'], 'chair.jpg', { type: 'image/jpeg' });
+    const uploaded = firstValueFrom(items.uploadImage(picture));
+
+    const request = backend.expectOne({ method: 'POST', url: '/api/images' });
+    request.flush({ path: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg' });
+
+    expect((request.request.body as FormData).get('file')).toBe(picture);
+    expect(await uploaded).toBe('images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg');
   });
 
   it('given more stock, when adding units, then pristine units are added', async () => {

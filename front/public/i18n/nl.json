@@ -101,7 +101,12 @@
       "updateButton": "Bijwerken",
       "urgency": "Urgentie",
       "edit": "{{name}} bewerken",
-      "editTitle": "Artikel bewerken"
+      "editTitle": "Artikel bewerken",
+      "picture": "Foto",
+      "choosePicture": "Kies een foto",
+      "changePicture": "Foto wijzigen",
+      "removePicture": "Foto verwijderen",
+      "pictureHint": "PNG, JPEG of WebP, maximaal 2 MB."
     },
     "customers": {
       "search": "Een achternaam zoeken",

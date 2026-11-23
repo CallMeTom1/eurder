@@ -53,6 +53,16 @@ describe('ItemCreatePage', () => {
     type('Amount of stock', '15');
   }
 
+  function choose(picture: File): void {
+    const input = page.querySelector<HTMLInputElement>('input[type="file"]')!;
+    Object.defineProperty(input, 'files', { value: [picture], configurable: true });
+    input.dispatchEvent(new Event('change'));
+  }
+
+  function pictureMessage(): string | undefined {
+    return page.querySelector('[data-testid="picture-error"]')?.textContent?.trim();
+  }
+
   async function submit(): Promise<void> {
     page.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await fixture.whenStable();
@@ -115,6 +125,7 @@ describe('ItemCreatePage', () => {
       description: 'Wooden chair',
       price: 49.99,
       units: { PRISTINE: 15 },
+      image: null,
     });
     expect(navigate).toHaveBeenCalledWith(['/admin/items', 'i1']);
   });
@@ -157,5 +168,70 @@ describe('ItemCreatePage', () => {
     expect(errorOf('Description')).toContain('At most 255 characters.');
     expect(page.querySelector('app-char-counter span')?.classList).toContain('text-error');
     backend.expectNone('/api/items');
+  });
+
+  it('given a picture, when choosing it, then it is uploaded at once, shown, and its path goes with the item', async () => {
+    fillIn();
+
+    choose(new File(['jpeg'], 'chair.jpg', { type: 'image/jpeg' }));
+    backend
+      .expectOne({ method: 'POST', url: '/api/images' })
+      .flush({ path: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg' });
+    await settle();
+    const preview = page.querySelector('[data-testid="picture-preview"]');
+    await submit();
+    const request = backend.expectOne({ method: 'POST', url: '/api/items' });
+    request.flush({ id: 'i1' });
+    await settle();
+
+    expect(preview?.getAttribute('src')).toBe(
+      '/api/images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
+    );
+    expect(request.request.body.image).toBe('images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg');
+  });
+
+  it('given a chosen picture, when removing it, then the item goes without picture', async () => {
+    fillIn();
+    choose(new File(['jpeg'], 'chair.jpg', { type: 'image/jpeg' }));
+    backend
+      .expectOne('/api/images')
+      .flush({ path: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg' });
+    await settle();
+
+    [...page.querySelectorAll('button')]
+      .find((button) => button.textContent?.includes('Remove the picture'))!
+      .click();
+    await fixture.whenStable();
+    await submit();
+    const request = backend.expectOne('/api/items');
+    request.flush({ id: 'i1' });
+    await settle();
+
+    expect(page.querySelector('[data-testid="picture-preview"]')).toBeNull();
+    expect(request.request.body.image).toBeNull();
+  });
+
+  it('given a file that is not a picture, when the API refuses it, then the picture field says why', async () => {
+    choose(new File(['text'], 'notes.png', { type: 'image/png' }));
+
+    backend
+      .expectOne('/api/images')
+      .flush(
+        { status: 400, code: 'error.image.invalid-type', params: { types: 'PNG, JPEG, WebP' } },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await settle();
+
+    expect(pictureMessage()).toBe('Only PNG, JPEG or WebP pictures are accepted.');
+  });
+
+  it('given a picture of more than 2 MB, when choosing it, then it is refused before any upload', async () => {
+    const big = new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'big.jpg', { type: 'image/jpeg' });
+
+    choose(big);
+    await fixture.whenStable();
+
+    expect(pictureMessage()).toBe('The file is too large: 2 MB at most.');
+    backend.expectNone('/api/images');
   });
 });

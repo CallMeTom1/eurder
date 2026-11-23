@@ -19,7 +19,7 @@ describe('ItemEditPage', () => {
     price: 49.99,
     stock: 15,
     urgency: 'STOCK_HIGH',
-    image: null,
+    image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
   };
 
   beforeEach(async () => {
@@ -80,7 +80,12 @@ describe('ItemEditPage', () => {
 
     await update();
     const put = backend.expectOne({ method: 'PUT', url: '/api/items/i1' });
-    expect(put.request.body).toEqual({ name: 'Chair', description: 'Oak chair', price: 49.99 });
+    expect(put.request.body).toEqual({
+      name: 'Chair',
+      description: 'Oak chair',
+      price: 49.99,
+      image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
+    });
     put.flush({ id: 'i1' });
     await settle();
     const units = backend.expectOne({ method: 'POST', url: '/api/items/i1/units' });

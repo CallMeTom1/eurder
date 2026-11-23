@@ -3,7 +3,7 @@ import { ADMIN, createItem, logIn, registerCustomer, uniqueEmail, uniqueName } f
 
 test.use({ locale: 'en-US' });
 
-test('given the admin, when creating then editing an item, then the shop shows the new details and the added stock', async ({
+test('given the admin, when creating then editing an item, then the shop shows the new details, the added stock and the picture', async ({
   page,
 }) => {
   const name = uniqueName('Admin chair');
@@ -16,7 +16,9 @@ test('given the admin, when creating then editing an item, then the shop shows t
   await page.getByLabel('Description').fill('A chair made by the admin');
   await page.getByLabel('Price').fill('59.90');
   await page.getByLabel('Amount of stock').fill('3');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.locator('input[type="file"]').setInputFiles('../demo/images/wooden-chair.jpg');
+  await expect(page.getByTestId('picture-preview')).toBeVisible();
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
   await page.getByRole('link', { name: 'Edit' }).click();
   await page.getByLabel('Description').fill('An oak chair made by the admin');
@@ -25,6 +27,7 @@ test('given the admin, when creating then editing an item, then the shop shows t
 
   await expect(page.getByText('An oak chair made by the admin')).toBeVisible();
   await expect(page.getByText('High stock')).toBeVisible();
+  await expect(page.getByRole('img', { name })).toHaveAttribute('src', /^\/api\/images\/.+\.jpg$/);
 });
 
 test('given the admin, when creating then editing a customer, then the detail shows the changes', async ({

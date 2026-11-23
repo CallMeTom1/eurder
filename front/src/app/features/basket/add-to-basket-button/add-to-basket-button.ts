@@ -15,6 +15,7 @@ const MESSAGE_DURATION = 4000;
   imports: [MatButton, MatIcon, TranslatePipe],
   selector: 'app-add-to-basket-button',
   templateUrl: './add-to-basket-button.html',
+  host: { class: 'contents' },
 })
 export class AddToBasketButton {
   private readonly basket = inject(BasketService);
