@@ -71,3 +71,43 @@ describe('ConfirmationService', () => {
     expect(answers).toEqual([false]);
   });
 });
+
+describe('ConfirmationService, to inform', () => {
+  let loader: HarnessLoader;
+  let closed: boolean;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostPage],
+      providers: [
+        provideTestTranslations(),
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+      ],
+    }).compileComponents();
+    loader = TestbedHarnessEnvironment.documentRootLoader(TestBed.createComponent(HostPage));
+    closed = false;
+    TestBed.inject(ConfirmationService)
+      .inform({ title: 'Order placed', message: 'Your order is registered.' })
+      .subscribe(() => (closed = true));
+  });
+
+  it('given some news, when it opens, then the dialog tells it with a single OK button', async () => {
+    const dialog = await loader.getHarness(MatDialogHarness);
+
+    const buttons = await dialog.getAllHarnesses(MatButtonHarness);
+
+    expect(await dialog.getRole()).toBe('dialog');
+    expect(await dialog.getTitleText()).toBe('Order placed');
+    expect(await dialog.getContentText()).toBe('Your order is registered.');
+    expect(await Promise.all(buttons.map((button) => button.getText()))).toEqual(['OK']);
+  });
+
+  it('given the news, when pressing OK, then the dialog closes and says so', async () => {
+    const dialog = await loader.getHarness(MatDialogHarness);
+
+    await (await dialog.getHarness(MatButtonHarness.with({ text: 'OK' }))).click();
+
+    expect(closed).toBe(true);
+    expect(await loader.getAllHarnesses(MatDialogHarness)).toHaveLength(0);
+  });
+});

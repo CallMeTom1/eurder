@@ -11,7 +11,8 @@
     "retry": "Opnieuw proberen",
     "cancel": "Annuleren",
     "confirm": "Bevestigen",
-    "charactersLeft": "Nog {{count}} tekens"
+    "charactersLeft": "Nog {{count}} tekens",
+    "ok": "OK"
   },
   "error": {
     "common": {

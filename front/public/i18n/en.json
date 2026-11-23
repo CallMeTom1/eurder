@@ -11,7 +11,8 @@
     "retry": "Try again",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "charactersLeft": "{{count}} characters left"
+    "charactersLeft": "{{count}} characters left",
+    "ok": "OK"
   },
   "error": {
     "common": {
