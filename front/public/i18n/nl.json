@@ -105,7 +105,16 @@
       "noMatch": "Geen achternaam begint met “{{query}}”.",
       "id": "Id",
       "view": "{{name}} bekijken",
-      "edit": "{{name}} bewerken"
+      "edit": "{{name}} bewerken",
+      "createButton": "Klant aanmaken",
+      "title": "Klant",
+      "editTitle": "Klant bewerken",
+      "updateButton": "Bijwerken",
+      "report": "Bestellingen",
+      "noOrder": "Nog geen bestellingen.",
+      "total": "Totaal van alle bestellingen",
+      "orderTotal": "Totaal",
+      "email": "E-mail"
     }
   },
   "page": {

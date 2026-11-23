@@ -105,7 +105,16 @@
       "noMatch": "No last name starts with “{{query}}”.",
       "id": "Id",
       "view": "View {{name}}",
-      "edit": "Edit {{name}}"
+      "edit": "Edit {{name}}",
+      "createButton": "Create the customer",
+      "title": "Customer",
+      "editTitle": "Edit customer",
+      "updateButton": "Update",
+      "report": "Orders",
+      "noOrder": "No order yet.",
+      "total": "Total of all orders",
+      "orderTotal": "Total",
+      "email": "Email"
     }
   },
   "page": {

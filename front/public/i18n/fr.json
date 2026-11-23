@@ -105,7 +105,16 @@
       "noMatch": "Aucun nom ne commence par « {{query}} ».",
       "id": "Id",
       "view": "Voir {{name}}",
-      "edit": "Modifier {{name}}"
+      "edit": "Modifier {{name}}",
+      "createButton": "Créer le client",
+      "title": "Client",
+      "editTitle": "Modifier le client",
+      "updateButton": "Mettre à jour",
+      "report": "Commandes",
+      "noOrder": "Aucune commande pour l’instant.",
+      "total": "Total de toutes les commandes",
+      "orderTotal": "Total",
+      "email": "Email"
     }
   },
   "page": {

@@ -1,0 +1,16 @@
+<app-page-header [title]="'admin.customers.new' | translate" />
+
+<form [formRoot]="customerForm" class="flex w-full max-w-2xl flex-col gap-2">
+  @if (problem(); as problem) {
+    <app-error-state [message]="problem.code | translate: problem.params" />
+  }
+
+  <app-customer-form-fields [form]="customerForm" [password]="customerForm.password" />
+
+  <div class="mt-2 flex justify-end gap-3">
+    <a matButton="outlined" routerLink="/admin/customers">{{ 'common.cancel' | translate }}</a>
+    <button matButton="filled" type="submit" [disabled]="customerForm().submitting()">
+      {{ 'admin.customers.createButton' | translate }}
+    </button>
+  </div>
+</form>
