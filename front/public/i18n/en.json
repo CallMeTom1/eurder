@@ -153,11 +153,11 @@
     "placeOrder": "Place order",
     "withCount": "Basket, {{count}} items",
     "amountOf": "Amount of {{name}}",
-    "title": "Your shopping basket",
-    "product": "Product",
     "placed": {
       "title": "Order placed",
       "message": "Your order has been successfully placed. Thank you!"
-    }
+    },
+    "item": "Item",
+    "unitPrice": "Unit price"
   }
 }

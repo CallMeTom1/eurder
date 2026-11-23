@@ -1,4 +1,4 @@
-<app-page-header [title]="'basket.title' | translate" />
+<app-page-header [title]="'nav.basket' | translate" />
 
 @if (problem(); as problem) {
   <app-error-state [message]="problem.code | translate: problem.params" />
@@ -9,23 +9,28 @@
     <a actions matButton="tonal" routerLink="/catalog">{{ 'basket.browse' | translate }}</a>
   </app-empty-state>
 } @else {
-  <div class="overflow-x-auto rounded-md border border-outline-variant">
+  <div class="overflow-x-auto">
     <table class="w-full border-collapse">
-      <thead class="bg-surface-container text-left text-on-surface-variant uppercase">
-        <tr>
-          <th scope="col" class="px-4 py-3 font-medium">{{ 'basket.product' | translate }}</th>
-          <th scope="col" class="px-4 py-3 font-medium">{{ 'basket.amount' | translate }}</th>
-          <th scope="col" class="px-4 py-3 font-medium">{{ 'basket.price' | translate }}</th>
+      <thead class="text-left text-on-surface-variant">
+        <tr class="border-b border-outline-variant">
+          <th scope="col" class="py-2 pr-4 font-medium">{{ 'basket.item' | translate }}</th>
+          <th scope="col" class="py-2 pr-4 font-medium">{{ 'basket.amount' | translate }}</th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">
+            {{ 'basket.unitPrice' | translate }}
+          </th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">
+            {{ 'basket.price' | translate }}
+          </th>
           <td></td>
         </tr>
       </thead>
       <tbody>
         @for (line of basket.lines(); track line.itemId) {
-          <tr class="border-t border-outline-variant">
-            <th scope="row" class="px-4 py-2 text-left font-normal">
+          <tr class="border-b border-outline-variant">
+            <th scope="row" class="py-2 pr-4 text-left font-normal">
               <a [routerLink]="['/catalog', line.itemId]" class="underline">{{ line.name }}</a>
             </th>
-            <td class="px-4 py-2">
+            <td class="py-2 pr-4">
               <input
                 #amount
                 type="number"
@@ -38,35 +43,44 @@
                 (change)="changeAmount(line, amount)"
               />
             </td>
-            <td class="px-4 py-2">{{ line.amount * line.priceInCents | price }}</td>
-            <td class="px-2 py-2 text-right">
+            <td class="py-2 pr-4 text-right">{{ line.priceInCents | price }}</td>
+            <td class="py-2 pr-4 text-right">{{ line.amount * line.priceInCents | price }}</td>
+            <td class="py-2 text-right">
               <button
                 matIconButton
                 type="button"
                 [attr.aria-label]="'basket.remove' | translate: { name: line.name }"
                 (click)="basket.remove(line.itemId)"
               >
-                <mat-icon class="text-error">close</mat-icon>
+                <mat-icon>delete</mat-icon>
               </button>
             </td>
           </tr>
         }
       </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row" colspan="3" class="py-3 pr-4 text-right">
+            {{ 'basket.total' | translate }}
+          </th>
+          <td class="py-3 pr-4 text-right [font:var(--mat-sys-title-medium)]">
+            {{ basket.totalInCents() | price }}
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 
-  <p data-testid="basket-total" class="text-right [font:var(--mat-sys-title-medium)]">
-    {{ 'basket.total' | translate }} {{ basket.totalInCents() | price }}
-  </p>
-
-  <button
-    data-testid="place-order"
-    matButton="filled"
-    type="button"
-    class="w-full"
-    [disabled]="placing()"
-    (click)="placeOrder()"
-  >
-    {{ 'basket.placeOrder' | translate }}
-  </button>
+  <div class="flex justify-end">
+    <button
+      data-testid="place-order"
+      matButton="filled"
+      type="button"
+      [disabled]="placing()"
+      (click)="placeOrder()"
+    >
+      {{ 'basket.placeOrder' | translate }}
+    </button>
+  </div>
 }
