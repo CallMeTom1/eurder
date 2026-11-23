@@ -8,6 +8,7 @@ import type { CurrentUserDto } from '@core/api/eurder-api';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
 import { SecurityService } from '@core/security/security.service';
+import { BasketService } from '@features/basket/basket.service';
 import { firstValueFrom } from 'rxjs';
 import { UserMenu } from './user-menu';
 
@@ -107,5 +108,23 @@ describe('UserMenu', () => {
 
     expect(TestBed.inject(SecurityService).isAuthenticated()).toBe(false);
     expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('given a filled basket, when logging out, then the basket is emptied', async () => {
+    await menuFor(customer);
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    TestBed.inject(BasketService).add({
+      id: 'i1',
+      name: 'Chair',
+      description: '',
+      priceInCents: 4999,
+    });
+    const menu = await loader.getHarness(MatMenuHarness);
+
+    await menu.clickItem({ text: /Log out/ });
+    backend.expectOne('/api/auth/logout').flush(null);
+    await fixture.whenStable();
+
+    expect(TestBed.inject(BasketService).lines()).toEqual([]);
   });
 });

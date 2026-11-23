@@ -45,7 +45,7 @@ TypeScript aliases avoid `../../../`:
 | Alias         | Folder                                                            |
 | ------------- | ----------------------------------------------------------------- |
 | `@core/*`     | `src/app/core/*`: app-wide services (security, http, i18n, theme) |
-| `@shared/*`   | `src/app/shared/*`: reusable components, directives, pipes        |
+| `@shared/*`   | `src/app/shared/*`: reusable components, forms helpers, pipes     |
 | `@layout/*`   | `src/app/layout/*`: front office and back office layouts          |
 | `@features/*` | `src/app/features/*`: the pages, per feature                      |
 
