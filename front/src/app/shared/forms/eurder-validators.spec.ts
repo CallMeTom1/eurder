@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { form } from '@angular/forms/signals';
-import { digits, notNegative, positive, wholeNumber } from './eurder-validators';
+import { atMost, digits, notNegative, positive, wholeNumber } from './eurder-validators';
 
 describe('Eurder validators', () => {
   function errorKindsOf(
@@ -92,5 +92,36 @@ describe('Eurder validators', () => {
     );
 
     expect(error).toMatchObject({ kind: 'digits', integer: 8, fraction: 2 });
+  });
+
+  it.each([
+    { name: '', errors: [] },
+    { name: 'x'.repeat(5), errors: [] },
+    { name: 'x'.repeat(6), errors: [{ kind: 'maxLength', maxLength: 5 }] },
+  ])(
+    'given a name of $name.length characters, when checking at most 5, then the errors are $errors',
+    ({ name, errors }) => {
+      const found = TestBed.runInInjectionContext(() =>
+        form(signal({ name }), (path) => atMost(path.name, 5))
+          .name()
+          .errors()
+          .map((error) => ({
+            kind: error.kind,
+            maxLength: (error as unknown as { maxLength: number }).maxLength,
+          })),
+      );
+
+      expect(found).toEqual(errors);
+    },
+  );
+
+  it('given a limit, when the field is shown, then the browser is not asked to cut the typing', () => {
+    const field = TestBed.runInInjectionContext(() =>
+      form(signal({ name: '' }), (path) => atMost(path.name, 5)).name(),
+    );
+
+    const limit = field.maxLength?.();
+
+    expect(limit).toBeUndefined();
   });
 });

@@ -13,9 +13,9 @@ import { TranslatePipe } from '@ngx-translate/core';
 })
 export class CharCounter {
   readonly field = input.required<FieldTree<string>>();
+  readonly max = input.required<number>();
 
   private readonly length = computed(() => this.field()().value().length);
-  private readonly max = computed(() => this.field()().maxLength?.() ?? Infinity);
 
   protected readonly remaining = computed(() => Math.max(0, this.max() - this.length()));
   protected readonly exceeded = computed(() => this.length() > this.max());

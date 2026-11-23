@@ -84,7 +84,11 @@
       <mat-label>Description</mat-label>
       <textarea matInput rows="3" [formField]="itemForm.description"></textarea>
       <mat-hint align="end">
-        <app-char-counter data-testid="description-counter" [field]="itemForm.description" />
+        <app-char-counter
+          data-testid="description-counter"
+          [field]="itemForm.description"
+          [max]="255"
+        />
       </mat-hint>
       <mat-error>
         @if (itemForm.description().errors() | fieldError; as error) {
@@ -94,6 +98,7 @@
           data-testid="description-counter"
           class="float-end"
           [field]="itemForm.description"
+          [max]="255"
         />
       </mat-error>
     </mat-form-field>

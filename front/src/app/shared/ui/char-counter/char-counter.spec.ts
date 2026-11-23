@@ -1,16 +1,17 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { form, maxLength } from '@angular/forms/signals';
+import { form } from '@angular/forms/signals';
+import { atMost } from '@shared/forms/eurder-validators';
 import { provideTestTranslations } from '@core/i18n/testing';
 import { CharCounter } from './char-counter';
 
 @Component({
   imports: [CharCounter],
-  template: `<app-char-counter [field]="item.description" />`,
+  template: `<app-char-counter [field]="item.description" [max]="255" />`,
 })
 class HostForm {
   readonly model = signal({ description: '' });
-  readonly item = form(this.model, (path) => maxLength(path.description, 255));
+  readonly item = form(this.model, (path) => atMost(path.description, 255));
 }
 
 describe('CharCounter', () => {

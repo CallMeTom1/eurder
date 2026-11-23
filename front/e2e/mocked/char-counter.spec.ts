@@ -1,6 +1,6 @@
 import { expect, test } from './fixtures';
 
-test('given the description field, when typing past 255 characters, then the browser stops at 255 and the counter at 0', async ({
+test('given the description field, when typing past 255 characters, then the counter stays at 0 in red and the field says it is too long', async ({
   page,
 }) => {
   await page.goto('/design-system');
@@ -11,8 +11,11 @@ test('given the description field, when typing past 255 characters, then the bro
   await description.fill('x'.repeat(250));
   await expect(counter).toHaveText('5 characters left');
   await description.pressSequentially('x'.repeat(10));
+  await description.blur();
 
-  await expect(description).toHaveValue('x'.repeat(255));
+  await expect(description).toHaveValue('x'.repeat(260));
   await expect(counter).toHaveText('0 characters left');
-  await expect(description).toHaveAttribute('maxlength', '255');
+  await expect(counter).toHaveCSS('color', 'rgb(186, 26, 26)');
+  await expect(description).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByText('At most 255 characters.')).toBeVisible();
 });

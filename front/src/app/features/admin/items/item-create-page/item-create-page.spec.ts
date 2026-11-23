@@ -145,4 +145,17 @@ describe('ItemCreatePage', () => {
 
     expect(cancel?.getAttribute('href')).toBe('/admin/items');
   });
+
+  it('given a name and a description longer than 255 characters, when creating, then both say they are too long and the counter is red', async () => {
+    fillIn();
+    type('Name', 'x'.repeat(256));
+    type('Description', 'x'.repeat(300));
+
+    await submit();
+
+    expect(errorOf('Name')).toBe('At most 255 characters.');
+    expect(errorOf('Description')).toContain('At most 255 characters.');
+    expect(page.querySelector('app-char-counter span')?.classList).toContain('text-error');
+    backend.expectNone('/api/items');
+  });
 });

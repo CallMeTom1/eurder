@@ -1,5 +1,11 @@
-import { maxLength, max, min, required, SchemaPathTree } from '@angular/forms/signals';
-import { digits, notNegative, positive, wholeNumber } from '@shared/forms/eurder-validators';
+import { max, min, required, SchemaPathTree } from '@angular/forms/signals';
+import {
+  atMost,
+  digits,
+  notNegative,
+  positive,
+  wholeNumber,
+} from '@shared/forms/eurder-validators';
 
 export interface ItemForm {
   name: string;
@@ -8,14 +14,14 @@ export interface ItemForm {
   stock: number | null;
 }
 
-const MAX_TEXT = 255;
+export const MAX_TEXT = 255;
 const MAX_UNITS = 1000;
 
 export function itemRules(path: SchemaPathTree<ItemForm>, minStock: () => number): void {
   required(path.name);
-  maxLength(path.name, MAX_TEXT);
+  atMost(path.name, MAX_TEXT);
   required(path.description);
-  maxLength(path.description, MAX_TEXT);
+  atMost(path.description, MAX_TEXT);
   required(path.price);
   positive(path.price);
   digits(path.price, 8, 2);

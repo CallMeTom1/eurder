@@ -1,12 +1,12 @@
 import {
   email,
-  maxLength,
   minLength,
   pattern,
   required,
   SchemaPath,
   SchemaPathTree,
 } from '@angular/forms/signals';
+import { atMost } from '@shared/forms/eurder-validators';
 import type { UpdateCustomerDto } from '@core/api/eurder-api';
 
 export type CustomerDetails = UpdateCustomerDto;
@@ -15,7 +15,7 @@ const PHONE_NUMBER = /^\+?[0-9 ./-]{6,20}$/;
 
 function requiredText(path: SchemaPath<string>, length: number): void {
   required(path);
-  maxLength(path, length);
+  atMost(path, length);
 }
 
 export function emptyCustomer(): CustomerDetails {
@@ -45,5 +45,5 @@ export function customerRules(path: SchemaPathTree<CustomerDetails>): void {
 export function passwordRules(path: SchemaPath<string>): void {
   required(path);
   minLength(path, 8);
-  maxLength(path, 72);
+  atMost(path, 72);
 }

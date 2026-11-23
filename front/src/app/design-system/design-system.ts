@@ -1,11 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { form, FormField, maxLength, required, submit } from '@angular/forms/signals';
+import { form, FormField, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslatePipe } from '@ngx-translate/core';
 import { apiErrorsOf } from '@shared/forms/api-errors';
-import { digits, positive } from '@shared/forms/eurder-validators';
+import { atMost, digits, positive } from '@shared/forms/eurder-validators';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { CharCounter } from '@shared/ui/char-counter/char-counter';
@@ -63,7 +63,7 @@ export class DesignSystem {
     required(path.price);
     positive(path.price);
     digits(path.price, 8, 2);
-    maxLength(path.description, 255);
+    atMost(path.description, 255);
   });
 
   protected readonly swatches: Swatch[] = [

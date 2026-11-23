@@ -41,3 +41,18 @@ export function wholeNumber(path: SchemaPath<number | null>): void {
     return number !== null && !Number.isInteger(number) ? { kind: 'wholeNumber' } : undefined;
   });
 }
+
+export interface AtMostValidationError extends ValidationError {
+  readonly kind: 'maxLength';
+  readonly maxLength: number;
+}
+
+export function atMost(path: SchemaPath<string>, max: number): void {
+  validate(path, ({ value }) => {
+    if (value().length <= max) {
+      return undefined;
+    }
+    const error: AtMostValidationError = { kind: 'maxLength', maxLength: max };
+    return error;
+  });
+}
