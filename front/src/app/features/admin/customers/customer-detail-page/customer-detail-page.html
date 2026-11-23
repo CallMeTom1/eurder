@@ -1,0 +1,48 @@
+<app-page-header [title]="'admin.customers.title' | translate" [subtitle]="id()">
+  @if (customer.hasValue()) {
+    <a actions matButton="filled" [routerLink]="['/admin/customers', id(), 'edit']">
+      <mat-icon>edit</mat-icon>
+      {{ 'common.edit' | translate }}
+    </a>
+  }
+</app-page-header>
+
+@if (customer.isLoading()) {
+  <app-loading-state />
+} @else if (customer.error()) {
+  <app-error-state [message]="problem().code | translate: problem().params" />
+} @else if (customer.hasValue()) {
+  @let value = customer.value();
+  <dl class="grid max-w-2xl gap-x-6 gap-y-3 sm:grid-cols-[10rem_1fr]">
+    <dt class="text-on-surface-variant">{{ 'account.firstName' | translate }}</dt>
+    <dd>{{ value.firstName }}</dd>
+    <dt class="text-on-surface-variant">{{ 'account.lastName' | translate }}</dt>
+    <dd>{{ value.lastName }}</dd>
+    <dt class="text-on-surface-variant">{{ 'account.email' | translate }}</dt>
+    <dd>{{ value.email }}</dd>
+    <dt class="text-on-surface-variant">{{ 'account.phoneNumber' | translate }}</dt>
+    <dd>{{ value.phoneNumber }}</dd>
+    <dt class="text-on-surface-variant">{{ 'account.address' | translate }}</dt>
+    <dd>
+      {{ value.address.street }} {{ value.address.houseNumber }}, {{ value.address.postalCode }}
+      {{ value.address.city }}, {{ 'country.' + value.address.country | translate }}
+    </dd>
+  </dl>
+
+  <section class="flex flex-col gap-4" aria-labelledby="orders-title">
+    <h2 id="orders-title" class="[font:var(--mat-sys-title-large)]">
+      {{ 'admin.customers.orders' | translate }}
+    </h2>
+    @if (report.isLoading()) {
+      <app-loading-state />
+    } @else if (report.error()) {
+      <app-error-state [message]="reportProblem().code | translate: reportProblem().params" />
+    } @else if (report.hasValue()) {
+      <app-eurder-report [report]="report.value()" />
+    }
+  </section>
+}
+
+<div>
+  <a matButton="outlined" routerLink="/admin/customers">{{ 'common.back' | translate }}</a>
+</div>

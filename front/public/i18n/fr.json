@@ -110,7 +110,8 @@
       "title": "Client",
       "editTitle": "Modifier le client",
       "updateButton": "Mettre à jour",
-      "email": "Email"
+      "email": "Email",
+      "orders": "Commandes"
     }
   },
   "page": {

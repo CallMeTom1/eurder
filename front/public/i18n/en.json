@@ -110,7 +110,8 @@
       "title": "Customer",
       "editTitle": "Edit customer",
       "updateButton": "Update",
-      "email": "Email"
+      "email": "Email",
+      "orders": "Orders"
     }
   },
   "page": {
