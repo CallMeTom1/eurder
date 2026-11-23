@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('given the description field, when typing past 255 characters, then the counter stays at 0 in red and the field is invalid', async ({
   page,

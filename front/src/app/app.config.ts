@@ -10,9 +10,11 @@ import { provideRouter, TitleStrategy } from '@angular/router';
 import { apiErrorInterceptor } from '@core/api/api-error.interceptor';
 import { DEFAULT_LANGUAGE, LanguageService } from '@core/i18n/language.service';
 import { TranslatedTitleStrategy } from '@core/i18n/translated-title-strategy';
+import { SecurityService } from '@core/security/security.service';
 import { ThemeService } from '@core/theme/theme.service';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { concat } from 'rxjs';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -31,7 +33,9 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(ThemeService);
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
-      return inject(LanguageService).start();
+      const language = inject(LanguageService);
+      const security = inject(SecurityService);
+      return concat(language.start(), security.loadCurrentUser());
     }),
   ],
 };

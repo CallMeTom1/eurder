@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('given a confirmation, when the user confirms, then the page gets a yes', async ({ page }) => {
   await page.goto('/design-system');
