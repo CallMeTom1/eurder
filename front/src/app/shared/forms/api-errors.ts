@@ -1,5 +1,7 @@
+import { WritableSignal } from '@angular/core';
 import { FieldTree, ReadonlyFieldTree, ValidationError } from '@angular/forms/signals';
-import { ApiFieldError, ApiProblem } from '@core/api/api-problem';
+import { isGlobalProblem } from '@core/api/api-error.interceptor';
+import { ApiFieldError, ApiProblem, isApiProblem } from '@core/api/api-problem';
 
 export interface ApiValidationError extends ValidationError.WithOptionalFieldTree {
   readonly kind: 'api';
@@ -24,6 +26,21 @@ export function apiErrorsOf(form: FieldTree<unknown>, problem: ApiProblem): ApiE
     }
   }
   return { onFields, unmatched };
+}
+
+export function submissionErrorsOf(
+  form: FieldTree<unknown>,
+  error: unknown,
+  shown: WritableSignal<ApiProblem | null>,
+): ApiValidationError[] | undefined {
+  if (!isApiProblem(error) || isGlobalProblem(error)) {
+    return undefined;
+  }
+  const { onFields, unmatched } = apiErrorsOf(form, error);
+  if (error.errors.length === 0 || unmatched.length > 0) {
+    shown.set(error);
+  }
+  return onFields;
 }
 
 export function apiErrorOn(

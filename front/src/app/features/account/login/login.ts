@@ -11,13 +11,12 @@ import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
-import { isGlobalProblem } from '@core/api/api-error.interceptor';
-import { ApiProblem, isApiProblem } from '@core/api/api-problem';
+import { ApiProblem } from '@core/api/api-problem';
 import { CurrentUser } from '@core/security/current-user';
 import { safeReturnUrl } from '@core/security/return-url';
 import { SecurityService } from '@core/security/security.service';
 import { TranslatePipe } from '@ngx-translate/core';
-import { apiErrorsOf } from '@shared/forms/api-errors';
+import { submissionErrorsOf } from '@shared/forms/api-errors';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
@@ -68,22 +67,11 @@ export class Login {
       await this.router.navigateByUrl(this.landingOf(user));
       return undefined;
     } catch (error) {
-      return this.errorsOf(error);
+      return submissionErrorsOf(this.loginForm, error, this.problem);
     }
   }
 
   private landingOf(user: CurrentUser): string {
     return safeReturnUrl(this.returnUrl()) ?? (user.role === 'ADMIN' ? '/admin' : '/catalog');
-  }
-
-  private errorsOf(error: unknown): TreeValidationResult {
-    if (!isApiProblem(error) || isGlobalProblem(error)) {
-      return undefined;
-    }
-    const { onFields, unmatched } = apiErrorsOf(this.loginForm, error);
-    if (error.errors.length === 0 || unmatched.length > 0) {
-      this.problem.set(error);
-    }
-    return onFields;
   }
 }

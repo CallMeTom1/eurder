@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { form } from '@angular/forms/signals';
 import { ApiProblem } from '@core/api/api-problem';
-import { apiErrorsOf } from './api-errors';
+import { apiErrorsOf, submissionErrorsOf } from './api-errors';
 
 describe('apiErrorsOf', () => {
   function orderForm() {
@@ -59,5 +59,57 @@ describe('apiErrorsOf', () => {
     expect(unmatched).toEqual([
       { field: 'password', code: 'validation.too-short', params: { min: 8 } },
     ]);
+  });
+});
+
+describe('submissionErrorsOf', () => {
+  function nameForm() {
+    return TestBed.runInInjectionContext(() => form(signal({ name: '' })));
+  }
+
+  function problemWith(status: number, errors: ApiProblem['errors']): ApiProblem {
+    return { status, code: 'error.common.unexpected', params: {}, errors };
+  }
+
+  it.each([
+    { what: 'an error that is not from the API', error: new Error('boom') },
+    { what: 'a server failure, already shown by the interceptor', error: problemWith(500, []) },
+  ])('given $what, when submitting, then nothing more is shown', ({ error }) => {
+    const shown = signal<ApiProblem | null>(null);
+
+    const errors = submissionErrorsOf(nameForm(), error, shown);
+
+    expect(errors).toBeUndefined();
+    expect(shown()).toBeNull();
+  });
+
+  it('given field errors the form knows, when submitting, then they go on their fields only', () => {
+    const shown = signal<ApiProblem | null>(null);
+    const person = nameForm();
+
+    const errors = submissionErrorsOf(
+      person,
+      problemWith(400, [{ field: 'name', code: 'validation.required', params: {} }]),
+      shown,
+    );
+
+    expect(errors).toEqual([
+      { kind: 'api', code: 'validation.required', params: {}, fieldTree: person.name },
+    ]);
+    expect(shown()).toBeNull();
+  });
+
+  it.each([
+    { what: 'a problem without field errors', problem: problemWith(404, []) },
+    {
+      what: 'an error on a field the form does not have',
+      problem: problemWith(400, [{ field: 'password', code: 'validation.required', params: {} }]),
+    },
+  ])('given $what, when submitting, then the page shows the problem', ({ problem }) => {
+    const shown = signal<ApiProblem | null>(null);
+
+    submissionErrorsOf(nameForm(), problem, shown);
+
+    expect(shown()).toEqual(problem);
   });
 });

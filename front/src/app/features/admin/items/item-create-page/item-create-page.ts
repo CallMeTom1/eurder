@@ -2,10 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { form, FormRoot, TreeValidationResult } from '@angular/forms/signals';
 import { MatAnchor, MatButton } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
-import { isGlobalProblem } from '@core/api/api-error.interceptor';
-import { ApiProblem, isApiProblem } from '@core/api/api-problem';
+import { ApiProblem } from '@core/api/api-problem';
 import { TranslatePipe } from '@ngx-translate/core';
-import { apiErrorsOf } from '@shared/forms/api-errors';
+import { submissionErrorsOf } from '@shared/forms/api-errors';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { firstValueFrom } from 'rxjs';
@@ -52,18 +51,7 @@ export class ItemCreatePage {
       await this.router.navigate(['/admin/items', id]);
       return undefined;
     } catch (error) {
-      return this.errorsOf(error);
+      return submissionErrorsOf(this.itemForm, error, this.problem);
     }
-  }
-
-  private errorsOf(error: unknown): TreeValidationResult {
-    if (!isApiProblem(error) || isGlobalProblem(error)) {
-      return undefined;
-    }
-    const { onFields, unmatched } = apiErrorsOf(this.itemForm, error);
-    if (error.errors.length === 0 || unmatched.length > 0) {
-      this.problem.set(error);
-    }
-    return onFields;
   }
 }

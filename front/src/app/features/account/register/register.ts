@@ -16,11 +16,10 @@ import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/for
 import { MatInput } from '@angular/material/input';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { isGlobalProblem } from '@core/api/api-error.interceptor';
 import { ApiProblem, isApiProblem } from '@core/api/api-problem';
 import { addressDtoCountryValues, type CreateCustomerDto } from '@core/api/eurder-api';
 import { TranslatePipe } from '@ngx-translate/core';
-import { apiErrorOn, apiErrorsOf } from '@shared/forms/api-errors';
+import { apiErrorOn, submissionErrorsOf } from '@shared/forms/api-errors';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
@@ -102,16 +101,9 @@ export class Register {
   }
 
   private errorsOf(error: unknown): TreeValidationResult {
-    if (!isApiProblem(error) || isGlobalProblem(error)) {
-      return undefined;
-    }
-    if (error.code === 'error.security.email-already-used') {
+    if (isApiProblem(error) && error.code === 'error.security.email-already-used') {
       return apiErrorOn(this.registerForm.email, error);
     }
-    const { onFields, unmatched } = apiErrorsOf(this.registerForm, error);
-    if (error.errors.length === 0 || unmatched.length > 0) {
-      this.problem.set(error);
-    }
-    return onFields;
+    return submissionErrorsOf(this.registerForm, error, this.problem);
   }
 }
