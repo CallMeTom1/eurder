@@ -97,6 +97,15 @@
       "urgency": "Urgency",
       "edit": "Edit {{name}}",
       "editTitle": "Edit item"
+    },
+    "customers": {
+      "search": "Search a last name",
+      "new": "New customer",
+      "empty": "No customer yet.",
+      "noMatch": "No last name starts with “{{query}}”.",
+      "id": "Id",
+      "view": "View {{name}}",
+      "edit": "Edit {{name}}"
     }
   },
   "page": {

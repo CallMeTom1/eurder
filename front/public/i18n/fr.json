@@ -97,6 +97,15 @@
       "urgency": "Urgence",
       "edit": "Modifier {{name}}",
       "editTitle": "Modifier l’article"
+    },
+    "customers": {
+      "search": "Rechercher un nom",
+      "new": "Nouveau client",
+      "empty": "Aucun client pour l’instant.",
+      "noMatch": "Aucun nom ne commence par « {{query}} ».",
+      "id": "Id",
+      "view": "Voir {{name}}",
+      "edit": "Modifier {{name}}"
     }
   },
   "page": {

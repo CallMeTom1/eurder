@@ -97,6 +97,15 @@
       "urgency": "Urgentie",
       "edit": "{{name}} bewerken",
       "editTitle": "Artikel bewerken"
+    },
+    "customers": {
+      "search": "Een achternaam zoeken",
+      "new": "Nieuwe klant",
+      "empty": "Nog geen klanten.",
+      "noMatch": "Geen achternaam begint met “{{query}}”.",
+      "id": "Id",
+      "view": "{{name}} bekijken",
+      "edit": "{{name}} bewerken"
     }
   },
   "page": {
