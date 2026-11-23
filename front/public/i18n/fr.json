@@ -8,7 +8,9 @@
       "system": "Système"
     },
     "loading": "Chargement…",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
   },
   "error": {
     "common": {

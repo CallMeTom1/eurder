@@ -8,7 +8,9 @@
       "system": "Systeem"
     },
     "loading": "Laden…",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen"
   },
   "error": {
     "common": {

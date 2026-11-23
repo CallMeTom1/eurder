@@ -46,6 +46,14 @@
     </div>
   </section>
 
+  <section class="flex flex-col gap-4" aria-labelledby="dialog-title">
+    <h2 id="dialog-title" class="[font:var(--mat-sys-title-large)]">Confirmation</h2>
+    <div class="flex items-center gap-4">
+      <button mat-stroked-button (click)="askToDelete()">Delete the chair</button>
+      <span data-testid="confirm-answer">{{ answer() }}</span>
+    </div>
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="buttons-title">
     <h2 id="buttons-title" class="[font:var(--mat-sys-title-large)]">Buttons</h2>
     <div class="flex flex-wrap gap-4">

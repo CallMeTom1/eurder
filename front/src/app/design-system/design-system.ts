@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { PricePipe } from '@shared/pipes/price-pipe';
+import { ConfirmationService } from '@shared/ui/confirm-dialog/confirmation.service';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
@@ -30,6 +31,10 @@ interface Swatch {
   templateUrl: './design-system.html',
 })
 export class DesignSystem {
+  private readonly confirmation = inject(ConfirmationService);
+
+  protected readonly answer = signal('');
+
   protected readonly swatches: Swatch[] = [
     { name: 'primary', colors: 'bg-primary text-on-primary' },
     { name: 'primary-container', colors: 'bg-primary-container text-on-primary-container' },
@@ -40,4 +45,14 @@ export class DesignSystem {
     { name: 'surface', colors: 'bg-surface text-on-surface border border-outline-variant' },
     { name: 'surface-container', colors: 'bg-surface-container text-on-surface' },
   ];
+
+  protected askToDelete(): void {
+    this.confirmation
+      .confirm({
+        title: 'Delete the chair?',
+        message: 'It cannot be undone.',
+        confirmLabel: 'Delete',
+      })
+      .subscribe((confirmed) => this.answer.set(confirmed ? 'Confirmed' : 'Cancelled'));
+  }
 }
