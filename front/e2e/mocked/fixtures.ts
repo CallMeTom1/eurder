@@ -3,6 +3,7 @@ import { expect, Page, test as base } from '@playwright/test';
 export const test = base.extend<{ anonymousVisitor: void }>({
   anonymousVisitor: [
     async ({ page }, use) => {
+      await page.route('**/api/**', (route) => route.abort());
       await page.route('**/api/auth/me', (route) =>
         route.fulfill({
           status: 401,
