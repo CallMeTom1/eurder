@@ -40,10 +40,10 @@ describe('ItemEditPage', () => {
   afterEach(() => backend.verify());
 
   function control(label: string): HTMLInputElement | HTMLTextAreaElement {
-    const formField = [...page.querySelectorAll('mat-form-field')].find(
-      (candidate) => candidate.querySelector('mat-label')?.textContent?.trim() === label,
+    const field = [...page.querySelectorAll('.field')].find(
+      (candidate) => candidate.querySelector('.field-label')?.textContent?.trim() === label,
     );
-    return formField!.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')!;
+    return field!.querySelector<HTMLInputElement | HTMLTextAreaElement>('input, textarea')!;
   }
 
   function type(label: string, value: string): void {

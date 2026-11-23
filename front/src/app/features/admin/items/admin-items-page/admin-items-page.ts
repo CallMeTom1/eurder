@@ -2,7 +2,7 @@ import { Component, computed, inject, linkedSignal, signal } from '@angular/core
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatAnchor, MatIconAnchor } from '@angular/material/button';
-import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatFormField, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
@@ -31,7 +31,6 @@ const PAGE_SIZE = 10;
     MatFormField,
     MatIcon,
     MatInput,
-    MatLabel,
     MatSuffix,
     PageHeader,
     Pagination,

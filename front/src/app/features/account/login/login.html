@@ -1,7 +1,7 @@
 <div class="mx-auto flex w-full max-w-sm flex-col gap-6">
   <app-page-header [title]="'nav.login' | translate" />
 
-  <form [formRoot]="loginForm" class="flex w-full flex-col gap-2">
+  <form [formRoot]="loginForm" class="flex w-full flex-col gap-4">
     @if (registered() && !problem()) {
       <p
         role="status"
@@ -14,30 +14,45 @@
       <app-error-state [message]="problem.code | translate: problem.params" />
     }
 
-    <mat-form-field>
-      <mat-label>{{ 'account.email' | translate }}</mat-label>
-      <input matInput type="email" autocomplete="username" [formField]="loginForm.email" />
-      <mat-error>
-        @if (loginForm.email().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
-      </mat-error>
-    </mat-form-field>
+    <div class="field">
+      <label class="field-label required" [for]="prefix + 'email'">{{
+        'account.email' | translate
+      }}</label>
+      <mat-form-field>
+        <input
+          [id]="prefix + 'email'"
+          matInput
+          type="email"
+          autocomplete="username"
+          [formField]="loginForm.email"
+        />
+        <mat-error>
+          @if (loginForm.email().errors() | fieldError; as error) {
+            {{ error.key | translate: error.params }}
+          }
+        </mat-error>
+      </mat-form-field>
+    </div>
 
-    <mat-form-field>
-      <mat-label>{{ 'account.password' | translate }}</mat-label>
-      <input
-        matInput
-        type="password"
-        autocomplete="current-password"
-        [formField]="loginForm.password"
-      />
-      <mat-error>
-        @if (loginForm.password().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
-      </mat-error>
-    </mat-form-field>
+    <div class="field">
+      <label class="field-label required" [for]="prefix + 'password'">{{
+        'account.password' | translate
+      }}</label>
+      <mat-form-field>
+        <input
+          [id]="prefix + 'password'"
+          matInput
+          type="password"
+          autocomplete="current-password"
+          [formField]="loginForm.password"
+        />
+        <mat-error>
+          @if (loginForm.password().errors() | fieldError; as error) {
+            {{ error.key | translate: error.params }}
+          }
+        </mat-error>
+      </mat-form-field>
+    </div>
 
     <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">
       {{ 'nav.login' | translate }}

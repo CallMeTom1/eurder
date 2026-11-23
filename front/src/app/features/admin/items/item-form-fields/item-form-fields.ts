@@ -1,8 +1,9 @@
 import { Component, input } from '@angular/core';
 import { FieldTree, FormField } from '@angular/forms/signals';
-import { MatError, MatFormField, MatHint, MatLabel, MatPrefix } from '@angular/material/form-field';
+import { MatError, MatFormField, MatHint, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { TranslatePipe } from '@ngx-translate/core';
+import { uniquePrefix } from '@shared/forms/field-ids';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { CharCounter } from '@shared/ui/char-counter/char-counter';
 import { ItemForm } from '../item-form';
@@ -16,7 +17,6 @@ import { ItemForm } from '../item-form';
     MatFormField,
     MatHint,
     MatInput,
-    MatLabel,
     MatPrefix,
     TranslatePipe,
   ],
@@ -25,5 +25,7 @@ import { ItemForm } from '../item-form';
   host: { class: 'grid gap-x-4 gap-y-3 sm:grid-cols-[12rem_14rem_1fr]' },
 })
 export class ItemFormFields {
+  protected readonly prefix = uniquePrefix();
+
   readonly form = input.required<FieldTree<ItemForm>>();
 }

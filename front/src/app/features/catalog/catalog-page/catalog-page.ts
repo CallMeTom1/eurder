@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatFormField, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { problemOf } from '@core/api/api-problem';
@@ -26,7 +26,6 @@ import { CatalogService } from '../catalog.service';
     MatFormField,
     MatIcon,
     MatInput,
-    MatLabel,
     MatSuffix,
     PageHeader,
     TranslatePipe,

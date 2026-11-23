@@ -1,7 +1,13 @@
 <app-page-header [title]="'nav.catalog' | translate">
   <mat-form-field actions subscriptSizing="dynamic" class="w-72">
-    <mat-label>{{ 'catalog.search' | translate }}</mat-label>
-    <input matInput type="search" name="query" [(ngModel)]="query" />
+    <input
+      matInput
+      type="search"
+      name="query"
+      [placeholder]="'catalog.search' | translate"
+      [attr.aria-label]="'catalog.search' | translate"
+      [(ngModel)]="query"
+    />
     <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 </app-page-header>

@@ -1,8 +1,14 @@
 <app-page-header [title]="'admin.nav.customers' | translate">
   <div actions class="flex flex-wrap items-center gap-3">
     <mat-form-field subscriptSizing="dynamic" class="w-72">
-      <mat-label>{{ 'admin.customers.search' | translate }}</mat-label>
-      <input matInput type="search" name="query" [(ngModel)]="query" />
+      <input
+        matInput
+        type="search"
+        name="query"
+        [placeholder]="'admin.customers.search' | translate"
+        [attr.aria-label]="'admin.customers.search' | translate"
+        [(ngModel)]="query"
+      />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
     <a matButton="filled" routerLink="/admin/customers/new">

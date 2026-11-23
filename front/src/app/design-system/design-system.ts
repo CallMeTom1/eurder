@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslatePipe } from '@ngx-translate/core';
+import { uniquePrefix } from '@shared/forms/field-ids';
 import { apiErrorsOf } from '@shared/forms/api-errors';
 import { atMost, digits, positive } from '@shared/forms/eurder-validators';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
@@ -54,6 +55,8 @@ interface DemoItem {
   templateUrl: './design-system.html',
 })
 export class DesignSystem {
+  protected readonly prefix = uniquePrefix();
+
   private readonly confirmation = inject(ConfirmationService);
 
   protected readonly answer = signal('');
