@@ -22,6 +22,14 @@
     </ul>
   </section>
 
+  <section class="flex flex-col gap-4" aria-labelledby="prices-title">
+    <h2 id="prices-title" class="[font:var(--mat-sys-title-large)]">Prices</h2>
+    <p class="flex gap-6" data-testid="prices">
+      <span>{{ 4999 | price }}</span>
+      <span>{{ 123456789 | price }}</span>
+    </p>
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="buttons-title">
     <h2 id="buttons-title" class="[font:var(--mat-sys-title-large)]">Buttons</h2>
     <div class="flex flex-wrap gap-4">

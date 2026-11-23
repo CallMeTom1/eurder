@@ -1,4 +1,4 @@
-import { DOCUMENT, inject, Service, signal } from '@angular/core';
+import { computed, DOCUMENT, inject, Service, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 
@@ -6,6 +6,8 @@ export type Language = 'fr' | 'en' | 'nl';
 
 export const LANGUAGES: readonly Language[] = ['fr', 'en', 'nl'];
 export const DEFAULT_LANGUAGE: Language = 'en';
+
+const LOCALES: Record<Language, string> = { fr: 'fr-BE', en: 'en-IE', nl: 'nl-BE' };
 
 const STORAGE_KEY = 'eurder.lang';
 
@@ -16,6 +18,7 @@ export class LanguageService {
   private readonly current = signal<Language>(initialLanguage());
 
   readonly language = this.current.asReadonly();
+  readonly locale = computed(() => LOCALES[this.current()]);
 
   start(): Observable<unknown> {
     return this.apply(this.current());
