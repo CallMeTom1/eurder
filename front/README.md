@@ -36,8 +36,8 @@ The basket lives in `localStorage` (`eurder.basket`) and is emptied at logout. A
 - Signal Forms: `form(signal(model), schema)`, `[formRoot]`, `[formField]`, and a submission action that awaits the API with `firstValueFrom`.
 - The rules mirror the API: `customerRules` and `passwordRules` (`@features/account/customer-form`), `itemRules` (`@features/admin/items/item-form`), and the shared `atMost`, `positive`, `notNegative`, `digits` and `wholeNumber` (`@shared/forms/eurder-validators`).
 - A length limit uses `atMost`, never `maxLength`: `maxLength` also sets the `maxlength` attribute, and the browser then cuts the typing silently instead of showing the message. `CharCounter` receives the same limit with `[max]`.
-- Every field has a `<label class="field-label">` above it, linked with `for` and an `id` made unique by `uniquePrefix()` (`@shared/forms/field-ids`); add `required` to show the red star. Material fields are outlined and 44 px high (`_theme.scss`, `app.config.ts`). Search fields keep a placeholder.
-- The `fieldError` pipe turns the first error of a field into a translation key with its parameters, the same keys as the API.
+- Every field is an `<app-form-field [label] [field]>` (`@shared/forms/form-field`) around its `mat-form-field`. It shows the label above, with a red star when the schema has `required()`, and gives the control marked `appFieldControl` a unique id (or `aria-labelledby` for a `mat-select`). `<app-field-errors [field]>` in the `mat-error` shows the first error, translated. The `mat-form-field` stays in the page: Material only finds its `matInput` among its direct content. Material fields are outlined and 44 px high (`_theme.scss`, `app.config.ts`). Search fields keep a placeholder.
+- The `fieldError` pipe, used by `app-field-errors`, turns the first error of a field into a translation key with its parameters, the same keys as the API.
 - `submissionErrorsOf(form, error, problem)` puts the field errors of the API on their fields, shows the other problems in the page, and leaves network, `403` and server failures to the snackbar of the interceptor.
 
 ## Pictures
