@@ -14,6 +14,7 @@ class HostPage {}
 
 describe('PageHeader', () => {
   it('given a title, a subtitle and an action, when rendered, then the title is the heading of the page and the action sits beside it', async () => {
+    await TestBed.configureTestingModule({ imports: [HostPage] }).compileComponents();
     const fixture = TestBed.createComponent(HostPage);
 
     await fixture.whenStable();
@@ -25,6 +26,7 @@ describe('PageHeader', () => {
   });
 
   it('given no subtitle, when rendered, then no empty paragraph is left', async () => {
+    await TestBed.configureTestingModule({ imports: [PageHeader] }).compileComponents();
     const fixture = TestBed.createComponent(PageHeader);
     fixture.componentRef.setInput('title', 'Customers');
 

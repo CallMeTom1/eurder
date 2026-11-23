@@ -3,6 +3,7 @@ import { Logo } from './logo';
 
 describe('Logo', () => {
   it('given the logo, when rendered, then it shows the name and hides its drawing from screen readers', async () => {
+    await TestBed.configureTestingModule({ imports: [Logo] }).compileComponents();
     const fixture = TestBed.createComponent(Logo);
 
     await fixture.whenStable();

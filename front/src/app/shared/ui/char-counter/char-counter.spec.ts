@@ -18,7 +18,10 @@ describe('CharCounter', () => {
 
   beforeEach(async () => {
     localStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideTestTranslations()] });
+    await TestBed.configureTestingModule({
+      imports: [HostForm],
+      providers: [provideTestTranslations()],
+    }).compileComponents();
     fixture = TestBed.createComponent(HostForm);
     await fixture.whenStable();
   });

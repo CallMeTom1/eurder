@@ -5,7 +5,10 @@ import { BackOfficeLayout } from './back-office-layout';
 
 describe('BackOfficeLayout', () => {
   it('given the back office, when rendered, then its navigation leads to the admin pages and back to the shop', async () => {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations(), provideRouter([])] });
+    await TestBed.configureTestingModule({
+      imports: [BackOfficeLayout],
+      providers: [provideTestTranslations(), provideRouter([])],
+    }).compileComponents();
     const fixture = TestBed.createComponent(BackOfficeLayout);
     await fixture.whenStable();
 
@@ -26,7 +29,10 @@ describe('BackOfficeLayout', () => {
   });
 
   it('given the back office, when rendered, then the pages go in its main area', async () => {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations(), provideRouter([])] });
+    await TestBed.configureTestingModule({
+      imports: [BackOfficeLayout],
+      providers: [provideTestTranslations(), provideRouter([])],
+    }).compileComponents();
     const fixture = TestBed.createComponent(BackOfficeLayout);
     await fixture.whenStable();
 

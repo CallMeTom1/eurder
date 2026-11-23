@@ -5,7 +5,10 @@ import { FrontOfficeLayout } from './front-office-layout';
 
 describe('FrontOfficeLayout', () => {
   async function layout(): Promise<HTMLElement> {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations(), provideRouter([])] });
+    await TestBed.configureTestingModule({
+      imports: [FrontOfficeLayout],
+      providers: [provideTestTranslations(), provideRouter([])],
+    }).compileComponents();
     const fixture = TestBed.createComponent(FrontOfficeLayout);
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;

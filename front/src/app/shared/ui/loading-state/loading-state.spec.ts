@@ -4,7 +4,10 @@ import { LoadingState } from './loading-state';
 
 describe('LoadingState', () => {
   it('given a loading page, when rendered, then it shows a spinner and announces the loading politely', async () => {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations()] });
+    await TestBed.configureTestingModule({
+      imports: [LoadingState],
+      providers: [provideTestTranslations()],
+    }).compileComponents();
     const fixture = TestBed.createComponent(LoadingState);
 
     await fixture.whenStable();

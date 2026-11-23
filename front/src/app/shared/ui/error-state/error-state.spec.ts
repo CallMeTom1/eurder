@@ -3,8 +3,11 @@ import { provideTestTranslations } from '@core/i18n/testing';
 import { ErrorState } from './error-state';
 
 describe('ErrorState', () => {
-  function errorState(retryable: boolean) {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations()] });
+  async function errorState(retryable: boolean) {
+    await TestBed.configureTestingModule({
+      imports: [ErrorState],
+      providers: [provideTestTranslations()],
+    }).compileComponents();
     const fixture = TestBed.createComponent(ErrorState);
     fixture.componentRef.setInput('message', 'This item does not exist.');
     fixture.componentRef.setInput('retryable', retryable);
@@ -12,7 +15,7 @@ describe('ErrorState', () => {
   }
 
   it('given an error, when rendered, then the message is announced at once', async () => {
-    const fixture = errorState(false);
+    const fixture = await errorState(false);
 
     await fixture.whenStable();
 
@@ -22,7 +25,7 @@ describe('ErrorState', () => {
   });
 
   it('given a retryable error, when clicking try again, then it asks to retry', async () => {
-    const fixture = errorState(true);
+    const fixture = await errorState(true);
     const retry = vi.fn();
     fixture.componentInstance.retry.subscribe(retry);
     await fixture.whenStable();

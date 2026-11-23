@@ -15,13 +15,14 @@ describe('ConfirmationService', () => {
   let loader: HarnessLoader;
   let answers: boolean[];
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostPage],
       providers: [
         provideTestTranslations(),
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
       ],
-    });
+    }).compileComponents();
     loader = TestbedHarnessEnvironment.documentRootLoader(TestBed.createComponent(HostPage));
     answers = [];
     TestBed.inject(ConfirmationService)

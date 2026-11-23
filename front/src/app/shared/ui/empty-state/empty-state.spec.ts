@@ -14,6 +14,7 @@ class HostPage {}
 
 describe('EmptyState', () => {
   it('given nothing to show, when rendered, then it shows the message and the action', async () => {
+    await TestBed.configureTestingModule({ imports: [HostPage] }).compileComponents();
     const fixture = TestBed.createComponent(HostPage);
 
     await fixture.whenStable();

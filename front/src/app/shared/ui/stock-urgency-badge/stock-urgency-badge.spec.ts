@@ -4,7 +4,10 @@ import { StockUrgency, StockUrgencyBadge } from './stock-urgency-badge';
 
 describe('StockUrgencyBadge', () => {
   async function badgeFor(urgency: StockUrgency): Promise<HTMLElement> {
-    TestBed.configureTestingModule({ providers: [provideTestTranslations()] });
+    await TestBed.configureTestingModule({
+      imports: [StockUrgencyBadge],
+      providers: [provideTestTranslations()],
+    }).compileComponents();
     const fixture = TestBed.createComponent(StockUrgencyBadge);
     fixture.componentRef.setInput('urgency', urgency);
     await fixture.whenStable();
