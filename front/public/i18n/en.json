@@ -110,10 +110,6 @@
       "title": "Customer",
       "editTitle": "Edit customer",
       "updateButton": "Update",
-      "report": "Orders",
-      "noOrder": "No order yet.",
-      "total": "Total of all orders",
-      "orderTotal": "Total",
       "email": "Email"
     }
   },
@@ -188,5 +184,20 @@
     "first": "First page",
     "last": "Last page",
     "range": "{{start}} – {{end}} of {{length}}"
+  },
+  "eurder": {
+    "order": "Order {{number}}",
+    "item": "Item",
+    "amount": "Amount",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "grandTotal": "Total of all orders: {{total}}",
+    "empty": "No order yet.",
+    "reorder": "Order again",
+    "state": {
+      "PRISTINE": "New",
+      "SLIGHTLY_DAMAGED": "Slightly damaged",
+      "DAMAGED": "Damaged"
+    }
   }
 }

@@ -110,10 +110,6 @@
       "title": "Klant",
       "editTitle": "Klant bewerken",
       "updateButton": "Bijwerken",
-      "report": "Bestellingen",
-      "noOrder": "Nog geen bestellingen.",
-      "total": "Totaal van alle bestellingen",
-      "orderTotal": "Totaal",
       "email": "E-mail"
     }
   },
@@ -188,5 +184,20 @@
     "first": "Eerste pagina",
     "last": "Laatste pagina",
     "range": "{{start}} – {{end}} van {{length}}"
+  },
+  "eurder": {
+    "order": "Bestelling {{number}}",
+    "item": "Artikel",
+    "amount": "Aantal",
+    "subtotal": "Subtotaal",
+    "total": "Totaal",
+    "grandTotal": "Totaal van alle bestellingen: {{total}}",
+    "empty": "Nog geen bestellingen.",
+    "reorder": "Opnieuw bestellen",
+    "state": {
+      "PRISTINE": "Nieuw",
+      "SLIGHTLY_DAMAGED": "Licht beschadigd",
+      "DAMAGED": "Beschadigd"
+    }
   }
 }

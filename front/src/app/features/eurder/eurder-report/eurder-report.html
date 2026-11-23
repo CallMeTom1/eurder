@@ -1,0 +1,59 @@
+@if (report().eurders.length === 0) {
+  <app-empty-state icon="receipt_long" [message]="'eurder.empty' | translate" />
+} @else {
+  @for (eurder of report().eurders; track eurder.id; let index = $index) {
+    <mat-card data-testid="eurder" appearance="outlined" class="gap-3 p-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h3 class="[font:var(--mat-sys-title-medium)]">
+          {{ 'eurder.order' | translate: { number: index + 1 } }}
+        </h3>
+        @if (canReorder()) {
+          <button matButton="tonal" type="button" (click)="reorder.emit(eurder.id)">
+            <mat-icon>replay</mat-icon>
+            {{ 'eurder.reorder' | translate }}
+          </button>
+        }
+      </div>
+      <table class="w-full border-collapse">
+        <thead class="text-left text-sm text-on-surface-variant">
+          <tr class="border-b border-outline-variant">
+            <th scope="col" class="py-1 pr-4 font-medium">{{ 'eurder.item' | translate }}</th>
+            <th scope="col" class="py-1 pr-4 text-right font-medium">
+              {{ 'eurder.amount' | translate }}
+            </th>
+            <th scope="col" class="py-1 text-right font-medium">
+              {{ 'eurder.subtotal' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of eurder.lines; track $index) {
+            <tr class="border-b border-outline-variant">
+              <th scope="row" class="py-1 pr-4 text-left font-normal">
+                {{ line.itemName }}
+                @if (line.itemState !== 'PRISTINE') {
+                  <span class="text-sm text-on-surface-variant">
+                    · {{ 'eurder.state.' + line.itemState | translate }}
+                  </span>
+                }
+              </th>
+              <td class="py-1 pr-4 text-right">{{ line.amount }}</td>
+              <td class="py-1 text-right">{{ line.subtotalInCents | price }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row" colspan="2" class="pt-2 pr-4 text-right">
+              {{ 'eurder.total' | translate }}
+            </th>
+            <td class="pt-2 text-right font-medium">{{ eurder.totalInCents | price }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </mat-card>
+  }
+  <p data-testid="report-total" class="text-right [font:var(--mat-sys-title-medium)]">
+    {{ 'eurder.grandTotal' | translate: { total: (report().totalInCents | price) } }}
+  </p>
+}

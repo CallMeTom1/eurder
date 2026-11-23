@@ -110,10 +110,6 @@
       "title": "Client",
       "editTitle": "Modifier le client",
       "updateButton": "Mettre à jour",
-      "report": "Commandes",
-      "noOrder": "Aucune commande pour l’instant.",
-      "total": "Total de toutes les commandes",
-      "orderTotal": "Total",
       "email": "Email"
     }
   },
@@ -188,5 +184,20 @@
     "first": "Première page",
     "last": "Dernière page",
     "range": "{{start}} – {{end}} sur {{length}}"
+  },
+  "eurder": {
+    "order": "Commande {{number}}",
+    "item": "Article",
+    "amount": "Quantité",
+    "subtotal": "Sous-total",
+    "total": "Total",
+    "grandTotal": "Total de toutes les commandes : {{total}}",
+    "empty": "Aucune commande pour l’instant.",
+    "reorder": "Commander à nouveau",
+    "state": {
+      "PRISTINE": "Neuf",
+      "SLIGHTLY_DAMAGED": "Légèrement abîmé",
+      "DAMAGED": "Abîmé"
+    }
   }
 }
