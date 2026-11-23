@@ -16,8 +16,8 @@ public record UpdateItemDto(
         String name,
 
         @NotBlank(message = "Description is required")
-        @Size(max = 1000, message = "Description must be at most 1000 characters")
-        @Schema(description = "Description of the item, up to 1000 characters", example = "Wooden chair")
+        @Size(max = 255, message = "Description must be at most 255 characters")
+        @Schema(description = "Description of the item, up to 255 characters", example = "Wooden chair")
         String description,
 
         @NotNull(message = "Price is required")

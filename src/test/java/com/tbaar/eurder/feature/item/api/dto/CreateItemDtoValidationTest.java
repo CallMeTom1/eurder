@@ -69,7 +69,7 @@ class CreateItemDtoValidationTest {
         missingCount.put(ItemState.PRISTINE, null);
         return Stream.of(
                 Arguments.of("name", new CreateItemDto(" ", "Wooden chair", new BigDecimal("49.99"), Map.of()), "Name is required"),
-                Arguments.of("description", new CreateItemDto("Chair", "a".repeat(1001), new BigDecimal("49.99"), Map.of()), "Description must be at most 1000 characters"),
+                Arguments.of("description", new CreateItemDto("Chair", "a".repeat(256), new BigDecimal("49.99"), Map.of()), "Description must be at most 255 characters"),
                 Arguments.of("price", new CreateItemDto("Chair", "Wooden chair", new BigDecimal("9.999"), Map.of()), "Price must have at most 8 digits before and 2 after the decimal point"),
                 Arguments.of("units", withUnits(null), "Units are required"),
                 Arguments.of("units[PRISTINE].<map value>", withUnits(missingCount), "Units per state are required"),

@@ -70,7 +70,7 @@ class UpdateItemDtoValidationTest {
                 Arguments.of("name", withName(" "), "Name is required"),
                 Arguments.of("name", withName("a".repeat(256)), "Name must be at most 255 characters"),
                 Arguments.of("description", withDescription(""), "Description is required"),
-                Arguments.of("description", withDescription("a".repeat(1001)), "Description must be at most 1000 characters"),
+                Arguments.of("description", withDescription("a".repeat(256)), "Description must be at most 255 characters"),
                 Arguments.of("price", withPrice(null), "Price is required"),
                 Arguments.of("price", withPrice(BigDecimal.ZERO), "Price must be greater than 0"),
                 Arguments.of("price", withPrice(new BigDecimal("-1.50")), "Price must be greater than 0"),
