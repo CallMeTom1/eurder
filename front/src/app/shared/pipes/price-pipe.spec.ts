@@ -17,12 +17,12 @@ describe('PricePipe', () => {
   beforeEach(() => localStorage.clear());
 
   it.each([
-    ['fr', '49,99 €'],
-    ['nl', '€ 49,99'],
-    ['en', '€49.99'],
+    { language: 'fr', expected: '49,99 €' },
+    { language: 'nl', expected: '€ 49,99' },
+    { language: 'en', expected: '€49.99' },
   ] as const)(
-    'given a %s page, when formatting 4999 cents, then shows %s',
-    (language, expected) => {
+    'given a $language page, when formatting 4999 cents, then shows $expected',
+    ({ language, expected }) => {
       const pipe = pipeIn(language);
 
       const price = pipe.transform(4999);

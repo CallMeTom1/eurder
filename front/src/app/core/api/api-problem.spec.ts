@@ -42,11 +42,15 @@ describe('toApiProblem', () => {
   });
 
   it.each([
-    ['the network is down', 0, null],
-    ['a proxy answers with an HTML page', 502, '<html>Bad Gateway</html>'],
+    { situation: 'the network is down', status: 0, body: null },
+    {
+      situation: 'a proxy answers with an HTML page',
+      status: 502,
+      body: '<html>Bad Gateway</html>',
+    },
   ])(
-    'given %s, when converting, then the problem is unexpected and keeps the status',
-    (_, status, body) => {
+    'given $situation, when converting, then the problem is unexpected and keeps the status',
+    ({ status, body }) => {
       const response = new HttpErrorResponse({ status, error: body });
 
       const problem = toApiProblem(response);
@@ -75,9 +79,12 @@ describe('problemOf', () => {
   );
 
   it.each([
-    ['the problem itself', notFound],
-    ['a problem wrapped by a resource', new Error('Resource failed', { cause: notFound })],
-  ])('given %s, when reading it, then it is the problem of the API', (_, error) => {
+    { situation: 'the problem itself', error: notFound },
+    {
+      situation: 'a problem wrapped by a resource',
+      error: new Error('Resource failed', { cause: notFound }),
+    },
+  ])('given $situation, when reading it, then it is the problem of the API', ({ error }) => {
     const problem = problemOf(error);
 
     expect(problem).toBe(notFound);

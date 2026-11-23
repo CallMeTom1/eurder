@@ -4,27 +4,35 @@ import { FieldErrorPipe } from './field-error-pipe';
 describe('FieldErrorPipe', () => {
   const pipe = new FieldErrorPipe();
 
-  it.each<[{ kind: string } & Record<string, unknown>, string, Record<string, unknown>]>([
-    [{ kind: 'required' }, 'validation.required', {}],
-    [{ kind: 'email' }, 'validation.invalid-format', {}],
-    [{ kind: 'pattern', pattern: /^\d+$/ }, 'validation.invalid-format', {}],
-    [{ kind: 'minLength', minLength: 8 }, 'validation.too-short', { min: 8 }],
-    [{ kind: 'maxLength', maxLength: 255 }, 'validation.too-long', { max: 255 }],
-    [{ kind: 'max', max: 1000 }, 'validation.too-large', { max: 1000 }],
-    [{ kind: 'positive' }, 'validation.must-be-positive', {}],
-    [{ kind: 'notNegative' }, 'validation.must-not-be-negative', {}],
-    [
-      { kind: 'digits', integer: 8, fraction: 2 },
-      'validation.too-many-digits',
-      { integer: 8, fraction: 2 },
-    ],
-    [
-      { kind: 'api', code: 'validation.too-long', params: { max: 50 } },
-      'validation.too-long',
-      { max: 50 },
-    ],
-    [{ kind: 'somethingElse' }, 'validation.invalid', {}],
-  ])('given the error %o, when translating, then the key is %s', (error, key, params) => {
+  it.each<{
+    error: { kind: string } & Record<string, unknown>;
+    key: string;
+    params: Record<string, unknown>;
+  }>([
+    { error: { kind: 'required' }, key: 'validation.required', params: {} },
+    { error: { kind: 'email' }, key: 'validation.invalid-format', params: {} },
+    { error: { kind: 'pattern', pattern: /^\d+$/ }, key: 'validation.invalid-format', params: {} },
+    { error: { kind: 'minLength', minLength: 8 }, key: 'validation.too-short', params: { min: 8 } },
+    {
+      error: { kind: 'maxLength', maxLength: 255 },
+      key: 'validation.too-long',
+      params: { max: 255 },
+    },
+    { error: { kind: 'max', max: 1000 }, key: 'validation.too-large', params: { max: 1000 } },
+    { error: { kind: 'positive' }, key: 'validation.must-be-positive', params: {} },
+    { error: { kind: 'notNegative' }, key: 'validation.must-not-be-negative', params: {} },
+    {
+      error: { kind: 'digits', integer: 8, fraction: 2 },
+      key: 'validation.too-many-digits',
+      params: { integer: 8, fraction: 2 },
+    },
+    {
+      error: { kind: 'api', code: 'validation.too-long', params: { max: 50 } },
+      key: 'validation.too-long',
+      params: { max: 50 },
+    },
+    { error: { kind: 'somethingElse' }, key: 'validation.invalid', params: {} },
+  ])('given the error $error, when translating, then the key is $key', ({ error, key, params }) => {
     const translated = pipe.transform([error as ValidationError]);
 
     expect(translated).toEqual({ key, params });

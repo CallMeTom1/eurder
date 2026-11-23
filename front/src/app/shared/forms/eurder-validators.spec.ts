@@ -26,35 +26,41 @@ describe('Eurder validators', () => {
   }
 
   it.each([
-    [0, ['positive']],
-    [-1, ['positive']],
-    [0.01, []],
-    [null, []],
-  ])('given %s, when checking it is positive, then the errors are %o', (price, kinds) => {
-    const errors = errorKindsOf(price, 'positive');
-
-    expect(errors).toEqual(kinds);
-  });
-
-  it.each([
-    [-1, ['notNegative']],
-    [0, []],
-    [null, []],
-  ])('given %s, when checking it is not negative, then the errors are %o', (price, kinds) => {
-    const errors = errorKindsOf(price, 'notNegative');
-
-    expect(errors).toEqual(kinds);
-  });
-
-  it.each([
-    [49.99, []],
-    [12345678.5, []],
-    [49.999, ['digits']],
-    [123456789, ['digits']],
-    [null, []],
+    { price: 0, kinds: ['positive'] },
+    { price: -1, kinds: ['positive'] },
+    { price: 0.01, kinds: [] },
+    { price: null, kinds: [] },
   ])(
-    'given %s, when checking at most 8 digits and 2 decimals, then the errors are %o',
-    (price, kinds) => {
+    'given $price, when checking it is positive, then the errors are $kinds',
+    ({ price, kinds }) => {
+      const errors = errorKindsOf(price, 'positive');
+
+      expect(errors).toEqual(kinds);
+    },
+  );
+
+  it.each([
+    { price: -1, kinds: ['notNegative'] },
+    { price: 0, kinds: [] },
+    { price: null, kinds: [] },
+  ])(
+    'given $price, when checking it is not negative, then the errors are $kinds',
+    ({ price, kinds }) => {
+      const errors = errorKindsOf(price, 'notNegative');
+
+      expect(errors).toEqual(kinds);
+    },
+  );
+
+  it.each([
+    { price: 49.99, kinds: [] },
+    { price: 12345678.5, kinds: [] },
+    { price: 49.999, kinds: ['digits'] },
+    { price: 123456789, kinds: ['digits'] },
+    { price: null, kinds: [] },
+  ])(
+    'given $price, when checking at most 8 digits and 2 decimals, then the errors are $kinds',
+    ({ price, kinds }) => {
       const errors = errorKindsOf(price, 'digits');
 
       expect(errors).toEqual(kinds);

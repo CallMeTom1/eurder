@@ -119,9 +119,13 @@ describe('authInterceptor', () => {
   });
 
   it.each([
-    ['an anonymous visitor', 401, 'error.security.authentication-required'],
-    ['a refused access', 403, 'error.security.forbidden'],
-  ])('given %s, when a call fails, then no refresh is sent', async (_, status, code) => {
+    {
+      situation: 'an anonymous visitor',
+      status: 401,
+      code: 'error.security.authentication-required',
+    },
+    { situation: 'a refused access', status: 403, code: 'error.security.forbidden' },
+  ])('given $situation, when a call fails, then no refresh is sent', async ({ status, code }) => {
     const customers = call();
 
     backend

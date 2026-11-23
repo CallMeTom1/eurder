@@ -15,12 +15,12 @@ describe('StockUrgencyBadge', () => {
   }
 
   it.each([
-    ['STOCK_HIGH', 'High stock', 'success'],
-    ['STOCK_MEDIUM', 'Medium stock', 'warning'],
-    ['STOCK_LOW', 'Low stock', 'error'],
+    { urgency: 'STOCK_HIGH', text: 'High stock', tone: 'success' },
+    { urgency: 'STOCK_MEDIUM', text: 'Medium stock', tone: 'warning' },
+    { urgency: 'STOCK_LOW', text: 'Low stock', tone: 'error' },
   ] as const)(
-    'given %s, when rendered, then it says %s in the %s tone',
-    async (urgency, text, tone) => {
+    'given $urgency, when rendered, then it says $text in the $tone tone',
+    async ({ urgency, text, tone }) => {
       const badge = await badgeFor(urgency);
 
       const label = badge.querySelector('[data-tone]');

@@ -11,11 +11,11 @@ function keysOf(translations: object, prefix = ''): string[] {
 
 describe('Translations', () => {
   it.each([
-    ['fr', fr],
-    ['nl', nl],
+    { language: 'fr', other: fr },
+    { language: 'nl', other: nl },
   ])(
-    'given the English texts, when comparing with %s, then both have exactly the same keys',
-    (_, other) => {
+    'given the English texts, when comparing with $language, then both have exactly the same keys',
+    ({ other }) => {
       const english = keysOf(en).sort();
 
       const translated = keysOf(other).sort();
@@ -25,10 +25,10 @@ describe('Translations', () => {
   );
 
   it.each([
-    ['en', en],
-    ['fr', fr],
-    ['nl', nl],
-  ])('given the %s texts, when reading them, then no text is empty', (_, translations) => {
+    { language: 'en', translations: en },
+    { language: 'fr', translations: fr },
+    { language: 'nl', translations: nl },
+  ])('given the $language texts, when reading them, then no text is empty', ({ translations }) => {
     const texts = keysOf(translations).map((key) =>
       key
         .split('.')

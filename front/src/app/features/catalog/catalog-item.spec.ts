@@ -2,13 +2,13 @@ import { toCatalogItem } from './catalog-item';
 
 describe('toCatalogItem', () => {
   it.each([
-    [49.99, 4999],
-    [0.29, 29],
-    [1234.5, 123450],
-    [10, 1000],
+    { price: 49.99, cents: 4999 },
+    { price: 0.29, cents: 29 },
+    { price: 1234.5, cents: 123450 },
+    { price: 10, cents: 1000 },
   ])(
-    'given a price of %s euros, when mapping, then it becomes %s cents without any rounding error',
-    (price, cents) => {
+    'given a price of $price euros, when mapping, then it becomes $cents cents without any rounding error',
+    ({ price, cents }) => {
       const item = toCatalogItem({ id: 'i1', name: 'Chair', description: 'Wooden chair', price });
 
       expect(item.priceInCents).toBe(cents);

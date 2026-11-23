@@ -38,44 +38,57 @@ describe('Guards', () => {
   }
 
   describe('customerGuard', () => {
-    it.each<[string, Role | null, string]>([
-      ['an anonymous visitor', null, '/login?returnUrl=%2Fmy-orders'],
-      ['a customer', 'CUSTOMER', '/my-orders'],
-      ['an admin', 'ADMIN', '/'],
-    ])('given %s, when opening my orders, then they land on %s', async (_, role, landing) => {
-      const harness = await as(role);
+    it.each<{ visitor: string; role: Role | null; landing: string }>([
+      { visitor: 'an anonymous visitor', role: null, landing: '/login?returnUrl=%2Fmy-orders' },
+      { visitor: 'a customer', role: 'CUSTOMER', landing: '/my-orders' },
+      { visitor: 'an admin', role: 'ADMIN', landing: '/' },
+    ])(
+      'given $visitor, when opening my orders, then they land on $landing',
+      async ({ role, landing }) => {
+        const harness = await as(role);
 
-      const url = await landingOf(harness, '/my-orders');
+        const url = await landingOf(harness, '/my-orders');
 
-      expect(url).toBe(landing);
-    });
+        expect(url).toBe(landing);
+      },
+    );
   });
 
   describe('adminGuard', () => {
-    it.each<[string, Role | null, string]>([
-      ['an anonymous visitor', null, '/login?returnUrl=%2Fadmin%2Fcustomers'],
-      ['a customer', 'CUSTOMER', '/'],
-      ['an admin', 'ADMIN', '/admin/customers'],
-    ])('given %s, when opening the back office, then they land on %s', async (_, role, landing) => {
-      const harness = await as(role);
+    it.each<{ visitor: string; role: Role | null; landing: string }>([
+      {
+        visitor: 'an anonymous visitor',
+        role: null,
+        landing: '/login?returnUrl=%2Fadmin%2Fcustomers',
+      },
+      { visitor: 'a customer', role: 'CUSTOMER', landing: '/' },
+      { visitor: 'an admin', role: 'ADMIN', landing: '/admin/customers' },
+    ])(
+      'given $visitor, when opening the back office, then they land on $landing',
+      async ({ role, landing }) => {
+        const harness = await as(role);
 
-      const url = await landingOf(harness, '/admin/customers');
+        const url = await landingOf(harness, '/admin/customers');
 
-      expect(url).toBe(landing);
-    });
+        expect(url).toBe(landing);
+      },
+    );
   });
 
   describe('guestGuard', () => {
-    it.each<[string, Role | null, string]>([
-      ['an anonymous visitor', null, '/login'],
-      ['a customer', 'CUSTOMER', '/'],
-      ['an admin', 'ADMIN', '/'],
-    ])('given %s, when opening the login, then they land on %s', async (_, role, landing) => {
-      const harness = await as(role);
+    it.each<{ visitor: string; role: Role | null; landing: string }>([
+      { visitor: 'an anonymous visitor', role: null, landing: '/login' },
+      { visitor: 'a customer', role: 'CUSTOMER', landing: '/' },
+      { visitor: 'an admin', role: 'ADMIN', landing: '/' },
+    ])(
+      'given $visitor, when opening the login, then they land on $landing',
+      async ({ role, landing }) => {
+        const harness = await as(role);
 
-      const url = await landingOf(harness, '/login');
+        const url = await landingOf(harness, '/login');
 
-      expect(url).toBe(landing);
-    });
+        expect(url).toBe(landing);
+      },
+    );
   });
 });
