@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatAnchor, MatIconAnchor } from '@angular/material/button';
@@ -13,9 +13,12 @@ import { startingWith } from '@shared/filter/starting-with';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
+import { pageOf, Pagination } from '@shared/ui/pagination/pagination';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { StockUrgencyBadge } from '@shared/ui/stock-urgency-badge/stock-urgency-badge';
 import { AdminItemService } from '../admin-item.service';
+
+const PAGE_SIZE = 10;
 
 @Component({
   imports: [
@@ -31,6 +34,7 @@ import { AdminItemService } from '../admin-item.service';
     MatLabel,
     MatSuffix,
     PageHeader,
+    Pagination,
     PricePipe,
     RouterLink,
     StockUrgencyBadge,
@@ -49,12 +53,20 @@ export class AdminItemsPage {
 
   protected readonly query = signal('');
 
-  protected readonly visibleItems = computed(() =>
+  protected readonly matchingItems = computed(() =>
     startingWith(
       this.items.hasValue() ? this.items.value() : [],
       this.query(),
       (item) => item.name,
     ),
+  );
+  protected readonly pageIndex = linkedSignal(() => {
+    this.query();
+    return 0;
+  });
+  protected readonly pageSize = signal(PAGE_SIZE);
+  protected readonly visibleItems = computed(() =>
+    pageOf(this.matchingItems(), this.pageIndex(), this.pageSize()),
   );
 
   protected readonly problem = computed(() => problemOf(this.items.error()));

@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import type { ItemOverviewDto } from '@core/api/eurder-api';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
+import { providePaginatorTranslations } from '@shared/ui/pagination/pagination';
 import { AdminItemsPage } from './admin-items-page';
 
 describe('AdminItemsPage', () => {
@@ -32,7 +33,12 @@ describe('AdminItemsPage', () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [AdminItemsPage],
-      providers: [provideTestTranslations(), provideRouter([]), provideApiTesting()],
+      providers: [
+        provideTestTranslations(),
+        provideRouter([]),
+        provideApiTesting(),
+        providePaginatorTranslations(),
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(AdminItemsPage);
     page = fixture.nativeElement as HTMLElement;
@@ -106,5 +112,19 @@ describe('AdminItemsPage', () => {
     const text = page.textContent;
 
     expect(text).toContain('No item yet.');
+  });
+
+  it('given more than ten items, when the page opens, then it shows the first ten and paginates the rest', async () => {
+    const many = Array.from({ length: 12 }, (_, index) => ({
+      ...chair,
+      id: `i${index}`,
+      name: `Chair ${String(index).padStart(2, '0')}`,
+    }));
+    await answer(many);
+
+    const range = page.querySelector('.mat-mdc-paginator-range-label')?.textContent?.trim();
+
+    expect(names()).toHaveLength(10);
+    expect(range).toBe('1 – 10 of 12');
   });
 });

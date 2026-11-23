@@ -162,5 +162,13 @@
     },
     "item": "Article",
     "unitPrice": "Prix unitaire"
+  },
+  "pagination": {
+    "itemsPerPage": "Éléments par page",
+    "next": "Page suivante",
+    "previous": "Page précédente",
+    "first": "Première page",
+    "last": "Dernière page",
+    "range": "{{start}} – {{end}} sur {{length}}"
   }
 }

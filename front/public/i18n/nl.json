@@ -162,5 +162,13 @@
     },
     "item": "Artikel",
     "unitPrice": "Eenheidsprijs"
+  },
+  "pagination": {
+    "itemsPerPage": "Items per pagina",
+    "next": "Volgende pagina",
+    "previous": "Vorige pagina",
+    "first": "Eerste pagina",
+    "last": "Laatste pagina",
+    "range": "{{start}} – {{end}} van {{length}}"
   }
 }

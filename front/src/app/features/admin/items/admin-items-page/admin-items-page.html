@@ -22,7 +22,7 @@
   />
 } @else if (items.value().length === 0) {
   <app-empty-state [message]="'admin.items.empty' | translate" />
-} @else if (visibleItems().length === 0) {
+} @else if (matchingItems().length === 0) {
   <app-empty-state
     icon="search_off"
     [message]="'catalog.noMatch' | translate: { query: query().trim() }"
@@ -66,4 +66,9 @@
       </tbody>
     </table>
   </div>
+  <app-pagination
+    [length]="matchingItems().length"
+    [(pageIndex)]="pageIndex"
+    [(pageSize)]="pageSize"
+  />
 }

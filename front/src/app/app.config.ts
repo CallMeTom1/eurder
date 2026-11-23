@@ -15,6 +15,7 @@ import { SecurityService } from '@core/security/security.service';
 import { SessionWatcher } from '@core/security/session-watcher';
 import { ThemeService } from '@core/theme/theme.service';
 import { provideTranslateService } from '@ngx-translate/core';
+import { providePaginatorTranslations } from '@shared/ui/pagination/pagination';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { concat } from 'rxjs';
 import { routes } from './app.routes';
@@ -24,6 +25,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
+    providePaginatorTranslations(),
     provideHttpClient(
       withInterceptors([apiErrorInterceptor, authInterceptor]),
       withXsrfConfiguration({ cookieName: 'XSRF-TOKEN', headerName: 'X-XSRF-TOKEN' }),
