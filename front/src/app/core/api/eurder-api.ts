@@ -188,7 +188,11 @@ export interface paths {
      * @description Requires the VIEW_CUSTOMERS feature (role ADMIN).
      */
     get: operations['findById'];
-    put?: never;
+    /**
+     * Change the details of one customer, its email included, not its password
+     * @description Requires the MANAGE_CUSTOMERS feature (role ADMIN).
+     */
+    put: operations['update_1'];
     post?: never;
     delete?: never;
     options?: never;
@@ -248,6 +252,26 @@ export interface paths {
      * @description Requires the VIEW_OWN_EURDERS feature (role CUSTOMER).
      */
     get: operations['findReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/eurders/reports/{customerId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Report of the eurders of one customer with their totals, oldest first, for the admin
+     * @description Requires the VIEW_CUSTOMER_EURDERS feature (role ADMIN).
+     */
+    get: operations['findReportOfCustomer'];
     put?: never;
     post?: never;
     delete?: never;
@@ -779,6 +803,31 @@ export interface components {
       /** @enum {string} */
       itemState: 'PRISTINE' | 'SLIGHTLY_DAMAGED' | 'DAMAGED';
     };
+    UpdateCustomerDto: {
+      /** @description Address the eurders of the customer are shipped to */
+      address: components['schemas']['AddressDto'];
+      /**
+       * Format: email
+       * @description Email, also used to log in; spaces and capitals are ignored
+       * @example jane@doe.be
+       */
+      email: string;
+      /**
+       * @description First name of the customer
+       * @example Jane
+       */
+      firstName: string;
+      /**
+       * @description Last name of the customer
+       * @example Doe
+       */
+      lastName: string;
+      /**
+       * @description Phone number: digits, spaces, dots, slashes or dashes, optionally starting with +
+       * @example +32 470 12 34 56
+       */
+      phoneNumber: string;
+    };
     UpdateItemDto: {
       /**
        * @description Description of the item, up to 255 characters
@@ -827,6 +876,7 @@ export type ProblemDetail = components['schemas']['ProblemDetail'];
 export type ReportDto = components['schemas']['ReportDto'];
 export type ShippingEurderDto = components['schemas']['ShippingEurderDto'];
 export type ShippingItemGroupDto = components['schemas']['ShippingItemGroupDto'];
+export type UpdateCustomerDto = components['schemas']['UpdateCustomerDto'];
 export type UpdateItemDto = components['schemas']['UpdateItemDto'];
 export type $defs = Record<string, never>;
 export interface operations {
@@ -1206,6 +1256,77 @@ export interface operations {
       };
     };
   };
+  update_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCustomerDto'];
+      };
+    };
+    responses: {
+      /** @description Customer updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CustomerDto'];
+        };
+      };
+      /** @description Invalid request: a field, a parameter or the JSON body is invalid */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description Missing, invalid or expired access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The role of the authenticated user lacks the required feature */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description No such customer */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description Email already in use by another account */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
   order: {
     parameters: {
       query?: never;
@@ -1371,6 +1492,64 @@ export interface operations {
       };
       /** @description The role of the authenticated user lacks the required feature */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  findReportOfCustomer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The report of the customer */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReportDto'];
+        };
+      };
+      /** @description Invalid request: a field, a parameter or the JSON body is invalid */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description Missing, invalid or expired access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The role of the authenticated user lacks the required feature */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description No such customer */
+      404: {
         headers: {
           [name: string]: unknown;
         };

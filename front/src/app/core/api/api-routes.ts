@@ -13,6 +13,7 @@ export const ApiRoutes = {
   },
   customers: {
     all: `${API}/customers`,
+    one: (id: string) => `${API}/customers/${id}`,
   },
   items: {
     all: `${API}/items`,
@@ -21,5 +22,9 @@ export const ApiRoutes = {
   },
   eurders: {
     all: `${API}/eurders`,
+    report: `${API}/eurders/report`,
+    reportOf: (customerId: string) => `${API}/eurders/reports/${customerId}`,
+    shippingToday: `${API}/eurders/shipping-today`,
+    reorder: (id: string) => `${API}/eurders/${id}/reorder`,
   },
 } as const;
