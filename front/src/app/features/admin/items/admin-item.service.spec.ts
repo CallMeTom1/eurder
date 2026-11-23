@@ -28,6 +28,7 @@ describe('AdminItemService', () => {
         price: 49.99,
         availableUnits: { PRISTINE: 3, SLIGHTLY_DAMAGED: 1, DAMAGED: 0 },
         urgency: 'STOCK_LOW',
+        image: null,
       },
     ]);
 
@@ -39,6 +40,8 @@ describe('AdminItemService', () => {
         priceInCents: 4999,
         stock: 4,
         urgency: 'STOCK_LOW',
+        image: null,
+        imageUrl: null,
       },
     ]);
   });

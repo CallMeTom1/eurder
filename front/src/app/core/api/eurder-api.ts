@@ -300,6 +300,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/images': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload a PNG, JPEG or WebP image of at most 2 MB
+     * @description Requires the MANAGE_ITEMS feature (role ADMIN).
+     */
+    post: operations['upload'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/images/{name}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Read an image; its name never changes, so it can be cached for a year
+     * @description Public: no authentication needed.
+     */
+    get: operations['read'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/items': {
     parameters: {
       query?: never;
@@ -444,6 +484,11 @@ export interface components {
       description: string;
       /** Format: uuid */
       id: string;
+      /**
+       * @description Path of an uploaded image, or null for none
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      image: string | null;
       /** @example Chair */
       name: string;
       /** @example 49.99 */
@@ -522,6 +567,11 @@ export interface components {
        */
       description: string;
       /**
+       * @description Path of an uploaded image, or null for none
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      image?: string | null;
+      /**
        * @description Name of the item; several items can share a name
        * @example Chair
        */
@@ -595,6 +645,11 @@ export interface components {
       description: string;
       /** Format: uuid */
       id: string;
+      /**
+       * @description Path of an uploaded image, or null for none
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      image: string | null;
       name: string;
       price: number;
     };
@@ -647,6 +702,11 @@ export interface components {
       description: string;
       /** Format: uuid */
       id: string;
+      /**
+       * @description Path of an uploaded image, or null for none
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      image: string | null;
       name: string;
       price: number;
       /**
@@ -686,6 +746,7 @@ export interface components {
         | 'error.common.method-not-allowed'
         | 'error.common.not-acceptable'
         | 'error.common.unsupported-media-type'
+        | 'error.common.file-too-large'
         | 'error.common.concurrent-modification'
         | 'error.security.authentication-required'
         | 'error.security.invalid-credentials'
@@ -700,6 +761,8 @@ export interface components {
         | 'error.item.not-found'
         | 'error.item.unit-not-found'
         | 'error.item.unit-already-sold'
+        | 'error.image.invalid-type'
+        | 'error.image.not-found'
         | 'validation.required'
         | 'validation.too-short'
         | 'validation.too-long'
@@ -729,6 +792,7 @@ export interface components {
           | 'error.common.method-not-allowed'
           | 'error.common.not-acceptable'
           | 'error.common.unsupported-media-type'
+          | 'error.common.file-too-large'
           | 'error.common.concurrent-modification'
           | 'error.security.authentication-required'
           | 'error.security.invalid-credentials'
@@ -743,6 +807,8 @@ export interface components {
           | 'error.item.not-found'
           | 'error.item.unit-not-found'
           | 'error.item.unit-already-sold'
+          | 'error.image.invalid-type'
+          | 'error.image.not-found'
           | 'validation.required'
           | 'validation.too-short'
           | 'validation.too-long'
@@ -835,6 +901,11 @@ export interface components {
        */
       description: string;
       /**
+       * @description Path of an uploaded image, or null for none
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      image?: string | null;
+      /**
        * @description Name of the item; several items can share a name
        * @example Chair
        */
@@ -844,6 +915,13 @@ export interface components {
        * @example 49.99
        */
       price: number;
+    };
+    UploadedImageDto: {
+      /**
+       * @description Path of the image, to give to an item and to read under /api
+       * @example images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png
+       */
+      path: string;
     };
   };
   responses: never;
@@ -878,6 +956,7 @@ export type ShippingEurderDto = components['schemas']['ShippingEurderDto'];
 export type ShippingItemGroupDto = components['schemas']['ShippingItemGroupDto'];
 export type UpdateCustomerDto = components['schemas']['UpdateCustomerDto'];
 export type UpdateItemDto = components['schemas']['UpdateItemDto'];
+export type UploadedImageDto = components['schemas']['UploadedImageDto'];
 export type $defs = Record<string, never>;
 export interface operations {
   registerAsAnAdmin: {
@@ -1597,6 +1676,100 @@ export interface operations {
       };
     };
   };
+  upload: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          file: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Image stored */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UploadedImageDto'];
+        };
+      };
+      /** @description The file is not a PNG, JPEG or WebP image */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description Missing, invalid or expired access token */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The role of the authenticated user lacks the required feature */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description The file is larger than 2 MB */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
+  read: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invalid request: a field, a parameter or the JSON body is invalid */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+      /** @description No such image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/problem+json': components['schemas']['ProblemDetail'];
+        };
+      };
+    };
+  };
   findOverview: {
     parameters: {
       query?: {
@@ -2015,6 +2188,7 @@ export const problemDetailCodeValues: ReadonlyArray<
   'error.common.method-not-allowed',
   'error.common.not-acceptable',
   'error.common.unsupported-media-type',
+  'error.common.file-too-large',
   'error.common.concurrent-modification',
   'error.security.authentication-required',
   'error.security.invalid-credentials',
@@ -2029,6 +2203,8 @@ export const problemDetailCodeValues: ReadonlyArray<
   'error.item.not-found',
   'error.item.unit-not-found',
   'error.item.unit-already-sold',
+  'error.image.invalid-type',
+  'error.image.not-found',
   'validation.required',
   'validation.too-short',
   'validation.too-long',
@@ -2052,6 +2228,7 @@ export const problemDetailErrorsCodeValues: ReadonlyArray<
   'error.common.method-not-allowed',
   'error.common.not-acceptable',
   'error.common.unsupported-media-type',
+  'error.common.file-too-large',
   'error.common.concurrent-modification',
   'error.security.authentication-required',
   'error.security.invalid-credentials',
@@ -2066,6 +2243,8 @@ export const problemDetailErrorsCodeValues: ReadonlyArray<
   'error.item.not-found',
   'error.item.unit-not-found',
   'error.item.unit-already-sold',
+  'error.image.invalid-type',
+  'error.image.not-found',
   'validation.required',
   'validation.too-short',
   'validation.too-long',

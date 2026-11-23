@@ -19,6 +19,7 @@ describe('AdminItemsPage', () => {
     price: 29,
     availableUnits: { PRISTINE: 1, SLIGHTLY_DAMAGED: 0, DAMAGED: 0 },
     urgency: 'STOCK_LOW',
+    image: null,
   };
   const chair: ItemOverviewDto = {
     id: 'i1',
@@ -27,6 +28,7 @@ describe('AdminItemsPage', () => {
     price: 49.99,
     availableUnits: { PRISTINE: 10, SLIGHTLY_DAMAGED: 2, DAMAGED: 0 },
     urgency: 'STOCK_HIGH',
+    image: null,
   };
 
   beforeEach(async () => {

@@ -20,12 +20,28 @@ describe('CatalogService', () => {
   it('given the catalog of the API, when listing it, then the items come with their price in cents', async () => {
     const items = firstValueFrom(catalog.getItems());
 
-    backend
-      .expectOne('/api/catalog')
-      .flush([{ id: 'i1', name: 'Chair', description: 'Wooden chair', price: 49.99 }]);
+    backend.expectOne('/api/catalog').flush([
+      {
+        id: 'i1',
+        name: 'Chair',
+        description: 'Wooden chair',
+        price: 49.99,
+        stock: 12,
+        urgency: 'STOCK_HIGH',
+        image: null,
+      },
+    ]);
 
     expect(await items).toEqual([
-      { id: 'i1', name: 'Chair', description: 'Wooden chair', priceInCents: 4999 },
+      {
+        id: 'i1',
+        name: 'Chair',
+        description: 'Wooden chair',
+        priceInCents: 4999,
+        stock: 12,
+        urgency: 'STOCK_HIGH',
+        imageUrl: null,
+      },
     ]);
   });
 

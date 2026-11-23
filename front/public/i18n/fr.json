@@ -28,7 +28,8 @@
       "method-not-allowed": "Cette action n'est pas permise ici.",
       "not-acceptable": "Le serveur ne peut pas répondre dans le format demandé.",
       "unsupported-media-type": "Ce format n'est pas pris en charge.",
-      "concurrent-modification": "Quelqu'un d'autre a modifié ces données entre-temps. Rechargez et réessayez."
+      "concurrent-modification": "Quelqu'un d'autre a modifié ces données entre-temps. Rechargez et réessayez.",
+      "file-too-large": "Le fichier est trop lourd : 2 Mo au maximum."
     },
     "security": {
       "authentication-required": "Connectez-vous pour continuer.",
@@ -50,6 +51,10 @@
       "not-found": "Cet article n'existe pas.",
       "unit-not-found": "Cette unité de l'article n'existe pas.",
       "unit-already-sold": "Cette unité est déjà vendue."
+    },
+    "image": {
+      "invalid-type": "Seules les images PNG, JPEG ou WebP sont acceptées.",
+      "not-found": "Cette image n’existe pas."
     }
   },
   "validation": {

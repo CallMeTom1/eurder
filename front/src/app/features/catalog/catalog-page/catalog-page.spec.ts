@@ -19,6 +19,7 @@ describe('CatalogPage', () => {
     price: 49.99,
     stock: 12,
     urgency: 'STOCK_HIGH',
+    image: null,
   };
   const lamp: CatalogItemDto = {
     id: 'i2',
@@ -27,6 +28,7 @@ describe('CatalogPage', () => {
     price: 29,
     stock: 3,
     urgency: 'STOCK_LOW',
+    image: null,
   };
   const armchair: CatalogItemDto = {
     id: 'i3',
@@ -35,6 +37,7 @@ describe('CatalogPage', () => {
     price: 150,
     stock: 3,
     urgency: 'STOCK_LOW',
+    image: null,
   };
 
   beforeEach(async () => {

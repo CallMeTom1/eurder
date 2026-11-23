@@ -1,3 +1,4 @@
+import { imageUrlOf } from '@core/api/api-routes';
 import type { ItemOverviewDto } from '@core/api/eurder-api';
 
 export interface AdminItem {
@@ -7,6 +8,8 @@ export interface AdminItem {
   priceInCents: number;
   stock: number;
   urgency: ItemOverviewDto['urgency'];
+  image: string | null;
+  imageUrl: string | null;
 }
 
 export interface ItemDetails {
@@ -29,5 +32,7 @@ export function toAdminItem(dto: ItemOverviewDto): AdminItem {
     priceInCents: Math.round(dto.price * CENTS_PER_EURO),
     stock: Object.values(dto.availableUnits).reduce((total, units) => total + units, 0),
     urgency: dto.urgency,
+    image: dto.image,
+    imageUrl: imageUrlOf(dto.image),
   };
 }

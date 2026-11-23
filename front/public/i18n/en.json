@@ -28,7 +28,8 @@
       "method-not-allowed": "This action is not allowed here.",
       "not-acceptable": "The server cannot answer in the requested format.",
       "unsupported-media-type": "This format is not supported.",
-      "concurrent-modification": "Someone else changed this in the meantime. Reload and try again."
+      "concurrent-modification": "Someone else changed this in the meantime. Reload and try again.",
+      "file-too-large": "The file is too large: 2 MB at most."
     },
     "security": {
       "authentication-required": "Please log in to continue.",
@@ -50,6 +51,10 @@
       "not-found": "This item does not exist.",
       "unit-not-found": "This unit of the item does not exist.",
       "unit-already-sold": "This unit is already sold."
+    },
+    "image": {
+      "invalid-type": "Only PNG, JPEG or WebP pictures are accepted.",
+      "not-found": "This picture does not exist."
     }
   },
   "validation": {

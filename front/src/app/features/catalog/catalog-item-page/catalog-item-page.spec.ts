@@ -21,6 +21,7 @@ describe('CatalogItemPage', () => {
     price: 49.99,
     stock: 15,
     urgency: 'STOCK_HIGH',
+    image: null,
   };
 
   beforeEach(async () => {
@@ -138,5 +139,13 @@ describe('CatalogItemPage', () => {
       'This item does not exist.',
     );
     expect(link('Back to the catalog')).toBe('/catalog');
+  });
+  it('given an item with a picture, when opening its page, then the picture shows with the name as text', async () => {
+    await open({ ...chair, image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg' });
+
+    const image = page().querySelector('article img');
+
+    expect(image?.getAttribute('src')).toBe('/api/images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg');
+    expect(image?.getAttribute('alt')).toBe('Chair');
   });
 });

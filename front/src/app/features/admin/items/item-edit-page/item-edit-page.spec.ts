@@ -19,6 +19,7 @@ describe('ItemEditPage', () => {
     price: 49.99,
     stock: 15,
     urgency: 'STOCK_HIGH',
+    image: null,
   };
 
   beforeEach(async () => {

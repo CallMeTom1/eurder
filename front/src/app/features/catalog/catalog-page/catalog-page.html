@@ -35,6 +35,7 @@
           [name]="item.name"
           [priceInCents]="item.priceInCents"
           [link]="['/catalog', item.id]"
+          [imageUrl]="item.imageUrl"
         >
           <app-add-to-basket-button [item]="item" />
         </app-item-card>

@@ -34,4 +34,22 @@ describe('ItemCard', () => {
     expect(link?.querySelector('button')).toBeNull();
     expect(card.querySelector('button')?.textContent).toBe('Add');
   });
+  it('given an item with a picture, when rendered, then the picture replaces the placeholder', async () => {
+    localStorage.clear();
+    TestBed.overrideTemplate(
+      HostPage,
+      '<app-item-card name="Chair" [priceInCents]="4999" [link]="[\'/catalog\', \'i1\']" imageUrl="/api/images/chair.jpg" />',
+    );
+    await TestBed.configureTestingModule({
+      imports: [HostPage],
+      providers: [provideTestTranslations(), provideRouter([])],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(HostPage);
+
+    await fixture.whenStable();
+
+    const image = (fixture.nativeElement as HTMLElement).querySelector('img');
+    expect(image?.getAttribute('src')).toBe('/api/images/chair.jpg');
+    expect(image?.getAttribute('alt')).toBe('');
+  });
 });

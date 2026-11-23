@@ -5,7 +5,8 @@
     "description": "Leather armchair",
     "price": 150,
     "stock": 12,
-    "urgency": "STOCK_HIGH"
+    "urgency": "STOCK_HIGH",
+    "image": null
   },
   {
     "id": "i2",
@@ -13,7 +14,8 @@
     "description": "Wooden chair",
     "price": 49.99,
     "stock": 7,
-    "urgency": "STOCK_MEDIUM"
+    "urgency": "STOCK_MEDIUM",
+    "image": null
   },
   {
     "id": "i3",
@@ -21,6 +23,7 @@
     "description": "Desk lamp",
     "price": 29,
     "stock": 2,
-    "urgency": "STOCK_LOW"
+    "urgency": "STOCK_LOW",
+    "image": null
   }
 ]

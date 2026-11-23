@@ -16,6 +16,7 @@ describe('toCatalogItem', () => {
         price,
         stock: 3,
         urgency: 'STOCK_LOW',
+        image: null,
       });
 
       expect(item.priceInCents).toBe(cents);
@@ -30,6 +31,7 @@ describe('toCatalogItem', () => {
       price: 49.99,
       stock: 12,
       urgency: 'STOCK_HIGH',
+      image: null,
     });
 
     expect(item).toEqual({
@@ -39,6 +41,26 @@ describe('toCatalogItem', () => {
       priceInCents: 4999,
       stock: 12,
       urgency: 'STOCK_HIGH',
+      imageUrl: null,
     });
+  });
+  it.each([
+    {
+      image: 'images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
+      url: '/api/images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.jpg',
+    },
+    { image: null, url: null },
+  ])('given the image $image, when mapping, then the picture is read at $url', ({ image, url }) => {
+    const item = toCatalogItem({
+      id: 'i1',
+      name: 'Chair',
+      description: 'Wooden chair',
+      price: 49.99,
+      stock: 3,
+      urgency: 'STOCK_LOW',
+      image,
+    });
+
+    expect(item.imageUrl).toBe(url);
   });
 });

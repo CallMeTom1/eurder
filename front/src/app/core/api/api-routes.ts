@@ -1,5 +1,9 @@
 export const API = '/api';
 
+export function imageUrlOf(path: string | null | undefined): string | null {
+  return path ? `${API}/${path}` : null;
+}
+
 export const ApiRoutes = {
   auth: {
     login: `${API}/auth/login`,
@@ -14,6 +18,9 @@ export const ApiRoutes = {
   customers: {
     all: `${API}/customers`,
     one: (id: string) => `${API}/customers/${id}`,
+  },
+  images: {
+    all: `${API}/images`,
   },
   items: {
     all: `${API}/items`,

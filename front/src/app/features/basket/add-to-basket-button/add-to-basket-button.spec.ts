@@ -27,6 +27,7 @@ describe('AddToBasketButton', () => {
     priceInCents: 4999,
     stock: 12,
     urgency: 'STOCK_HIGH',
+    imageUrl: null,
   };
   const admin: CurrentUserDto = {
     id: 'a',

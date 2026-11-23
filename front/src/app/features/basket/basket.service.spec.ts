@@ -10,6 +10,7 @@ describe('BasketService', () => {
     priceInCents: 4999,
     stock: 12,
     urgency: 'STOCK_HIGH',
+    imageUrl: null,
   };
   const lamp: CatalogItem = {
     id: 'i2',
@@ -18,6 +19,7 @@ describe('BasketService', () => {
     priceInCents: 2900,
     stock: 12,
     urgency: 'STOCK_HIGH',
+    imageUrl: null,
   };
 
   function basket(): BasketService {

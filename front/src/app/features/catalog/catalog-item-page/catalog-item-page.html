@@ -6,12 +6,20 @@
   @let value = item.value();
   <app-page-header [title]="value.name" />
   <article class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-    <span
-      aria-hidden="true"
-      class="flex aspect-[4/3] items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
-    >
-      <mat-icon>image</mat-icon>
-    </span>
+    @if (value.imageUrl; as url) {
+      <img
+        [src]="url"
+        [alt]="value.name"
+        class="aspect-[4/3] w-full rounded-md bg-surface-container object-cover"
+      />
+    } @else {
+      <span
+        aria-hidden="true"
+        class="flex aspect-[4/3] items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
+      >
+        <mat-icon>image</mat-icon>
+      </span>
+    }
     <div class="flex flex-col items-start gap-4">
       <p class="[font:var(--mat-sys-headline-small)]">{{ value.priceInCents | price }}</p>
       <app-stock-urgency-badge [urgency]="value.urgency" />

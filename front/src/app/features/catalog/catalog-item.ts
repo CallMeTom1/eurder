@@ -1,3 +1,4 @@
+import { imageUrlOf } from '@core/api/api-routes';
 import type { CatalogItemDto } from '@core/api/eurder-api';
 
 export interface CatalogItem {
@@ -7,6 +8,7 @@ export interface CatalogItem {
   priceInCents: number;
   stock: number;
   urgency: CatalogItemDto['urgency'];
+  imageUrl: string | null;
 }
 
 const CENTS_PER_EURO = 100;
@@ -19,5 +21,6 @@ export function toCatalogItem(dto: CatalogItemDto): CatalogItem {
     priceInCents: Math.round(dto.price * CENTS_PER_EURO),
     stock: dto.stock,
     urgency: dto.urgency,
+    imageUrl: imageUrlOf(dto.image),
   };
 }
