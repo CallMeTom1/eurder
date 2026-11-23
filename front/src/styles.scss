@@ -4,6 +4,7 @@ html {
   height: 100%;
   @include theme.apply;
   @include theme.chosen-scheme;
+  @include theme.status-colors;
 }
 
 body {

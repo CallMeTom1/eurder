@@ -58,5 +58,12 @@
     "must-be-positive": "Doit être supérieur à 0.",
     "must-not-be-negative": "Ne peut pas être négatif.",
     "invalid": "Cette valeur n'est pas valide."
+  },
+  "stock": {
+    "urgency": {
+      "STOCK_LOW": "Stock bas",
+      "STOCK_MEDIUM": "Stock moyen",
+      "STOCK_HIGH": "Stock élevé"
+    }
   }
 }

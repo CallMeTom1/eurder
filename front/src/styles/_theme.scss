@@ -24,3 +24,10 @@
     color-scheme: dark;
   }
 }
+
+@mixin status-colors {
+  --eurder-success-container: light-dark(#c8eec4, #1d4f21);
+  --eurder-on-success-container: light-dark(#0b3d10, #c8eec4);
+  --eurder-warning-container: light-dark(#ffdf9e, #5c4300);
+  --eurder-on-warning-container: light-dark(#261a00, #ffdf9e);
+}

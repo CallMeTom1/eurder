@@ -8,6 +8,7 @@ import { LoadingState } from '@shared/ui/loading-state/loading-state';
 import { Logo } from '@shared/ui/logo/logo';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { LanguageSwitcher } from '@shared/ui/language-switcher/language-switcher';
+import { StockUrgencyBadge } from '@shared/ui/stock-urgency-badge/stock-urgency-badge';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
 
 interface Swatch {
@@ -26,6 +27,7 @@ interface Swatch {
     Logo,
     PageHeader,
     PricePipe,
+    StockUrgencyBadge,
     ThemeToggle,
   ],
   templateUrl: './design-system.html',

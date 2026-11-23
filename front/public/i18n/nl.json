@@ -58,5 +58,12 @@
     "must-be-positive": "Moet groter zijn dan 0.",
     "must-not-be-negative": "Mag niet negatief zijn.",
     "invalid": "Deze waarde is ongeldig."
+  },
+  "stock": {
+    "urgency": {
+      "STOCK_LOW": "Lage voorraad",
+      "STOCK_MEDIUM": "Gemiddelde voorraad",
+      "STOCK_HIGH": "Hoge voorraad"
+    }
   }
 }

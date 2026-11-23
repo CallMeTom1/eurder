@@ -16,6 +16,10 @@
   --color-on-error: var(--mat-sys-on-error);
   --color-error-container: var(--mat-sys-error-container);
   --color-on-error-container: var(--mat-sys-on-error-container);
+  --color-success-container: var(--eurder-success-container);
+  --color-on-success-container: var(--eurder-on-success-container);
+  --color-warning-container: var(--eurder-warning-container);
+  --color-on-warning-container: var(--eurder-on-warning-container);
   --color-surface: var(--mat-sys-surface);
   --color-on-surface: var(--mat-sys-on-surface);
   --color-on-surface-variant: var(--mat-sys-on-surface-variant);

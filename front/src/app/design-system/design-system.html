@@ -35,6 +35,15 @@
     </p>
   </section>
 
+  <section class="flex flex-col gap-4" aria-labelledby="urgency-title">
+    <h2 id="urgency-title" class="[font:var(--mat-sys-title-large)]">Stock urgency</h2>
+    <div class="flex flex-wrap gap-3">
+      <app-stock-urgency-badge urgency="STOCK_HIGH" />
+      <app-stock-urgency-badge urgency="STOCK_MEDIUM" />
+      <app-stock-urgency-badge urgency="STOCK_LOW" />
+    </div>
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="states-title">
     <h2 id="states-title" class="[font:var(--mat-sys-title-large)]">Page states</h2>
     <div class="grid gap-4 sm:grid-cols-3">
