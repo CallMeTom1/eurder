@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, loggedInAs, test } from './fixtures';
 
 test.use({ locale: 'en-US' });
 
@@ -28,9 +28,11 @@ test('given the shop, when following its navigation, then each page opens in the
   );
 });
 
-test('given the back office, when opening it, then it shows the items in the admin layout', async ({
+test('given an admin, when opening the back office, then it shows the items in the admin layout', async ({
   page,
 }) => {
+  await loggedInAs(page, 'ADMIN');
+
   await page.goto('/admin');
 
   await expect(page).toHaveURL('/admin/items');
