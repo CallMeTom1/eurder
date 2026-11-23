@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatAnchor, MatButton } from '@angular/material/button';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { SecurityService } from '@core/security/security.service';
+import { BasketService } from '@features/basket/basket.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageSwitcher } from '@shared/ui/language-switcher/language-switcher';
 import { Logo } from '@shared/ui/logo/logo';
@@ -32,8 +34,11 @@ interface NavigationLink {
 export class FrontOfficeLayout {
   protected readonly year = new Date().getFullYear();
 
-  protected readonly links: NavigationLink[] = [
+  private readonly security = inject(SecurityService);
+  protected readonly basket = inject(BasketService);
+
+  protected readonly links = computed<NavigationLink[]>(() => [
     { path: '/catalog', labelKey: 'nav.catalog' },
-    { path: '/basket', labelKey: 'nav.basket' },
-  ];
+    ...(this.security.isAdmin() ? [] : [{ path: '/basket', labelKey: 'nav.basket' }]),
+  ]);
 }

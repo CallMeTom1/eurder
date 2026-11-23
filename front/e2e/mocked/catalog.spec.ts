@@ -47,3 +47,37 @@ test('given an item, when clicking it, then its detail opens and leads back to t
   await page.getByRole('link', { name: 'Back to the catalog' }).click();
   await expect(page).toHaveURL('/catalog');
 });
+
+test('given items for sale, when adding some to the basket, then the header counts them, even after a reload', async ({
+  page,
+}) => {
+  await page.goto('/catalog');
+  const chair = page
+    .getByTestId('catalog-item')
+    .filter({ has: page.getByRole('heading', { name: 'Chair', exact: true }) });
+
+  await chair.getByRole('button', { name: 'Add to basket' }).click();
+  await expect(page.getByText('Chair added to the basket')).toBeVisible();
+  await chair.getByRole('button', { name: 'Add to basket' }).click();
+  await page.getByRole('link', { name: 'Lamp' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Lamp' })).toBeVisible();
+  await page.getByRole('main').getByRole('button', { name: 'Add to basket' }).click();
+  await page.reload();
+
+  await expect(page.getByRole('link', { name: 'Basket, 3 items' })).toBeVisible();
+});
+
+test('given an item just added, when following the message, then the basket opens', async ({
+  page,
+}) => {
+  await page.goto('/catalog');
+
+  await page
+    .getByTestId('catalog-item')
+    .filter({ hasText: 'Lamp' })
+    .getByRole('button', { name: 'Add to basket' })
+    .click();
+  await page.getByRole('button', { name: 'View basket' }).click();
+
+  await expect(page).toHaveURL('/basket');
+});

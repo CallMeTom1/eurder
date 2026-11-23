@@ -1,0 +1,6 @@
+@if (!security.isAdmin()) {
+  <button matButton="tonal" type="button" (click)="add()">
+    <mat-icon>add_shopping_cart</mat-icon>
+    {{ 'basket.add' | translate }}
+  </button>
+}

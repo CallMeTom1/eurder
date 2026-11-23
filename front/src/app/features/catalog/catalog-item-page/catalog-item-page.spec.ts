@@ -4,6 +4,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
+import { BasketService } from '@features/basket/basket.service';
 import { routes } from '../../../app.routes';
 
 describe('CatalogItemPage', () => {
@@ -60,5 +61,18 @@ describe('CatalogItemPage', () => {
       'This item does not exist.',
     );
     expect(page().querySelector('main a[href="/catalog"]')).not.toBeNull();
+  });
+
+  it('given an item, when adding it to the basket from its page, then the basket holds it', async () => {
+    await harness.navigateByUrl('/catalog/i1');
+    backend
+      .expectOne('/api/catalog/i1')
+      .flush({ id: 'i1', name: 'Chair', description: 'Wooden chair', price: 49.99 });
+    await harness.fixture.whenStable();
+
+    page().querySelector<HTMLButtonElement>('main app-add-to-basket-button button')!.click();
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(BasketService).count()).toBe(1);
   });
 });

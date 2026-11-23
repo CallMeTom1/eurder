@@ -122,5 +122,20 @@
     "noMatch": "Aucun article ne commence par « {{query}} ».",
     "back": "Retour au catalogue",
     "item": "Article"
+  },
+  "basket": {
+    "add": "Ajouter au panier",
+    "added": "{{name}} ajouté au panier",
+    "view": "Voir le panier",
+    "empty": "Votre panier est vide.",
+    "browse": "Parcourir le catalogue",
+    "item": "Article",
+    "amount": "Quantité",
+    "unitPrice": "Prix unitaire",
+    "price": "Prix",
+    "total": "Total",
+    "remove": "Retirer {{name}}",
+    "placeOrder": "Passer la commande",
+    "withCount": "Panier, {{count}} articles"
   }
 }

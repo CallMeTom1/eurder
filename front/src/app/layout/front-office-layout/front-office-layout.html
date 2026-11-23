@@ -3,15 +3,24 @@
     <a routerLink="/" class="rounded-md"><app-logo /></a>
 
     <nav [attr.aria-label]="'nav.main' | translate" class="flex gap-1">
-      @for (link of links; track link.path) {
+      @for (link of links(); track link.path) {
+        @let count = link.path === '/basket' ? basket.count() : 0;
         <a
           [matButton]="active.isActive ? 'tonal' : 'text'"
           [routerLink]="link.path"
           routerLinkActive
           #active="routerLinkActive"
           ariaCurrentWhenActive="page"
+          [attr.aria-label]="count > 0 ? ('basket.withCount' | translate: { count }) : null"
         >
           {{ link.labelKey | translate }}
+          @if (count > 0) {
+            <span
+              data-testid="basket-count"
+              class="ml-1 min-w-6 rounded-full bg-primary px-1.5 text-center text-xs leading-6 text-on-primary"
+              >{{ count }}</span
+            >
+          }
         </a>
       }
     </nav>

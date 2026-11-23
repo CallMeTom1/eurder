@@ -122,5 +122,20 @@
     "noMatch": "Geen artikel begint met “{{query}}”.",
     "back": "Terug naar de catalogus",
     "item": "Artikel"
+  },
+  "basket": {
+    "add": "In winkelmandje",
+    "added": "{{name}} toegevoegd aan het winkelmandje",
+    "view": "Winkelmandje bekijken",
+    "empty": "Je winkelmandje is leeg.",
+    "browse": "Naar de catalogus",
+    "item": "Artikel",
+    "amount": "Aantal",
+    "unitPrice": "Eenheidsprijs",
+    "price": "Prijs",
+    "total": "Totaal",
+    "remove": "{{name}} verwijderen",
+    "placeOrder": "Bestelling plaatsen",
+    "withCount": "Winkelmandje, {{count}} artikels"
   }
 }

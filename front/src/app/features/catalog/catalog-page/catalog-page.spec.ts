@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import type { CatalogItemDto } from '@core/api/eurder-api';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
+import { BasketService } from '@features/basket/basket.service';
 import { CatalogPage } from './catalog-page';
 
 describe('CatalogPage', () => {
@@ -123,5 +124,19 @@ describe('CatalogPage', () => {
     await answer([chair]);
 
     expect(names()).toEqual(['Chair']);
+  });
+
+  it('given items for sale, when adding one to the basket from its card, then the basket holds it', async () => {
+    await answer([chair, lamp]);
+    const lampCard = page.querySelectorAll('[data-testid="catalog-item"]')[1];
+
+    lampCard.querySelector<HTMLButtonElement>('app-add-to-basket-button button')!.click();
+    await fixture.whenStable();
+
+    expect(
+      TestBed.inject(BasketService)
+        .lines()
+        .map((line) => line.name),
+    ).toEqual(['Lamp']);
   });
 });

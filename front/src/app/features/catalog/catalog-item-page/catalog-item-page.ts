@@ -4,6 +4,7 @@ import { MatAnchor } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { problemOf } from '@core/api/api-problem';
+import { AddToBasketButton } from '@features/basket/add-to-basket-button/add-to-basket-button';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
@@ -13,6 +14,7 @@ import { CatalogService } from '../catalog.service';
 
 @Component({
   imports: [
+    AddToBasketButton,
     ErrorState,
     LoadingState,
     MatAnchor,
