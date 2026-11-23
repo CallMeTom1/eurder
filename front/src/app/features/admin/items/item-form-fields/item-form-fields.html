@@ -1,0 +1,42 @@
+<mat-form-field class="sm:col-span-3">
+  <mat-label>{{ 'catalog.field.name' | translate }}</mat-label>
+  <input matInput [formField]="form().name" />
+  <mat-error>
+    @if (form().name().errors() | fieldError; as error) {
+      {{ error.key | translate: error.params }}
+    }
+  </mat-error>
+</mat-form-field>
+
+<mat-form-field class="sm:col-span-3">
+  <mat-label>{{ 'catalog.field.description' | translate }}</mat-label>
+  <textarea matInput rows="4" [formField]="form().description"></textarea>
+  <mat-hint align="end"><app-char-counter [field]="form().description" /></mat-hint>
+  <mat-error>
+    @if (form().description().errors() | fieldError; as error) {
+      {{ error.key | translate: error.params }}
+    }
+    <app-char-counter class="float-end" [field]="form().description" />
+  </mat-error>
+</mat-form-field>
+
+<mat-form-field>
+  <mat-label>{{ 'catalog.field.price' | translate }}</mat-label>
+  <span matTextPrefix>€&nbsp;</span>
+  <input matInput type="number" step="0.01" [formField]="form().price" />
+  <mat-error>
+    @if (form().price().errors() | fieldError; as error) {
+      {{ error.key | translate: error.params }}
+    }
+  </mat-error>
+</mat-form-field>
+
+<mat-form-field>
+  <mat-label>{{ 'catalog.field.stock' | translate }}</mat-label>
+  <input matInput type="number" step="1" [formField]="form().stock" />
+  <mat-error>
+    @if (form().stock().errors() | fieldError; as error) {
+      {{ error.key | translate: error.params }}
+    }
+  </mat-error>
+</mat-form-field>

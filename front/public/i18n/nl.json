@@ -90,7 +90,10 @@
     },
     "items": {
       "new": "Nieuw artikel",
-      "empty": "Nog geen artikels."
+      "empty": "Nog geen artikels.",
+      "create": "Artikel aanmaken",
+      "createButton": "Aanmaken",
+      "updateButton": "Bijwerken"
     }
   },
   "page": {

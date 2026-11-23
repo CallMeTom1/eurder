@@ -90,7 +90,10 @@
     },
     "items": {
       "new": "New item",
-      "empty": "No item yet."
+      "empty": "No item yet.",
+      "create": "Create item",
+      "createButton": "Create",
+      "updateButton": "Update"
     }
   },
   "page": {

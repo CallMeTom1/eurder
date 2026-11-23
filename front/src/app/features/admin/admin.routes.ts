@@ -16,6 +16,12 @@ export const adminRoutes: Routes = [
         title: 'admin.nav.items',
       },
       {
+        path: 'items/new',
+        loadComponent: () =>
+          import('./items/item-create-page/item-create-page').then((m) => m.ItemCreatePage),
+        title: 'admin.items.create',
+      },
+      {
         path: 'items/:id',
         loadComponent: () =>
           import('@features/catalog/catalog-item-page/catalog-item-page').then(
