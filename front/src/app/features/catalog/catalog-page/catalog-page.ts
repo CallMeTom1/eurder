@@ -1,36 +1,36 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatCard } from '@angular/material/card';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatFormField, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { problemOf } from '@core/api/api-problem';
-import { AddToBasketButton } from '@features/basket/add-to-basket-button/add-to-basket-button';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
+import { ImagePlaceholder } from '@shared/ui/image-placeholder/image-placeholder';
 import { PageHeader } from '@shared/ui/page-header/page-header';
+import { StockUrgencyBadge } from '@shared/ui/stock-urgency-badge/stock-urgency-badge';
 import { CatalogService } from '../catalog.service';
 
 @Component({
   imports: [
-    AddToBasketButton,
     EmptyState,
-    FormsModule,
     ErrorState,
+    FormsModule,
+    ImagePlaceholder,
     LoadingState,
-    MatCard,
     MatFormField,
     MatIcon,
     MatInput,
-    MatLabel,
+    MatSuffix,
     PageHeader,
     PricePipe,
     RouterLink,
+    StockUrgencyBadge,
     TranslatePipe,
   ],
   selector: 'app-catalog-page',

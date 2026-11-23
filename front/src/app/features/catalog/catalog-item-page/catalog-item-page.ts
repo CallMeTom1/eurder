@@ -1,9 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatAnchor } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { problemOf } from '@core/api/api-problem';
+import { SecurityService } from '@core/security/security.service';
 import { AddToBasketButton } from '@features/basket/add-to-basket-button/add-to-basket-button';
 import { TranslatePipe } from '@ngx-translate/core';
 import { PricePipe } from '@shared/pipes/price-pipe';
@@ -18,7 +20,9 @@ import { CatalogService } from '../catalog.service';
     ErrorState,
     LoadingState,
     MatAnchor,
-    MatIcon,
+    MatFormField,
+    MatInput,
+    MatLabel,
     PageHeader,
     PricePipe,
     RouterLink,
@@ -31,6 +35,7 @@ export class CatalogItemPage {
   readonly id = input.required<string>();
 
   private readonly catalog = inject(CatalogService);
+  protected readonly security = inject(SecurityService);
 
   protected readonly item = rxResource({
     params: () => this.id(),

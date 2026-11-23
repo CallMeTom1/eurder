@@ -1,7 +1,14 @@
 <app-page-header [title]="'nav.catalog' | translate">
   <mat-form-field actions subscriptSizing="dynamic" class="w-72">
-    <mat-label>{{ 'catalog.search' | translate }}</mat-label>
-    <input matInput type="search" name="query" [(ngModel)]="query" />
+    <input
+      matInput
+      type="search"
+      name="query"
+      [placeholder]="'catalog.filter' | translate"
+      [attr.aria-label]="'catalog.filter' | translate"
+      [(ngModel)]="query"
+    />
+    <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 </app-page-header>
 
@@ -21,22 +28,17 @@
     [message]="'catalog.noMatch' | translate: { query: query().trim() }"
   />
 } @else {
-  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4">
+  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-8 gap-y-6">
     @for (item of visibleItems(); track item.id) {
-      <li data-testid="catalog-item">
-        <mat-card appearance="outlined" class="h-full">
-          <a [routerLink]="['/catalog', item.id]" class="flex flex-1 flex-col gap-3 p-4 pb-3">
-            <span
-              aria-hidden="true"
-              class="flex aspect-[4/3] items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
-            >
-              <mat-icon>image</mat-icon>
-            </span>
-            <h2 class="[font:var(--mat-sys-title-medium)]">{{ item.name }}</h2>
-            <span class="text-on-surface-variant">{{ item.priceInCents | price }}</span>
-          </a>
-          <app-add-to-basket-button class="px-4 pb-4" [item]="item" />
-        </mat-card>
+      <li data-testid="catalog-item" class="flex flex-col gap-2">
+        <a [routerLink]="['/catalog', item.id]" class="flex flex-col gap-2 rounded-md">
+          <h2 class="text-center [font:var(--mat-sys-title-medium)]">{{ item.name }}</h2>
+          <app-image-placeholder data-testid="item-image" />
+        </a>
+        <div class="flex items-center justify-between gap-2 text-sm">
+          <span>{{ 'catalog.price' | translate: { price: (item.priceInCents | price) } }}</span>
+          <app-stock-urgency-badge [urgency]="item.urgency" />
+        </div>
       </li>
     }
   </ul>

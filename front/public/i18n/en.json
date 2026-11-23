@@ -12,7 +12,9 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "charactersLeft": "{{count}} characters left",
-    "ok": "OK"
+    "ok": "OK",
+    "back": "Back",
+    "edit": "Edit"
   },
   "error": {
     "common": {
@@ -118,11 +120,17 @@
     "GERMANY": "Germany"
   },
   "catalog": {
-    "search": "Search an item",
     "empty": "No item for sale yet.",
     "noMatch": "No item starts with “{{query}}”.",
-    "back": "Back to the catalog",
-    "item": "Item"
+    "item": "Item",
+    "price": "Price: {{price}}",
+    "filter": "Filter by name…",
+    "field": {
+      "name": "Name",
+      "description": "Description",
+      "price": "Price",
+      "stock": "Amount of stock"
+    }
   },
   "basket": {
     "add": "Add to basket",

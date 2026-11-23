@@ -116,7 +116,7 @@ describe('UserMenu', () => {
     TestBed.inject(BasketService).add({
       id: 'i1',
       name: 'Chair',
-      description: '',
+
       priceInCents: 4999,
     });
     const menu = await loader.getHarness(MatMenuHarness);

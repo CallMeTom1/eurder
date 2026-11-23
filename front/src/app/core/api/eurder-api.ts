@@ -424,6 +424,17 @@ export interface components {
       name: string;
       /** @example 49.99 */
       price: number;
+      /**
+       * Format: int64
+       * @description Number of units available to order, in any state
+       * @example 12
+       */
+      stock: number;
+      /**
+       * @description Stock urgency from the available units: STOCK_LOW below 5, STOCK_MEDIUM below 10, STOCK_HIGH from 10
+       * @enum {string}
+       */
+      urgency: 'STOCK_LOW' | 'STOCK_MEDIUM' | 'STOCK_HIGH';
     };
     ChangeUnitStateDto: {
       /**
@@ -1006,7 +1017,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description The items, without stock nor urgency */
+      /** @description The items, with their stock and its urgency */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1028,7 +1039,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description The item, without stock nor urgency */
+      /** @description The item, with its stock and its urgency */
       200: {
         headers: {
           [name: string]: unknown;
@@ -1788,6 +1799,9 @@ export const addressDtoCountryValues: ReadonlyArray<
 export const addUnitsDtoStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AddUnitsDto']['state']
 > = ['PRISTINE', 'SLIGHTLY_DAMAGED', 'DAMAGED'];
+export const catalogItemDtoUrgencyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CatalogItemDto']['urgency']
+> = ['STOCK_LOW', 'STOCK_MEDIUM', 'STOCK_HIGH'];
 export const changeUnitStateDtoStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChangeUnitStateDto']['state']
 > = ['PRISTINE', 'SLIGHTLY_DAMAGED', 'DAMAGED'];

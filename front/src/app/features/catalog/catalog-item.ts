@@ -5,6 +5,8 @@ export interface CatalogItem {
   name: string;
   description: string;
   priceInCents: number;
+  stock: number;
+  urgency: CatalogItemDto['urgency'];
 }
 
 const CENTS_PER_EURO = 100;
@@ -15,5 +17,7 @@ export function toCatalogItem(dto: CatalogItemDto): CatalogItem {
     name: dto.name,
     description: dto.description,
     priceInCents: Math.round(dto.price * CENTS_PER_EURO),
+    stock: dto.stock,
+    urgency: dto.urgency,
   };
 }

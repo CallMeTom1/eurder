@@ -75,9 +75,9 @@ describe('FrontOfficeLayout', () => {
 
   it('given items in the basket, when rendered, then the basket link shows how many', async () => {
     const basket = TestBed.inject(BasketService);
-    basket.add({ id: 'i1', name: 'Chair', description: '', priceInCents: 4999 });
-    basket.add({ id: 'i1', name: 'Chair', description: '', priceInCents: 4999 });
-    basket.add({ id: 'i2', name: 'Lamp', description: '', priceInCents: 2900 });
+    basket.add({ id: 'i1', name: 'Chair', priceInCents: 4999 });
+    basket.add({ id: 'i1', name: 'Chair', priceInCents: 4999 });
+    basket.add({ id: 'i2', name: 'Lamp', priceInCents: 2900 });
 
     const page = await layout();
 

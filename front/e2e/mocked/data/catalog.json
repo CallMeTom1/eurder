@@ -1,5 +1,26 @@
 [
-  { "id": "i1", "name": "Armchair", "description": "Leather armchair", "price": 150 },
-  { "id": "i2", "name": "Chair", "description": "Wooden chair", "price": 49.99 },
-  { "id": "i3", "name": "Lamp", "description": "Desk lamp", "price": 29 }
+  {
+    "id": "i1",
+    "name": "Armchair",
+    "description": "Leather armchair",
+    "price": 150,
+    "stock": 12,
+    "urgency": "STOCK_HIGH"
+  },
+  {
+    "id": "i2",
+    "name": "Chair",
+    "description": "Wooden chair",
+    "price": 49.99,
+    "stock": 7,
+    "urgency": "STOCK_MEDIUM"
+  },
+  {
+    "id": "i3",
+    "name": "Lamp",
+    "description": "Desk lamp",
+    "price": 29,
+    "stock": 2,
+    "urgency": "STOCK_LOW"
+  }
 ]

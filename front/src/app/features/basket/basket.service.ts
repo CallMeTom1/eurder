@@ -14,7 +14,7 @@ export class BasketService {
     this.lines().reduce((total, line) => total + line.amount * line.priceInCents, 0),
   );
 
-  add(item: CatalogItem): void {
+  add(item: Pick<CatalogItem, 'id' | 'name' | 'priceInCents'>): void {
     const existing = this.lines().find((line) => line.itemId === item.id);
     if (existing) {
       this.changeAmount(item.id, existing.amount + 1);

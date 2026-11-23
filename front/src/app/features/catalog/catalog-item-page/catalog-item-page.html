@@ -3,22 +3,43 @@
 } @else if (item.error()) {
   <app-error-state [message]="problem().code | translate: problem().params" />
 } @else if (item.hasValue()) {
-  <app-page-header [title]="item.value().name" />
-  <article class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-    <span
-      aria-hidden="true"
-      class="flex aspect-[4/3] items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
-    >
-      <mat-icon>image</mat-icon>
-    </span>
-    <div class="flex flex-col gap-4">
-      <p class="[font:var(--mat-sys-headline-small)]">{{ item.value().priceInCents | price }}</p>
-      <div><app-add-to-basket-button [item]="item.value()" /></div>
-      <p class="whitespace-pre-line text-on-surface-variant">{{ item.value().description }}</p>
-    </div>
-  </article>
+  @let value = item.value();
+  <app-page-header [title]="'catalog.item' | translate" [subtitle]="value.id">
+    @if (!security.isAdmin()) {
+      <a actions matButton="tonal" routerLink="/basket">{{ 'basket.view' | translate }}</a>
+    }
+  </app-page-header>
+
+  <div class="grid gap-x-4 sm:grid-cols-[12rem_14rem_1fr]">
+    <mat-form-field class="sm:col-span-3">
+      <mat-label>{{ 'catalog.field.name' | translate }}</mat-label>
+      <input matInput readonly [value]="value.name" />
+    </mat-form-field>
+    <mat-form-field class="sm:col-span-3">
+      <mat-label>{{ 'catalog.field.description' | translate }}</mat-label>
+      <textarea matInput readonly rows="4" [value]="value.description"></textarea>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'catalog.field.price' | translate }}</mat-label>
+      <input matInput readonly [value]="value.priceInCents | price" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>{{ 'catalog.field.stock' | translate }}</mat-label>
+      <input matInput readonly [value]="value.stock" />
+    </mat-form-field>
+  </div>
 }
 
-<div>
-  <a matButton="outlined" routerLink="/catalog">{{ 'catalog.back' | translate }}</a>
+<div class="flex flex-wrap items-center gap-3">
+  @if (item.hasValue()) {
+    <app-add-to-basket-button [item]="item.value()" />
+  }
+  <div class="ml-auto flex gap-3">
+    @if (item.hasValue() && security.isAdmin()) {
+      <a matButton="filled" [routerLink]="['/admin/items', item.value().id, 'edit']">
+        {{ 'common.edit' | translate }}
+      </a>
+    }
+    <a matButton="outlined" routerLink="/catalog">{{ 'common.back' | translate }}</a>
+  </div>
 </div>

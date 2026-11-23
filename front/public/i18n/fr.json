@@ -12,7 +12,9 @@
     "cancel": "Annuler",
     "confirm": "Confirmer",
     "charactersLeft": "{{count}} caractères restants",
-    "ok": "OK"
+    "ok": "OK",
+    "back": "Retour",
+    "edit": "Modifier"
   },
   "error": {
     "common": {
@@ -118,11 +120,17 @@
     "GERMANY": "Allemagne"
   },
   "catalog": {
-    "search": "Rechercher un article",
     "empty": "Aucun article en vente pour l’instant.",
     "noMatch": "Aucun article ne commence par « {{query}} ».",
-    "back": "Retour au catalogue",
-    "item": "Article"
+    "item": "Article",
+    "price": "Prix : {{price}}",
+    "filter": "Filtrer par nom…",
+    "field": {
+      "name": "Nom",
+      "description": "Description",
+      "price": "Prix",
+      "stock": "Quantité en stock"
+    }
   },
   "basket": {
     "add": "Ajouter au panier",

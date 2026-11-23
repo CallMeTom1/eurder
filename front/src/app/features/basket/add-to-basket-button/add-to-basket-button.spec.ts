@@ -25,6 +25,8 @@ describe('AddToBasketButton', () => {
     name: 'Chair',
     description: 'Wooden chair',
     priceInCents: 4999,
+    stock: 12,
+    urgency: 'STOCK_HIGH',
   };
   const admin: CurrentUserDto = {
     id: 'a',

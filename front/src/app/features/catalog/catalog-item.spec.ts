@@ -9,18 +9,27 @@ describe('toCatalogItem', () => {
   ])(
     'given a price of $price euros, when mapping, then it becomes $cents cents without any rounding error',
     ({ price, cents }) => {
-      const item = toCatalogItem({ id: 'i1', name: 'Chair', description: 'Wooden chair', price });
+      const item = toCatalogItem({
+        id: 'i1',
+        name: 'Chair',
+        description: 'Wooden chair',
+        price,
+        stock: 3,
+        urgency: 'STOCK_LOW',
+      });
 
       expect(item.priceInCents).toBe(cents);
     },
   );
 
-  it('given an item of the API, when mapping, then keeps its id, name and description', () => {
+  it('given an item of the API, when mapping, then keeps its id, name, description, stock and urgency', () => {
     const item = toCatalogItem({
       id: 'i1',
       name: 'Chair',
       description: 'Wooden chair',
       price: 49.99,
+      stock: 12,
+      urgency: 'STOCK_HIGH',
     });
 
     expect(item).toEqual({
@@ -28,6 +37,8 @@ describe('toCatalogItem', () => {
       name: 'Chair',
       description: 'Wooden chair',
       priceInCents: 4999,
+      stock: 12,
+      urgency: 'STOCK_HIGH',
     });
   });
 });

@@ -8,12 +8,16 @@ describe('BasketService', () => {
     name: 'Chair',
     description: 'Wooden chair',
     priceInCents: 4999,
+    stock: 12,
+    urgency: 'STOCK_HIGH',
   };
   const lamp: CatalogItem = {
     id: 'i2',
     name: 'Lamp',
     description: 'Desk lamp',
     priceInCents: 2900,
+    stock: 12,
+    urgency: 'STOCK_HIGH',
   };
 
   function basket(): BasketService {

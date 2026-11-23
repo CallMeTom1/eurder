@@ -12,7 +12,9 @@
     "cancel": "Annuleren",
     "confirm": "Bevestigen",
     "charactersLeft": "Nog {{count}} tekens",
-    "ok": "OK"
+    "ok": "OK",
+    "back": "Terug",
+    "edit": "Bewerken"
   },
   "error": {
     "common": {
@@ -118,11 +120,17 @@
     "GERMANY": "Duitsland"
   },
   "catalog": {
-    "search": "Een artikel zoeken",
     "empty": "Nog geen artikels te koop.",
     "noMatch": "Geen artikel begint met “{{query}}”.",
-    "back": "Terug naar de catalogus",
-    "item": "Artikel"
+    "item": "Artikel",
+    "price": "Prijs: {{price}}",
+    "filter": "Filteren op naam…",
+    "field": {
+      "name": "Naam",
+      "description": "Beschrijving",
+      "price": "Prijs",
+      "stock": "Aantal in voorraad"
+    }
   },
   "basket": {
     "add": "In winkelmandje",

@@ -25,8 +25,8 @@ describe('BasketPage', () => {
   }
 
   function fill(): void {
-    basket.add({ id: 'i1', name: 'Chair', description: '', priceInCents: 4999 });
-    basket.add({ id: 'i2', name: 'Lamp', description: '', priceInCents: 2900 });
+    basket.add({ id: 'i1', name: 'Chair', priceInCents: 4999 });
+    basket.add({ id: 'i2', name: 'Lamp', priceInCents: 2900 });
     basket.changeAmount('i2', 3);
   }
 
@@ -107,7 +107,7 @@ describe('BasketPage', () => {
   });
 
   it('given the last line, when removing it, then the basket says it is empty', async () => {
-    basket.add({ id: 'i1', name: 'Chair', description: '', priceInCents: 4999 });
+    basket.add({ id: 'i1', name: 'Chair', priceInCents: 4999 });
     await open();
 
     page.querySelector<HTMLButtonElement>('button[aria-label="Remove Chair"]')!.click();
