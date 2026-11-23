@@ -22,7 +22,7 @@ import { ItemForm } from '../item-form';
   ],
   selector: 'app-item-form-fields',
   templateUrl: './item-form-fields.html',
-  host: { class: 'grid gap-x-4 gap-y-1 sm:grid-cols-[12rem_14rem_1fr]' },
+  host: { class: 'grid gap-x-4 gap-y-3 sm:grid-cols-[12rem_14rem_1fr]' },
 })
 export class ItemFormFields {
   readonly form = input.required<FieldTree<ItemForm>>();

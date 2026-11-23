@@ -1,7 +1,7 @@
 <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
   <app-page-header [title]="'nav.register' | translate" />
 
-  <form [formRoot]="registerForm" class="grid w-full gap-x-4 gap-y-1 sm:grid-cols-2">
+  <form [formRoot]="registerForm" class="grid w-full gap-x-4 gap-y-3 sm:grid-cols-2">
     @if (problem(); as problem) {
       <app-error-state class="sm:col-span-2" [message]="problem.code | translate: problem.params" />
     }

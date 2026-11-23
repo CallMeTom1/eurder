@@ -20,3 +20,7 @@ main > :not(router-outlet) {
   flex-direction: column;
   gap: 1.5rem;
 }
+
+.mat-mdc-form-field {
+  align-self: start;
+}

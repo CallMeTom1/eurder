@@ -13,6 +13,12 @@
       density: 0,
     )
   );
+  @include mat.form-field-overrides(
+    (
+      container-height: 44px,
+      container-vertical-padding: 10px,
+    )
+  );
 }
 
 @mixin chosen-scheme {

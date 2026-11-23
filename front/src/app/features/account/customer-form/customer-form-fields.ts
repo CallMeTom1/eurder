@@ -23,7 +23,7 @@ import { CustomerDetails } from './customer-form';
   ],
   selector: 'app-customer-form-fields',
   templateUrl: './customer-form-fields.html',
-  host: { class: 'grid gap-x-4 gap-y-1 sm:grid-cols-2' },
+  host: { class: 'grid gap-x-4 gap-y-3 sm:grid-cols-2' },
 })
 export class CustomerFormFields {
   readonly form = input.required<FieldTree<CustomerDetails>>();
