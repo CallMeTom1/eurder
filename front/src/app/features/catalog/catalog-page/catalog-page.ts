@@ -10,6 +10,7 @@ import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
 import { ItemCard } from '@shared/ui/item-card/item-card';
+import { startingWith } from '@shared/filter/starting-with';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { CatalogService } from '../catalog.service';
 
@@ -40,11 +41,13 @@ export class CatalogPage {
 
   protected readonly query = signal('');
 
-  protected readonly visibleItems = computed(() => {
-    const start = this.query().trim().toLocaleLowerCase();
-    const items = this.items.hasValue() ? this.items.value() : [];
-    return items.filter((item) => item.name.toLocaleLowerCase().startsWith(start));
-  });
+  protected readonly visibleItems = computed(() =>
+    startingWith(
+      this.items.hasValue() ? this.items.value() : [],
+      this.query(),
+      (item) => item.name,
+    ),
+  );
 
   protected readonly problem = computed(() => problemOf(this.items.error()));
 }

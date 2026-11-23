@@ -86,6 +86,10 @@
       "items": "Articles",
       "customers": "Clients",
       "shipping": "Livraisons du jour"
+    },
+    "items": {
+      "new": "Nouvel article",
+      "empty": "Aucun article pour l’instant."
     }
   },
   "page": {

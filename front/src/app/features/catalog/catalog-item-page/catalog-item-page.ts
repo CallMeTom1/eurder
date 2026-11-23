@@ -33,6 +33,9 @@ import { CatalogService } from '../catalog.service';
 })
 export class CatalogItemPage {
   readonly id = input.required<string>();
+  readonly back = input<string>();
+
+  protected readonly backLink = computed(() => this.back() ?? '/catalog');
 
   private readonly catalog = inject(CatalogService);
   protected readonly security = inject(SecurityService);

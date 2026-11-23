@@ -40,6 +40,6 @@
         {{ 'common.edit' | translate }}
       </a>
     }
-    <a matButton="outlined" routerLink="/catalog">{{ 'common.back' | translate }}</a>
+    <a matButton="outlined" [routerLink]="backLink()">{{ 'common.back' | translate }}</a>
   </div>
 </div>

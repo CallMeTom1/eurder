@@ -112,6 +112,24 @@ describe('CatalogItemPage', () => {
     expect(page().querySelector('app-add-to-basket-button button')).toBeNull();
   });
 
+  it('given an admin in the back office, when opening an item, then Back leads to the back office items', async () => {
+    await loggedInAs({
+      id: 'a',
+      role: 'ADMIN',
+      email: 'admin@eurder.be',
+      firstName: null,
+      lastName: null,
+    });
+
+    await harness.navigateByUrl('/admin/items/i1');
+    backend.expectOne('/api/catalog/i1').flush(chair);
+    await harness.fixture.whenStable();
+
+    expect(field('Name')).toBe('Chair');
+    expect(link('Back')).toBe('/admin/items');
+    expect(link('Edit')).toBe('/admin/items/i1/edit');
+  });
+
   it('given an item, when adding it to the basket from its page, then the basket holds it', async () => {
     await open(chair);
 

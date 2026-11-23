@@ -1,0 +1,46 @@
+<app-page-header [title]="'admin.nav.items' | translate">
+  <div actions class="flex flex-wrap items-center gap-3">
+    <mat-form-field subscriptSizing="dynamic" class="w-72">
+      <input
+        matInput
+        type="search"
+        name="query"
+        [placeholder]="'catalog.filter' | translate"
+        [attr.aria-label]="'catalog.filter' | translate"
+        [(ngModel)]="query"
+      />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <a matButton="filled" routerLink="/admin/items/new">{{ 'admin.items.new' | translate }}</a>
+  </div>
+</app-page-header>
+
+@if (items.isLoading()) {
+  <app-loading-state />
+} @else if (items.error()) {
+  <app-error-state
+    [message]="problem().code | translate: problem().params"
+    [retryable]="true"
+    (retry)="items.reload()"
+  />
+} @else if (items.value().length === 0) {
+  <app-empty-state [message]="'admin.items.empty' | translate" />
+} @else if (visibleItems().length === 0) {
+  <app-empty-state
+    icon="search_off"
+    [message]="'catalog.noMatch' | translate: { query: query().trim() }"
+  />
+} @else {
+  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-8 gap-y-6">
+    @for (item of visibleItems(); track item.id) {
+      <li>
+        <app-item-card
+          [name]="item.name"
+          [priceInCents]="item.priceInCents"
+          [urgency]="item.urgency"
+          [link]="['/admin/items', item.id]"
+        />
+      </li>
+    }
+  </ul>
+}

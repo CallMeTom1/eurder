@@ -9,7 +9,21 @@ export const adminRoutes: Routes = [
     component: BackOfficeLayout,
     children: [
       { path: '', redirectTo: 'items', pathMatch: 'full' },
-      { path: 'items', component: ComingSoon, title: 'admin.nav.items' },
+      {
+        path: 'items',
+        loadComponent: () =>
+          import('./items/admin-items-page/admin-items-page').then((m) => m.AdminItemsPage),
+        title: 'admin.nav.items',
+      },
+      {
+        path: 'items/:id',
+        loadComponent: () =>
+          import('@features/catalog/catalog-item-page/catalog-item-page').then(
+            (m) => m.CatalogItemPage,
+          ),
+        data: { back: '/admin/items' },
+        title: 'catalog.item',
+      },
       { path: 'customers', component: ComingSoon, title: 'admin.nav.customers' },
       { path: 'shipping', component: ComingSoon, title: 'admin.nav.shipping' },
       { path: '**', component: NotFound, title: 'page.notFound' },

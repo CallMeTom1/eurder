@@ -86,6 +86,10 @@
       "items": "Artikelen",
       "customers": "Klanten",
       "shipping": "Leveringen van vandaag"
+    },
+    "items": {
+      "new": "Nieuw artikel",
+      "empty": "Nog geen artikels."
     }
   },
   "page": {

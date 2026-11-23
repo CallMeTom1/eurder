@@ -86,6 +86,10 @@
       "items": "Items",
       "customers": "Customers",
       "shipping": "Shipping today"
+    },
+    "items": {
+      "new": "New item",
+      "empty": "No item yet."
     }
   },
   "page": {
