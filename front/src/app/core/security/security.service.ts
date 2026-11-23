@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Service, signal } from '@angular/core';
 import type { CurrentUserDto } from '@core/api/eurder-api';
 import { ApiRoutes } from '@core/api/api-routes';
-import { catchError, map, Observable, of, timeout } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, tap, timeout } from 'rxjs';
 import { CurrentUser, toCurrentUser } from './current-user';
 
 const STARTUP_TIMEOUT_MS = 5000;
@@ -11,6 +11,7 @@ const STARTUP_TIMEOUT_MS = 5000;
 export class SecurityService {
   private readonly http = inject(HttpClient);
   private readonly user = signal<CurrentUser | null>(null);
+  private refreshing: Observable<CurrentUser> | null = null;
 
   readonly currentUser = this.user.asReadonly();
   readonly isAuthenticated = computed(() => this.user() !== null);
@@ -26,5 +27,15 @@ export class SecurityService {
         return of(undefined);
       }),
     );
+  }
+
+  refreshSession(): Observable<CurrentUser> {
+    this.refreshing ??= this.http.post<CurrentUserDto>(ApiRoutes.auth.refresh, null).pipe(
+      map(toCurrentUser),
+      tap({ next: (user) => this.user.set(user), error: () => this.user.set(null) }),
+      finalize(() => (this.refreshing = null)),
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
+    return this.refreshing;
   }
 }
