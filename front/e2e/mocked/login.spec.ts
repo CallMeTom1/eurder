@@ -1,15 +1,10 @@
 import { Page } from '@playwright/test';
+import users from './data/users.json';
 import { expect, loggedInAs, test } from './fixtures';
 
 test.use({ locale: 'en-US' });
 
-const jane = {
-  id: '3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90',
-  role: 'CUSTOMER',
-  email: 'jane@doe.be',
-  firstName: 'Jane',
-  lastName: 'Doe',
-};
+const jane = users.customer;
 
 async function apiAccepts(page: Page, user: object): Promise<void> {
   await page.route('**/api/auth/login', (route) => route.fulfill({ json: user }));

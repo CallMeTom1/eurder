@@ -1,0 +1,5 @@
+[
+  { "id": "i1", "name": "Armchair", "description": "Leather armchair", "price": 150 },
+  { "id": "i2", "name": "Chair", "description": "Wooden chair", "price": 49.99 },
+  { "id": "i3", "name": "Lamp", "description": "Desk lamp", "price": 29 }
+]

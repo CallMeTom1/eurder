@@ -1,3 +1,4 @@
+import users from './data/users.json';
 import { expect, Page, test as base } from '@playwright/test';
 
 export const test = base.extend<{ anonymousVisitor: void }>({
@@ -20,11 +21,6 @@ export const test = base.extend<{ anonymousVisitor: void }>({
 export { expect };
 
 export async function loggedInAs(page: Page, role: 'ADMIN' | 'CUSTOMER'): Promise<void> {
-  const user =
-    role === 'ADMIN'
-      ? { email: 'admin@eurder.be', firstName: null, lastName: null }
-      : { email: 'jane@doe.be', firstName: 'Jane', lastName: 'Doe' };
-  await page.route('**/api/auth/me', (route) =>
-    route.fulfill({ json: { id: '3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90', role, ...user } }),
-  );
+  const user = role === 'ADMIN' ? users.admin : users.customer;
+  await page.route('**/api/auth/me', (route) => route.fulfill({ json: user }));
 }

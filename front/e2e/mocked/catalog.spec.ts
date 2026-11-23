@@ -1,16 +1,15 @@
+import items from './data/catalog.json';
 import { expect, test } from './fixtures';
 
 test.use({ locale: 'en-US' });
 
-const items = [
-  { id: 'i1', name: 'Armchair', description: 'Leather armchair', price: 150 },
-  { id: 'i2', name: 'Chair', description: 'Wooden chair', price: 49.99 },
-  { id: 'i3', name: 'Lamp', description: 'Desk lamp', price: 29 },
-];
-
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/catalog', (route) => route.fulfill({ json: items }));
-  await page.route('**/api/catalog/i2', (route) => route.fulfill({ json: items[1] }));
+  await page.route('**/api/catalog/*', (route) => {
+    const id = route.request().url().split('/').pop();
+    const item = items.find((candidate) => candidate.id === id);
+    return item ? route.fulfill({ json: item }) : route.fulfill({ status: 404 });
+  });
 });
 
 test('given items for sale, when opening the shop, then each one shows its name and price', async ({
