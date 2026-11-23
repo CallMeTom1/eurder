@@ -8,7 +8,41 @@ Angular 22 front end of the Eurder API: a public shop and an admin back office.
 2. `npm install`
 3. `npm start`, then open http://localhost:4200
 
+To see a real shop, fill the API with `node demo/seed.mjs` from the root of the repository: items with pictures, customers and orders.
+
 `npm start` serves the app with `proxy.conf.json`: every call to `/api` goes to `http://localhost:8080`. For the browser, the page and the API have the same origin, so there is no CORS, and the `HttpOnly; SameSite=Strict` token cookies of the API work as they are.
+
+## Pages
+
+| Path                                                 | Who           | What                                                                                     |
+| ---------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `/catalog`                                           | Anybody       | Item cards with picture and price, search by name start, Add to basket (IT1, IT2, ORBA1) |
+| `/catalog/{id}`                                      | Anybody       | Picture, price, stock badge, description, Add to basket, Edit for an admin (IT5)         |
+| `/basket`                                            | Anybody       | Lines, amounts, total, Place order: asks to log in first if needed (ORBA2, ORBA3)        |
+| `/login`, `/register`                                | Visitors only | Log in, create a customer account                                                        |
+| `/my-orders`                                         | Customer      | Report of the orders, Order again (OR1)                                                  |
+| `/admin/items`                                       | Admin         | Table with thumbnail, stock and urgency, search, pagination, New item                    |
+| `/admin/items/new`, `/admin/items/{id}/edit`         | Admin         | Item form with picture upload; the stock can only grow (IT3, IT4, IT6)                   |
+| `/admin/items/{id}`                                  | Admin         | The item detail inside the back office                                                   |
+| `/admin/customers`                                   | Admin         | Table, filter by last name, pagination, New customer (CU1, CU2, CUPAG1)                  |
+| `/admin/customers/new`, `/admin/customers/{id}/edit` | Admin         | Customer form (CU3, CU5)                                                                 |
+| `/admin/customers/{id}`                              | Admin         | Customer details and the report of their orders (CU4, OR2)                               |
+| `/admin/shipping`                                    | Admin         | What ships today, with the address of each customer                                      |
+
+The basket lives in `localStorage` (`eurder.basket`) and is emptied at logout. An admin sees neither the basket nor the Add to basket buttons: the API refuses an order from an admin.
+
+## Forms
+
+- Signal Forms: `form(signal(model), schema)`, `[formRoot]`, `[formField]`, and a submission action that awaits the API with `firstValueFrom`.
+- The rules mirror the API: `customerRules` and `passwordRules` (`@features/account/customer-form`), `itemRules` (`@features/admin/items/item-form`), and the shared `atMost`, `positive`, `notNegative`, `digits` and `wholeNumber` (`@shared/forms/eurder-validators`).
+- A length limit uses `atMost`, never `maxLength`: `maxLength` also sets the `maxlength` attribute, and the browser then cuts the typing silently instead of showing the message. `CharCounter` receives the same limit with `[max]`.
+- Every field has a `<label class="field-label">` above it, linked with `for` and an `id` made unique by `uniquePrefix()` (`@shared/forms/field-ids`); add `required` to show the red star. Material fields are outlined and 44 px high (`_theme.scss`, `app.config.ts`). Search fields keep a placeholder.
+- The `fieldError` pipe turns the first error of a field into a translation key with its parameters, the same keys as the API.
+- `submissionErrorsOf(form, error, problem)` puts the field errors of the API on their fields, shows the other problems in the page, and leaves network, `403` and server failures to the snackbar of the interceptor.
+
+## Pictures
+
+An item has an optional `image`, the path the API returns for an uploaded picture. `imageUrlOf(path)` (`@core/api/api-routes`) turns it into `/api/images/...`, through the same proxy as the API. The item forms upload a chosen file at once with `AdminItemService.uploadImage`, refuse a file over 2 MB before sending it, and send only the path with the item.
 
 ## Tests
 
@@ -36,7 +70,7 @@ Angular 22 front end of the Eurder API: a public shop and an admin back office.
 3. starts its own dev server on port 4300 (`proxy.e2e.json` sends `/api` to port 8181),
 4. runs the tests in parallel: each one creates its own customer with a unique email, so they never share data.
 
-The development API (8080), dev server (4200) and database (`eurder`) are never touched. The database connection defaults to `postgres` / `postgres`: override it with `E2E_DB_HOST`, `E2E_DB_PORT`, `E2E_DB_USERNAME`, `E2E_DB_PASSWORD` or `E2E_DB_NAME`.
+The development API (8080), dev server (4200) and database (`eurder`) are never touched. The pictures uploaded by the tests go to `data/images` at the root of the repository, outside of git. The database connection defaults to `postgres` / `postgres`: override it with `E2E_DB_HOST`, `E2E_DB_PORT`, `E2E_DB_USERNAME`, `E2E_DB_PASSWORD` or `E2E_DB_NAME`.
 
 ## Imports
 

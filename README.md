@@ -147,19 +147,20 @@ Tests are independent and repeatable: they share the same database, so every tes
 | E | Item units and states (optional extension) | Done |
 | C | Required configuration validated at startup (technical) | Done |
 | B | Create another admin (bonus) | Done |
+| G | What the GUI stories needed: public stock and urgency, item pictures, update a customer, report of one customer for the admin | Done |
 
 ## Item units and states
 
 Optional extension of the assignment: every piece in stock has a state, and damaged pieces are sold at a discount.
 
-- An `Item` is a product of the catalog (name, description, base price). Each physical piece of it is an `ItemUnit`, with its own state. What the assignment calls "an Item representing a single fridge" is an `ItemUnit` here.
+- An `Item` is a product of the catalog (name, description of at most 255 characters, base price, optional picture). Each physical piece of it is an `ItemUnit`, with its own state. What the assignment calls "an Item representing a single fridge" is an `ItemUnit` here.
 - States and discounts: `PRISTINE` (full price), `SLIGHTLY_DAMAGED` (-5%), `DAMAGED` (-10%). The discounted price of a unit is rounded half up to the cent: 49.99 becomes 47.49 and 44.99.
 - The stock of an item is the number of its available units. A unit is available until it is linked to the item group that sold it.
 
 | Endpoint | Role | Body |
 | --- | --- | --- |
-| `POST /items` | Create an item with its first units | `{"name": "...", "description": "...", "price": 49.99, "units": {"PRISTINE": 5, "DAMAGED": 1}}` |
-| `PUT /items/{id}` | Replace the name, description and price | `{"name": "...", "description": "...", "price": 49.99}` |
+| `POST /items` | Create an item with its first units, and optionally its picture | `{"name": "...", "description": "...", "price": 49.99, "units": {"PRISTINE": 5, "DAMAGED": 1}, "image": "images/....jpg"}` |
+| `PUT /items/{id}` | Replace the name, description, price and picture (no `image` removes it) | `{"name": "...", "description": "...", "price": 49.99, "image": "images/....jpg"}` |
 | `GET /items/{id}/units` | List the units, by state, available ones first | |
 | `POST /items/{id}/units` | Add units of a state (restocking) | `{"state": "PRISTINE", "amount": 10}` |
 | `PATCH /items/{id}/units/{unitId}` | Change the state of an available unit | `{"state": "DAMAGED"}` |
@@ -168,12 +169,34 @@ At most 1000 units per state can be added in one request. A sold unit keeps the 
 
 ## Public catalog
 
-What a visitor of the shop sees, without logging in. The stock and its urgency stay internal: they are only in the admin overview (`GET /items`).
+What a visitor of the shop sees, without logging in: like a real shop, it shows how many units are left and how urgent it is to order. The stock per state stays in the admin overview (`GET /items`).
 
 | Endpoint | Result |
 | --- | --- |
-| `GET /catalog` | Every item as `{"id", "name", "description", "price"}`, sorted by name |
+| `GET /catalog` | Every item as `{"id", "name", "description", "price", "stock", "urgency", "image"}`, sorted by name |
 | `GET /catalog/{id}` | One item, `404` with `code: error.item.not-found` when it does not exist |
+
+`stock` counts the available units of all states, `urgency` is `STOCK_LOW` below 5, `STOCK_MEDIUM` below 10, `STOCK_HIGH` from 10, and `image` is the path of its picture or `null`.
+
+## Item pictures
+
+| Endpoint | Role | Result |
+| --- | --- | --- |
+| `POST /images` | Admin (`MANAGE_ITEMS`) | Multipart field `file`: a PNG, JPEG or WebP image of at most 2 MB. `201` with `{"path": "images/{uuid}.jpg"}`, to give to an item |
+| `GET /images/{name}` | Anybody | The picture, cached for a year since a name never changes |
+
+- The type comes from the first bytes of the file, not from its name or its content type: anything else gets a `400` with `error.image.invalid-type`. A bigger file gets a `413` with `error.common.file-too-large`.
+- A stored picture gets a random name. Reading a name that is not one of them gives `404` (`error.image.not-found`), so a path never leaves the folder.
+- The pictures are files in `data/images` (`IMAGES_DIRECTORY`), not in the database. A picture nobody uses any more is not deleted.
+
+## Customers for the admin
+
+| Endpoint | Feature | Result |
+| --- | --- | --- |
+| `GET /customers` | `VIEW_CUSTOMERS` | Every customer, sorted by last name then first name |
+| `GET /customers/{id}` | `VIEW_CUSTOMERS` | One customer, `404` when unknown |
+| `PUT /customers/{id}` | `MANAGE_CUSTOMERS` | Replace the names, the email, the address and the phone number, with the rules of the registration. Not the password. The email of another account gives `409` |
+| `GET /eurders/reports/{customerId}` | `VIEW_CUSTOMER_EURDERS` | The report of the eurders of that customer, as they see it at `GET /eurders/report`, `404` when unknown |
 
 ## Ordering rules
 
