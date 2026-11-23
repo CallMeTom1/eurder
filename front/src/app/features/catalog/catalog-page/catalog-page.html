@@ -30,15 +30,13 @@
 } @else {
   <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-8 gap-y-6">
     @for (item of visibleItems(); track item.id) {
-      <li data-testid="catalog-item" class="flex flex-col gap-2">
-        <a [routerLink]="['/catalog', item.id]" class="flex flex-col gap-2 rounded-md">
-          <h2 class="text-center [font:var(--mat-sys-title-medium)]">{{ item.name }}</h2>
-          <app-image-placeholder data-testid="item-image" />
-        </a>
-        <div class="flex items-center justify-between gap-2 text-sm">
-          <span>{{ 'catalog.price' | translate: { price: (item.priceInCents | price) } }}</span>
-          <app-stock-urgency-badge [urgency]="item.urgency" />
-        </div>
+      <li data-testid="catalog-item">
+        <app-item-card
+          [name]="item.name"
+          [priceInCents]="item.priceInCents"
+          [urgency]="item.urgency"
+          [link]="['/catalog', item.id]"
+        />
       </li>
     }
   </ul>

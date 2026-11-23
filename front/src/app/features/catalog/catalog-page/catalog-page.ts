@@ -4,16 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { MatFormField, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
-import { RouterLink } from '@angular/router';
 import { problemOf } from '@core/api/api-problem';
 import { TranslatePipe } from '@ngx-translate/core';
-import { PricePipe } from '@shared/pipes/price-pipe';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
-import { ImagePlaceholder } from '@shared/ui/image-placeholder/image-placeholder';
+import { ItemCard } from '@shared/ui/item-card/item-card';
 import { PageHeader } from '@shared/ui/page-header/page-header';
-import { StockUrgencyBadge } from '@shared/ui/stock-urgency-badge/stock-urgency-badge';
 import { CatalogService } from '../catalog.service';
 
 @Component({
@@ -21,16 +18,13 @@ import { CatalogService } from '../catalog.service';
     EmptyState,
     ErrorState,
     FormsModule,
-    ImagePlaceholder,
+    ItemCard,
     LoadingState,
     MatFormField,
     MatIcon,
     MatInput,
     MatSuffix,
     PageHeader,
-    PricePipe,
-    RouterLink,
-    StockUrgencyBadge,
     TranslatePipe,
   ],
   selector: 'app-catalog-page',
