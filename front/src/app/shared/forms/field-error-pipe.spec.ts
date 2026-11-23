@@ -19,6 +19,8 @@ describe('FieldErrorPipe', () => {
       params: { max: 255 },
     },
     { error: { kind: 'max', max: 1000 }, key: 'validation.too-large', params: { max: 1000 } },
+    { error: { kind: 'min', min: 15 }, key: 'validation.too-small', params: { min: 15 } },
+    { error: { kind: 'wholeNumber' }, key: 'validation.invalid-format', params: {} },
     { error: { kind: 'positive' }, key: 'validation.must-be-positive', params: {} },
     { error: { kind: 'notNegative' }, key: 'validation.must-not-be-negative', params: {} },
     {

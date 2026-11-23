@@ -34,3 +34,10 @@ export function digits(path: SchemaPath<number | null>, integer: number, fractio
     return error;
   });
 }
+
+export function wholeNumber(path: SchemaPath<number | null>): void {
+  validate(path, ({ value }) => {
+    const number = value();
+    return number !== null && !Number.isInteger(number) ? { kind: 'wholeNumber' } : undefined;
+  });
+}

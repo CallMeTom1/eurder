@@ -61,7 +61,8 @@
     "invalid-format": "Het formaat is ongeldig.",
     "must-be-positive": "Moet groter zijn dan 0.",
     "must-not-be-negative": "Mag niet negatief zijn.",
-    "invalid": "Deze waarde is ongeldig."
+    "invalid": "Deze waarde is ongeldig.",
+    "too-small": "Minstens {{min}}."
   },
   "stock": {
     "urgency": {

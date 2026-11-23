@@ -61,7 +61,8 @@
     "invalid-format": "The format is not valid.",
     "must-be-positive": "Must be greater than 0.",
     "must-not-be-negative": "Must not be negative.",
-    "invalid": "This value is not valid."
+    "invalid": "This value is not valid.",
+    "too-small": "At least {{min}}."
   },
   "stock": {
     "urgency": {
