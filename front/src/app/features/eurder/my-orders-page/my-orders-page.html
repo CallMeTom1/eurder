@@ -1,0 +1,17 @@
+<app-page-header [title]="'nav.myOrders' | translate" />
+
+@if (problem(); as problem) {
+  <app-error-state [message]="problem.code | translate: problem.params" />
+}
+
+@if (report.isLoading() && !report.hasValue()) {
+  <app-loading-state />
+} @else if (report.error()) {
+  <app-error-state
+    [message]="loadProblem().code | translate: loadProblem().params"
+    [retryable]="true"
+    (retry)="report.reload()"
+  />
+} @else if (report.hasValue()) {
+  <app-eurder-report [report]="report.value()" [canReorder]="true" (reorder)="reorder($event)" />
+}

@@ -199,6 +199,7 @@
       "PRISTINE": "New",
       "SLIGHTLY_DAMAGED": "Slightly damaged",
       "DAMAGED": "Damaged"
-    }
+    },
+    "reordered": "Order placed again."
   }
 }

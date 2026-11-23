@@ -4,8 +4,6 @@ import { CatalogPage } from '@features/catalog/catalog-page/catalog-page';
 import { FrontOfficeLayout } from '@layout/front-office-layout/front-office-layout';
 import { devOnlyRoutes } from './dev-only.routes';
 
-const comingSoon = () => import('@features/coming-soon/coming-soon').then((m) => m.ComingSoon);
-
 export const routes: Routes = [
   ...devOnlyRoutes,
   {
@@ -49,7 +47,8 @@ export const routes: Routes = [
         path: 'my-orders',
         canActivate: [customerGuard],
         runGuardsAndResolvers: 'always',
-        loadComponent: comingSoon,
+        loadComponent: () =>
+          import('@features/eurder/my-orders-page/my-orders-page').then((m) => m.MyOrdersPage),
         title: 'nav.myOrders',
       },
       {
