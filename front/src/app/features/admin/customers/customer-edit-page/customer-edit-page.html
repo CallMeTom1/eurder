@@ -1,0 +1,24 @@
+<app-page-header [title]="'admin.customers.editTitle' | translate" [subtitle]="id()" />
+
+@if (loaded.isLoading()) {
+  <app-loading-state />
+} @else if (loaded.error()) {
+  <app-error-state [message]="loadProblem().code | translate: loadProblem().params" />
+} @else {
+  <form [formRoot]="customerForm" class="flex w-full max-w-2xl flex-col gap-2">
+    @if (problem(); as problem) {
+      <app-error-state [message]="problem.code | translate: problem.params" />
+    }
+
+    <app-customer-form-fields [form]="customerForm" />
+
+    <div class="mt-2 flex justify-end gap-3">
+      <a matButton="outlined" [routerLink]="['/admin/customers', id()]">
+        {{ 'common.cancel' | translate }}
+      </a>
+      <button matButton="filled" type="submit" [disabled]="customerForm().submitting()">
+        {{ 'admin.customers.updateButton' | translate }}
+      </button>
+    </div>
+  </form>
+}

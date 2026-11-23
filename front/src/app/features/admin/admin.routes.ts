@@ -58,6 +58,14 @@ export const adminRoutes: Routes = [
           ),
         title: 'admin.customers.title',
       },
+      {
+        path: 'customers/:id/edit',
+        loadComponent: () =>
+          import('./customers/customer-edit-page/customer-edit-page').then(
+            (m) => m.CustomerEditPage,
+          ),
+        title: 'admin.customers.editTitle',
+      },
       { path: 'shipping', component: ComingSoon, title: 'admin.nav.shipping' },
       { path: '**', component: NotFound, title: 'page.notFound' },
     ],
