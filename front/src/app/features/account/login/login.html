@@ -14,45 +14,35 @@
       <app-error-state [message]="problem.code | translate: problem.params" />
     }
 
-    <div class="field">
-      <label class="field-label required" [for]="prefix + 'email'">{{
-        'account.email' | translate
-      }}</label>
+    <app-form-field [label]="'account.email' | translate" [field]="loginForm.email">
       <mat-form-field>
         <input
-          [id]="prefix + 'email'"
           matInput
+          appFieldControl
           type="email"
           autocomplete="username"
           [formField]="loginForm.email"
         />
         <mat-error>
-          @if (loginForm.email().errors() | fieldError; as error) {
-            {{ error.key | translate: error.params }}
-          }
+          <app-field-errors [field]="loginForm.email" />
         </mat-error>
       </mat-form-field>
-    </div>
+    </app-form-field>
 
-    <div class="field">
-      <label class="field-label required" [for]="prefix + 'password'">{{
-        'account.password' | translate
-      }}</label>
+    <app-form-field [label]="'account.password' | translate" [field]="loginForm.password">
       <mat-form-field>
         <input
-          [id]="prefix + 'password'"
           matInput
+          appFieldControl
           type="password"
           autocomplete="current-password"
           [formField]="loginForm.password"
         />
         <mat-error>
-          @if (loginForm.password().errors() | fieldError; as error) {
-            {{ error.key | translate: error.params }}
-          }
+          <app-field-errors [field]="loginForm.password" />
         </mat-error>
       </mat-form-field>
-    </div>
+    </app-form-field>
 
     <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">
       {{ 'nav.login' | translate }}

@@ -1,190 +1,130 @@
-<div class="field">
-  <label class="field-label required" [for]="prefix + 'firstName'">{{
-    'account.firstName' | translate
-  }}</label>
+<app-form-field [label]="'account.firstName' | translate" [field]="form().firstName">
   <mat-form-field>
-    <input
-      [id]="prefix + 'firstName'"
-      matInput
-      autocomplete="given-name"
-      [formField]="form().firstName"
-    />
+    <input matInput appFieldControl autocomplete="given-name" [formField]="form().firstName" />
     <mat-error>
-      @if (form().firstName().errors() | fieldError; as error) {
-        {{ error.key | translate: error.params }}
-      }
+      <app-field-errors [field]="form().firstName" />
     </mat-error>
   </mat-form-field>
-</div>
+</app-form-field>
 
-<div class="field">
-  <label class="field-label required" [for]="prefix + 'lastName'">{{
-    'account.lastName' | translate
-  }}</label>
+<app-form-field [label]="'account.lastName' | translate" [field]="form().lastName">
   <mat-form-field>
-    <input
-      [id]="prefix + 'lastName'"
-      matInput
-      autocomplete="family-name"
-      [formField]="form().lastName"
-    />
+    <input matInput appFieldControl autocomplete="family-name" [formField]="form().lastName" />
     <mat-error>
-      @if (form().lastName().errors() | fieldError; as error) {
-        {{ error.key | translate: error.params }}
-      }
+      <app-field-errors [field]="form().lastName" />
     </mat-error>
   </mat-form-field>
-</div>
+</app-form-field>
 
-<div class="field">
-  <label class="field-label required" [for]="prefix + 'email'">{{
-    'account.email' | translate
-  }}</label>
+<app-form-field [label]="'account.email' | translate" [field]="form().email">
   <mat-form-field>
-    <input
-      [id]="prefix + 'email'"
-      matInput
-      type="email"
-      autocomplete="email"
-      [formField]="form().email"
-    />
+    <input matInput appFieldControl type="email" autocomplete="email" [formField]="form().email" />
     <mat-error>
-      @if (form().email().errors() | fieldError; as error) {
-        {{ error.key | translate: error.params }}
-      }
+      <app-field-errors [field]="form().email" />
     </mat-error>
   </mat-form-field>
-</div>
+</app-form-field>
 
 @if (password(); as password) {
-  <div class="field">
-    <label class="field-label required" [for]="prefix + 'password'">{{
-      'account.password' | translate
-    }}</label>
+  <app-form-field [label]="'account.password' | translate" [field]="password">
     <mat-form-field>
       <input
-        [id]="prefix + 'password'"
         matInput
+        appFieldControl
         type="password"
         autocomplete="new-password"
         [formField]="password"
       />
       <mat-hint>{{ 'account.passwordHint' | translate }}</mat-hint>
       <mat-error>
-        @if (password().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
+        <app-field-errors [field]="password" />
       </mat-error>
     </mat-form-field>
-  </div>
+  </app-form-field>
 }
 
-<div class="field">
-  <label class="field-label required" [for]="prefix + 'phoneNumber'">{{
-    'account.phoneNumber' | translate
-  }}</label>
+<app-form-field [label]="'account.phoneNumber' | translate" [field]="form().phoneNumber">
   <mat-form-field>
     <input
-      [id]="prefix + 'phoneNumber'"
       matInput
+      appFieldControl
       type="tel"
       autocomplete="tel"
       [formField]="form().phoneNumber"
     />
     <mat-error>
-      @if (form().phoneNumber().errors() | fieldError; as error) {
-        {{ error.key | translate: error.params }}
-      }
+      <app-field-errors [field]="form().phoneNumber" />
     </mat-error>
   </mat-form-field>
-</div>
+</app-form-field>
 
 <fieldset class="mt-4 grid gap-x-4 gap-y-3 sm:col-span-2 sm:grid-cols-[1fr_11rem]">
   <legend class="mb-2 [font:var(--mat-sys-title-medium)]">
     {{ 'account.address' | translate }}
   </legend>
 
-  <div class="field">
-    <label class="field-label required" [for]="prefix + 'street'">{{
-      'account.street' | translate
-    }}</label>
+  <app-form-field [label]="'account.street' | translate" [field]="form().address.street">
     <mat-form-field>
       <input
-        [id]="prefix + 'street'"
         matInput
+        appFieldControl
         autocomplete="address-line1"
         [formField]="form().address.street"
       />
       <mat-error>
-        @if (form().address.street().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
+        <app-field-errors [field]="form().address.street" />
       </mat-error>
     </mat-form-field>
-  </div>
+  </app-form-field>
 
-  <div class="field">
-    <label class="field-label required" [for]="prefix + 'houseNumber'">{{
-      'account.houseNumber' | translate
-    }}</label>
+  <app-form-field [label]="'account.houseNumber' | translate" [field]="form().address.houseNumber">
     <mat-form-field>
-      <input [id]="prefix + 'houseNumber'" matInput [formField]="form().address.houseNumber" />
+      <input matInput appFieldControl [formField]="form().address.houseNumber" />
       <mat-error>
-        @if (form().address.houseNumber().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
+        <app-field-errors [field]="form().address.houseNumber" />
       </mat-error>
     </mat-form-field>
-  </div>
+  </app-form-field>
 
-  <div class="field">
-    <label class="field-label required" [for]="prefix + 'city'">{{
-      'account.city' | translate
-    }}</label>
+  <app-form-field [label]="'account.city' | translate" [field]="form().address.city">
     <mat-form-field>
       <input
-        [id]="prefix + 'city'"
         matInput
+        appFieldControl
         autocomplete="address-level2"
         [formField]="form().address.city"
       />
       <mat-error>
-        @if (form().address.city().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
+        <app-field-errors [field]="form().address.city" />
       </mat-error>
     </mat-form-field>
-  </div>
+  </app-form-field>
 
-  <div class="field">
-    <label class="field-label required" [for]="prefix + 'postalCode'">{{
-      'account.postalCode' | translate
-    }}</label>
+  <app-form-field [label]="'account.postalCode' | translate" [field]="form().address.postalCode">
     <mat-form-field>
       <input
-        [id]="prefix + 'postalCode'"
         matInput
+        appFieldControl
         autocomplete="postal-code"
         [formField]="form().address.postalCode"
       />
       <mat-error>
-        @if (form().address.postalCode().errors() | fieldError; as error) {
-          {{ error.key | translate: error.params }}
-        }
+        <app-field-errors [field]="form().address.postalCode" />
       </mat-error>
     </mat-form-field>
-  </div>
+  </app-form-field>
 
-  <div class="field sm:col-span-2">
-    <label class="field-label required" [id]="prefix + 'country-label'">{{
-      'account.country' | translate
-    }}</label>
+  <app-form-field
+    class="sm:col-span-2"
+    [label]="'account.country' | translate"
+    [field]="form().address.country"
+  >
     <mat-form-field>
-      <mat-select [aria-labelledby]="prefix + 'country-label'" [formField]="form().address.country">
+      <mat-select appFieldControl [formField]="form().address.country">
         @for (country of countries; track country) {
           <mat-option [value]="country">{{ 'country.' + country | translate }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
-  </div>
+  </app-form-field>
 </fieldset>

@@ -10,8 +10,9 @@ import { imageUrlOf } from '@core/api/api-routes';
 import { firstValueFrom } from 'rxjs';
 import { AdminItemService } from '../admin-item.service';
 import { TranslatePipe } from '@ngx-translate/core';
-import { uniquePrefix } from '@shared/forms/field-ids';
-import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
+import { FieldControl } from '@shared/forms/form-field/field-control';
+import { FieldErrors } from '@shared/forms/form-field/field-errors';
+import { FormFieldComponent } from '@shared/forms/form-field/form-field';
 import { CharCounter } from '@shared/ui/char-counter/char-counter';
 import { ItemForm } from '../item-form';
 
@@ -19,8 +20,10 @@ const MAX_PICTURE_SIZE = 2 * 1024 * 1024;
 
 @Component({
   imports: [
+    FieldControl,
+    FieldErrors,
+    FormFieldComponent,
     CharCounter,
-    FieldErrorPipe,
     FormField,
     MatError,
     MatFormField,
@@ -36,8 +39,6 @@ const MAX_PICTURE_SIZE = 2 * 1024 * 1024;
   host: { class: 'grid gap-x-4 gap-y-3 sm:grid-cols-[12rem_14rem_1fr]' },
 })
 export class ItemFormFields {
-  protected readonly prefix = uniquePrefix();
-
   readonly form = input.required<FieldTree<ItemForm>>();
 
   private readonly adminItems = inject(AdminItemService);

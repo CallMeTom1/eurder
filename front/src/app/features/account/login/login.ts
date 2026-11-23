@@ -16,17 +16,20 @@ import { CurrentUser } from '@core/security/current-user';
 import { safeReturnUrl } from '@core/security/return-url';
 import { SecurityService } from '@core/security/security.service';
 import { TranslatePipe } from '@ngx-translate/core';
-import { uniquePrefix } from '@shared/forms/field-ids';
+import { FieldControl } from '@shared/forms/form-field/field-control';
+import { FieldErrors } from '@shared/forms/form-field/field-errors';
+import { FormFieldComponent } from '@shared/forms/form-field/form-field';
 import { submissionErrorsOf } from '@shared/forms/api-errors';
-import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   imports: [
+    FieldControl,
+    FieldErrors,
+    FormFieldComponent,
     ErrorState,
-    FieldErrorPipe,
     FormField,
     FormRoot,
     MatButton,
@@ -41,8 +44,6 @@ import { firstValueFrom } from 'rxjs';
   templateUrl: './login.html',
 })
 export class Login {
-  protected readonly prefix = uniquePrefix();
-
   readonly returnUrl = input<string>();
   readonly registered = input(false, { transform: booleanAttribute });
 

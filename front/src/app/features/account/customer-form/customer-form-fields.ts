@@ -5,13 +5,16 @@ import { MatInput } from '@angular/material/input';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { addressDtoCountryValues } from '@core/api/eurder-api';
 import { TranslatePipe } from '@ngx-translate/core';
-import { uniquePrefix } from '@shared/forms/field-ids';
-import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
+import { FieldControl } from '@shared/forms/form-field/field-control';
+import { FieldErrors } from '@shared/forms/form-field/field-errors';
+import { FormFieldComponent } from '@shared/forms/form-field/form-field';
 import { CustomerDetails } from './customer-form';
 
 @Component({
   imports: [
-    FieldErrorPipe,
+    FieldControl,
+    FieldErrors,
+    FormFieldComponent,
     FormField,
     MatError,
     MatFormField,
@@ -26,8 +29,6 @@ import { CustomerDetails } from './customer-form';
   host: { class: 'grid gap-x-4 gap-y-3 sm:grid-cols-2' },
 })
 export class CustomerFormFields {
-  protected readonly prefix = uniquePrefix();
-
   readonly form = input.required<FieldTree<CustomerDetails>>();
   readonly password = input<FieldTree<string>>();
 

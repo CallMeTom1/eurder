@@ -3,11 +3,11 @@ import { form, FormField, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { TranslatePipe } from '@ngx-translate/core';
-import { uniquePrefix } from '@shared/forms/field-ids';
+import { FieldControl } from '@shared/forms/form-field/field-control';
+import { FieldErrors } from '@shared/forms/form-field/field-errors';
+import { FormFieldComponent } from '@shared/forms/form-field/form-field';
 import { apiErrorsOf } from '@shared/forms/api-errors';
 import { atMost, digits, positive } from '@shared/forms/eurder-validators';
-import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { CharCounter } from '@shared/ui/char-counter/char-counter';
 import { ConfirmationService } from '@shared/ui/confirm-dialog/confirmation.service';
@@ -34,10 +34,12 @@ interface DemoItem {
 
 @Component({
   imports: [
+    FieldControl,
+    FieldErrors,
+    FormFieldComponent,
     CharCounter,
     EmptyState,
     ErrorState,
-    FieldErrorPipe,
     FormField,
     LanguageSwitcher,
     LoadingState,
@@ -49,14 +51,11 @@ interface DemoItem {
     PricePipe,
     StockUrgencyBadge,
     ThemeToggle,
-    TranslatePipe,
   ],
   selector: 'app-design-system',
   templateUrl: './design-system.html',
 })
 export class DesignSystem {
-  protected readonly prefix = uniquePrefix();
-
   private readonly confirmation = inject(ConfirmationService);
 
   protected readonly answer = signal('');
