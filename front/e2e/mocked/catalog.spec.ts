@@ -1,6 +1,6 @@
 import items from './data/catalog.json';
 import { Page } from '@playwright/test';
-import { expect, test } from './fixtures';
+import { expect, loggedInAs, test } from './fixtures';
 
 test.use({ locale: 'en-US' });
 
@@ -98,4 +98,37 @@ test('given items in the basket, when changing an amount and removing a line, th
   await expect(page.getByTestId('basket-total')).toContainText('€87.00');
   await expect(page.getByRole('link', { name: 'Basket, 3 items' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Place order' })).toBeVisible();
+});
+
+test('given an anonymous visitor with a basket, when placing the order, then the login comes first and brings them back to the basket', async ({
+  page,
+}) => {
+  await addToBasket(page, 'Lamp');
+  await page.goto('/basket');
+
+  await page.getByRole('button', { name: 'Place order' }).click();
+
+  await expect(page).toHaveURL('/login?returnUrl=%2Fbasket');
+});
+
+test('given a customer with a basket, when placing the order, then a dialog confirms it, the basket empties and the catalog opens', async ({
+  page,
+}) => {
+  await loggedInAs(page, 'CUSTOMER');
+  let sent: unknown;
+  await page.route('**/api/eurders', async (route) => {
+    sent = route.request().postDataJSON();
+    await route.fulfill({ status: 201, json: { id: 'e1', itemGroups: [], totalPrice: 58 } });
+  });
+  await addToBasket(page, 'Lamp');
+  await page.getByRole('main').getByRole('button', { name: 'Add to basket' }).click();
+  await page.goto('/basket');
+
+  await page.getByRole('button', { name: 'Place order' }).click();
+  await expect(page.getByRole('dialog', { name: 'Order placed' })).toBeVisible();
+  await page.getByRole('button', { name: 'OK' }).click();
+
+  expect(sent).toEqual({ itemGroups: [{ itemId: 'i3', amount: 2 }] });
+  await expect(page).toHaveURL('/catalog');
+  await expect(page.getByRole('link', { name: 'Basket', exact: true })).toBeVisible();
 });

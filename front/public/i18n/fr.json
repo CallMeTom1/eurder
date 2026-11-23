@@ -146,6 +146,10 @@
     "withCount": "Panier, {{count}} articles",
     "amountOf": "Quantité de {{name}}",
     "title": "Votre panier",
-    "product": "Produit"
+    "product": "Produit",
+    "placed": {
+      "title": "Commande passée",
+      "message": "Votre commande a bien été passée. Merci !"
+    }
   }
 }

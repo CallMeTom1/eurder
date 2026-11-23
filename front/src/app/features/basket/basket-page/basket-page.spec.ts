@@ -1,6 +1,16 @@
+import { HarnessLoader } from '@angular/cdk/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { MatButtonHarness } from '@angular/material/button/testing';
+import { MATERIAL_ANIMATIONS } from '@angular/material/core';
+import { MatDialogHarness } from '@angular/material/dialog/testing';
+import { provideRouter, Router } from '@angular/router';
+import type { CurrentUserDto } from '@core/api/eurder-api';
+import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
+import { SecurityService } from '@core/security/security.service';
+import { firstValueFrom } from 'rxjs';
 import { BasketService } from '../basket.service';
 import { BasketPage } from './basket-page';
 
@@ -8,19 +18,61 @@ describe('BasketPage', () => {
   let fixture: ComponentFixture<BasketPage>;
   let page: HTMLElement;
   let basket: BasketService;
+  let backend: HttpTestingController;
+  let navigate: ReturnType<typeof vi.spyOn>;
+  let documentLoader: HarnessLoader;
+
+  const customer: CurrentUserDto = {
+    id: 'c',
+    role: 'CUSTOMER',
+    email: 'jane@doe.be',
+    firstName: 'Jane',
+    lastName: 'Doe',
+  };
 
   beforeEach(async () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [BasketPage],
-      providers: [provideTestTranslations(), provideRouter([])],
+      providers: [
+        provideTestTranslations(),
+        provideRouter([]),
+        provideApiTesting(),
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+      ],
     }).compileComponents();
     basket = TestBed.inject(BasketService);
+    backend = TestBed.inject(HttpTestingController);
+    navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
   });
+
+  afterEach(() => backend.verify());
+
+  async function loggedIn(): Promise<void> {
+    const loaded = firstValueFrom(TestBed.inject(SecurityService).loadCurrentUser());
+    backend.expectOne('/api/auth/me').flush(customer);
+    await loaded;
+  }
+
+  function placeOrderButton(): HTMLButtonElement {
+    return page.querySelector<HTMLButtonElement>('[data-testid="place-order"]')!;
+  }
+
+  async function placeOrder(): Promise<void> {
+    placeOrderButton().click();
+    await fixture.whenStable();
+  }
+
+  async function settle(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
+  }
 
   async function open(): Promise<void> {
     fixture = TestBed.createComponent(BasketPage);
     page = fixture.nativeElement as HTMLElement;
+    documentLoader = TestbedHarnessEnvironment.documentRootLoader(fixture);
     await fixture.whenStable();
   }
 
@@ -132,5 +184,91 @@ describe('BasketPage', () => {
     expect(page.querySelector('[data-testid="place-order"]')?.textContent?.trim()).toBe(
       'Place order',
     );
+  });
+
+  it('given an anonymous visitor, when placing the order, then they are asked to log in first and come back to the basket', async () => {
+    fill();
+    await open();
+
+    await placeOrder();
+
+    expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/basket' } });
+    backend.expectNone('/api/eurders');
+  });
+
+  it('given a customer, when placing the order, then the item ids and amounts are sent and the button waits', async () => {
+    await loggedIn();
+    fill();
+    await open();
+
+    await placeOrder();
+
+    const request = backend.expectOne({ method: 'POST', url: '/api/eurders' });
+    expect(request.request.body).toEqual({
+      itemGroups: [
+        { itemId: 'i1', amount: 1 },
+        { itemId: 'i2', amount: 3 },
+      ],
+    });
+    expect(placeOrderButton().disabled).toBe(true);
+  });
+
+  it('given a placed order, when the API registers it, then a dialog says so, the basket is emptied and OK leads to the catalog', async () => {
+    await loggedIn();
+    fill();
+    await open();
+    await placeOrder();
+
+    backend.expectOne('/api/eurders').flush({ id: 'e1', itemGroups: [], totalPrice: 136.99 });
+    await settle();
+    const dialog = await documentLoader.getHarness(MatDialogHarness);
+
+    expect(await dialog.getTitleText()).toBe('Order placed');
+    expect(await dialog.getContentText()).toBe(
+      'Your order has been successfully placed. Thank you!',
+    );
+    expect(basket.lines()).toEqual([]);
+    await (await dialog.getHarness(MatButtonHarness.with({ text: 'OK' }))).click();
+    await settle();
+    expect(TestBed.inject(Router).navigateByUrl).toHaveBeenCalledWith('/catalog');
+  });
+
+  it('given an order refused by the API, when placing it, then the page says why and keeps the basket', async () => {
+    await loggedIn();
+    fill();
+    await open();
+    await placeOrder();
+
+    backend
+      .expectOne('/api/eurders')
+      .flush(
+        { status: 404, code: 'error.item.not-found', params: { id: 'i2' } },
+        { status: 404, statusText: 'Not Found' },
+      );
+    await settle();
+
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain(
+      'This item does not exist.',
+    );
+    expect(basket.count()).toBe(4);
+    expect(placeOrderButton().disabled).toBe(false);
+  });
+
+  it('given a session lost on the way, when placing the order, then they are asked to log in again and come back to the basket', async () => {
+    await loggedIn();
+    fill();
+    await open();
+    await placeOrder();
+
+    backend
+      .expectOne('/api/eurders')
+      .flush(
+        { status: 401, code: 'error.security.authentication-required', params: {} },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+    await settle();
+
+    expect(navigate).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/basket' } });
+    expect(basket.count()).toBe(4);
   });
 });

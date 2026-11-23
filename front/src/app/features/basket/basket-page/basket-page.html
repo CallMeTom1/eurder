@@ -1,5 +1,9 @@
 <app-page-header [title]="'basket.title' | translate" />
 
+@if (problem(); as problem) {
+  <app-error-state [message]="problem.code | translate: problem.params" />
+}
+
 @if (basket.lines().length === 0) {
   <app-empty-state icon="shopping_cart" [message]="'basket.empty' | translate">
     <a actions matButton="tonal" routerLink="/catalog">{{ 'basket.browse' | translate }}</a>
@@ -55,7 +59,14 @@
     {{ 'basket.total' | translate }} {{ basket.totalInCents() | price }}
   </p>
 
-  <button data-testid="place-order" matButton="filled" type="button" class="w-full">
+  <button
+    data-testid="place-order"
+    matButton="filled"
+    type="button"
+    class="w-full"
+    [disabled]="placing()"
+    (click)="placeOrder()"
+  >
     {{ 'basket.placeOrder' | translate }}
   </button>
 }

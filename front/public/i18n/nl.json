@@ -146,6 +146,10 @@
     "withCount": "Winkelmandje, {{count}} artikels",
     "amountOf": "Aantal {{name}}",
     "title": "Je winkelmandje",
-    "product": "Product"
+    "product": "Product",
+    "placed": {
+      "title": "Bestelling geplaatst",
+      "message": "Je bestelling is geplaatst. Bedankt!"
+    }
   }
 }
