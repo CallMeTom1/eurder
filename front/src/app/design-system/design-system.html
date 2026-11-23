@@ -1,11 +1,16 @@
 <main class="mx-auto flex max-w-5xl flex-col gap-10 p-8">
-  <header class="flex items-center justify-between">
-    <h1 class="[font:var(--mat-sys-headline-medium)]">Design system</h1>
-    <div class="flex items-center gap-2">
-      <app-language-switcher />
-      <app-theme-toggle />
-    </div>
-  </header>
+  <app-page-header
+    title="Design system"
+    subtitle="The shared pieces of Eurder, in every theme and language"
+  >
+    <app-language-switcher actions />
+    <app-theme-toggle actions />
+  </app-page-header>
+
+  <section class="flex flex-col gap-4" aria-labelledby="brand-title">
+    <h2 id="brand-title" class="[font:var(--mat-sys-title-large)]">Brand</h2>
+    <app-logo />
+  </section>
 
   <section class="flex flex-col gap-4" aria-labelledby="colors-title">
     <h2 id="colors-title" class="[font:var(--mat-sys-title-large)]">Colors</h2>
