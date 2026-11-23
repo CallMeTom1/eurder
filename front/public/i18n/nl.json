@@ -112,10 +112,13 @@
       "updateButton": "Bijwerken",
       "email": "E-mail",
       "orders": "Bestellingen"
+    },
+    "shipping": {
+      "empty": "Vandaag wordt niets verzonden.",
+      "order": "Bestelling {{id}}"
     }
   },
   "page": {
-    "comingSoon": "Deze pagina komt binnenkort.",
     "notFound": "Pagina niet gevonden"
   },
   "footer": {

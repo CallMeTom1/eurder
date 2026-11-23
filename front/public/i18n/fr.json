@@ -112,10 +112,13 @@
       "updateButton": "Mettre à jour",
       "email": "Email",
       "orders": "Commandes"
+    },
+    "shipping": {
+      "empty": "Rien à expédier aujourd’hui.",
+      "order": "Commande {{id}}"
     }
   },
   "page": {
-    "comingSoon": "Cette page arrive bientôt.",
     "notFound": "Page introuvable"
   },
   "footer": {

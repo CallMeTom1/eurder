@@ -1,0 +1,48 @@
+<app-page-header [title]="'admin.nav.shipping' | translate" />
+
+@if (shipments.isLoading()) {
+  <app-loading-state />
+} @else if (shipments.error()) {
+  <app-error-state
+    [message]="problem().code | translate: problem().params"
+    [retryable]="true"
+    (retry)="shipments.reload()"
+  />
+} @else if (shipments.value().length === 0) {
+  <app-empty-state icon="local_shipping" [message]="'admin.shipping.empty' | translate" />
+} @else {
+  <ul class="grid gap-4 md:grid-cols-2">
+    @for (shipment of shipments.value(); track shipment.eurderId) {
+      <li>
+        <mat-card data-testid="shipment" appearance="outlined" class="h-full gap-3 p-4">
+          <div>
+            <h2 class="[font:var(--mat-sys-title-medium)]">{{ shipment.customerName }}</h2>
+            <p class="text-on-surface-variant">
+              {{ shipment.address.street }} {{ shipment.address.houseNumber }},
+              {{ shipment.address.postalCode }} {{ shipment.address.city }},
+              {{ 'country.' + shipment.address.country | translate }}
+            </p>
+            <p class="font-mono text-xs text-on-surface-variant">
+              {{ 'admin.shipping.order' | translate: { id: (shipment.eurderId | slice: 0 : 8) } }}
+            </p>
+          </div>
+          <ul class="flex flex-col gap-1 border-t border-outline-variant pt-3">
+            @for (group of shipment.itemGroups; track $index) {
+              <li class="flex justify-between gap-4">
+                <span>
+                  {{ group.itemName }}
+                  @if (group.itemState !== 'PRISTINE') {
+                    <span class="text-sm text-on-surface-variant">
+                      · {{ 'eurder.state.' + group.itemState | translate }}
+                    </span>
+                  }
+                </span>
+                <span class="font-medium">× {{ group.amount }}</span>
+              </li>
+            }
+          </ul>
+        </mat-card>
+      </li>
+    }
+  </ul>
+}

@@ -112,10 +112,13 @@
       "updateButton": "Update",
       "email": "Email",
       "orders": "Orders"
+    },
+    "shipping": {
+      "empty": "Nothing ships today.",
+      "order": "Order {{id}}"
     }
   },
   "page": {
-    "comingSoon": "This page is coming soon.",
     "notFound": "Page not found"
   },
   "footer": {

@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { ComingSoon } from '@features/coming-soon/coming-soon';
 import { NotFound } from '@features/not-found/not-found';
 import { BackOfficeLayout } from '@layout/back-office-layout/back-office-layout';
 
@@ -66,7 +65,11 @@ export const adminRoutes: Routes = [
           ),
         title: 'admin.customers.editTitle',
       },
-      { path: 'shipping', component: ComingSoon, title: 'admin.nav.shipping' },
+      {
+        path: 'shipping',
+        loadComponent: () => import('./shipping-page/shipping-page').then((m) => m.ShippingPage),
+        title: 'admin.nav.shipping',
+      },
       { path: '**', component: NotFound, title: 'page.notFound' },
     ],
   },
