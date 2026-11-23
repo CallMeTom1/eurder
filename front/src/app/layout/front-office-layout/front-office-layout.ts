@@ -13,7 +13,6 @@ interface NavigationLink {
 }
 
 @Component({
-  selector: 'app-front-office-layout',
   imports: [
     LanguageSwitcher,
     Logo,
@@ -26,6 +25,7 @@ interface NavigationLink {
     TranslatePipe,
     UserMenu,
   ],
+  selector: 'app-front-office-layout',
   templateUrl: './front-office-layout.html',
   host: { class: 'flex min-h-full flex-col' },
 })

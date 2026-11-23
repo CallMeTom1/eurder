@@ -13,16 +13,16 @@ import { Register } from './register';
 describe('Register', () => {
   let fixture: ComponentFixture<Register>;
   let page: HTMLElement;
-  let register: ReturnType<typeof vi.fn>;
+  let addCustomer: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.spyOn>;
 
   async function open(answer: Observable<CustomerDto>): Promise<void> {
-    register = vi.fn().mockReturnValue(answer);
+    addCustomer = vi.fn().mockReturnValue(answer);
     TestBed.configureTestingModule({
       providers: [
         provideTestTranslations(),
         provideRouter([]),
-        { provide: AccountService, useValue: { register } },
+        { provide: AccountService, useValue: { addCustomer } },
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
       ],
     });
@@ -70,7 +70,7 @@ describe('Register', () => {
 
     expect(errorOf('firstName')).toBe('This field is required.');
     expect(errorOf('city')).toBe('This field is required.');
-    expect(register).not.toHaveBeenCalled();
+    expect(addCustomer).not.toHaveBeenCalled();
   });
 
   it('given a short password and a wrong phone number, when submitting, then the same rules as the API apply', async () => {
@@ -83,7 +83,7 @@ describe('Register', () => {
 
     expect(errorOf('password')).toBe('At least 8 characters.');
     expect(errorOf('phoneNumber')).toBe('The format is not valid.');
-    expect(register).not.toHaveBeenCalled();
+    expect(addCustomer).not.toHaveBeenCalled();
   });
 
   it('given a complete form in France, when submitting, then the customer is registered and asked to log in', async () => {
@@ -94,7 +94,7 @@ describe('Register', () => {
 
     await submit();
 
-    expect(register).toHaveBeenCalledWith({
+    expect(addCustomer).toHaveBeenCalledWith({
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'jane@doe.be',

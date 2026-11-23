@@ -17,7 +17,6 @@ import { PageHeader } from '@shared/ui/page-header/page-header';
 import { finalize } from 'rxjs';
 
 @Component({
-  selector: 'app-login',
   imports: [
     ErrorState,
     FieldErrorPipe,
@@ -31,6 +30,7 @@ import { finalize } from 'rxjs';
     RouterLink,
     TranslatePipe,
   ],
+  selector: 'app-login',
   templateUrl: './login.html',
 })
 export class Login {

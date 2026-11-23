@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class AccountService {
   private readonly http = inject(HttpClient);
 
-  register(registration: CreateCustomerDto): Observable<CustomerDto> {
+  addCustomer(registration: CreateCustomerDto): Observable<CustomerDto> {
     return this.http.post<CustomerDto>(ApiRoutes.customers.all, registration);
   }
 }

@@ -25,7 +25,6 @@ interface Swatch {
 }
 
 @Component({
-  selector: 'app-design-system',
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
@@ -44,6 +43,7 @@ interface Swatch {
     StockUrgencyBadge,
     ThemeToggle,
   ],
+  selector: 'app-design-system',
   templateUrl: './design-system.html',
 })
 export class DesignSystem {

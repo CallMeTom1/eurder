@@ -34,7 +34,6 @@ function requiredText(maxLength: number, ...validators: ValidatorFn[]): FormCont
 }
 
 @Component({
-  selector: 'app-register',
   imports: [
     ErrorState,
     FieldErrorPipe,
@@ -51,6 +50,7 @@ function requiredText(maxLength: number, ...validators: ValidatorFn[]): FormCont
     RouterLink,
     TranslatePipe,
   ],
+  selector: 'app-register',
   templateUrl: './register.html',
 })
 export class Register {
@@ -89,7 +89,7 @@ export class Register {
     this.submitting.set(true);
     this.problem.set(null);
     this.accounts
-      .register(this.form.getRawValue())
+      .addCustomer(this.form.getRawValue())
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: () => this.router.navigate(['/login'], { queryParams: { registered: true } }),

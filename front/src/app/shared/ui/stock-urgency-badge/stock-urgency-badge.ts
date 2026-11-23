@@ -19,8 +19,8 @@ const COLORS: Record<Tone, string> = {
 };
 
 @Component({
-  selector: 'app-stock-urgency-badge',
   imports: [TranslatePipe],
+  selector: 'app-stock-urgency-badge',
   template: `
     <span
       class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-medium"

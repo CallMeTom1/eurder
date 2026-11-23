@@ -10,8 +10,8 @@ interface LanguageOption {
 }
 
 @Component({
-  selector: 'app-language-switcher',
   imports: [MatButtonModule, MatMenuModule, TranslatePipe],
+  selector: 'app-language-switcher',
   templateUrl: './language-switcher.html',
 })
 export class LanguageSwitcher {

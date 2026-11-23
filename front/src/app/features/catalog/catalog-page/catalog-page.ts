@@ -15,7 +15,6 @@ import { PageHeader } from '@shared/ui/page-header/page-header';
 import { CatalogService } from '../catalog.service';
 
 @Component({
-  selector: 'app-catalog-page',
   imports: [
     EmptyState,
     ErrorState,
@@ -30,13 +29,14 @@ import { CatalogService } from '../catalog.service';
     RouterLink,
     TranslatePipe,
   ],
+  selector: 'app-catalog-page',
   templateUrl: './catalog-page.html',
 })
 export class CatalogPage {
   private readonly catalog = inject(CatalogService);
 
   protected readonly items = rxResource({
-    stream: () => this.catalog.findAll(),
+    stream: () => this.catalog.getItems(),
     defaultValue: [],
   });
 

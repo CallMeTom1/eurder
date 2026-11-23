@@ -8,7 +8,6 @@ import { SecurityService } from '@core/security/security.service';
 import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-user-menu',
   imports: [
     MatButton,
     MatDivider,
@@ -19,6 +18,7 @@ import { TranslatePipe } from '@ngx-translate/core';
     RouterLink,
     TranslatePipe,
   ],
+  selector: 'app-user-menu',
   templateUrl: './user-menu.html',
 })
 export class UserMenu {

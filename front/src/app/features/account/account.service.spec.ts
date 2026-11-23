@@ -1,4 +1,3 @@
-import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import type { CreateCustomerDto } from '@core/api/eurder-api';
@@ -8,7 +7,7 @@ import { AccountService } from './account.service';
 describe('AccountService', () => {
   it('given a registration, when sending it, then it posts the new customer to the API', async () => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClientTesting()],
     });
     const backend = TestBed.inject(HttpTestingController);
     const registration: CreateCustomerDto = {
@@ -26,7 +25,7 @@ describe('AccountService', () => {
       },
     };
 
-    const registering = firstValueFrom(TestBed.inject(AccountService).register(registration));
+    const registering = firstValueFrom(TestBed.inject(AccountService).addCustomer(registration));
     const request = backend.expectOne('/api/customers');
     request.flush({ id: 'c1' });
     await registering;

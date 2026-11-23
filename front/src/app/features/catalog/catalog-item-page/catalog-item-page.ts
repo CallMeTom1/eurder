@@ -12,7 +12,6 @@ import { PageHeader } from '@shared/ui/page-header/page-header';
 import { CatalogService } from '../catalog.service';
 
 @Component({
-  selector: 'app-catalog-item-page',
   imports: [
     ErrorState,
     LoadingState,
@@ -23,6 +22,7 @@ import { CatalogService } from '../catalog.service';
     RouterLink,
     TranslatePipe,
   ],
+  selector: 'app-catalog-item-page',
   templateUrl: './catalog-item-page.html',
 })
 export class CatalogItemPage {
@@ -32,7 +32,7 @@ export class CatalogItemPage {
 
   protected readonly item = rxResource({
     params: () => this.id(),
-    stream: ({ params }) => this.catalog.findOne(params),
+    stream: ({ params }) => this.catalog.getItem(params),
   });
 
   protected readonly problem = computed(() => problemOf(this.item.error()));

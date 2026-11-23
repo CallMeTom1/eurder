@@ -14,7 +14,6 @@ interface NavigationLink {
 }
 
 @Component({
-  selector: 'app-back-office-layout',
   imports: [
     LanguageSwitcher,
     Logo,
@@ -28,6 +27,7 @@ interface NavigationLink {
     TranslatePipe,
     UserMenu,
   ],
+  selector: 'app-back-office-layout',
   templateUrl: './back-office-layout.html',
   host: { class: 'flex min-h-full flex-col' },
 })

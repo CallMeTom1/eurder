@@ -12,8 +12,8 @@ interface ThemeOption {
 }
 
 @Component({
-  selector: 'app-theme-toggle',
   imports: [MatButtonModule, MatIconModule, MatMenuModule, TranslatePipe],
+  selector: 'app-theme-toggle',
   templateUrl: './theme-toggle.html',
 })
 export class ThemeToggle {

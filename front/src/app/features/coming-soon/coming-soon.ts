@@ -6,8 +6,8 @@ import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 
 @Component({
-  selector: 'app-coming-soon',
   imports: [EmptyState, PageHeader, TranslatePipe],
+  selector: 'app-coming-soon',
   template: `
     <app-page-header [title]="title() ?? '' | translate" />
     <app-empty-state icon="construction" [message]="'page.comingSoon' | translate" />

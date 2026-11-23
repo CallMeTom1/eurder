@@ -16,7 +16,6 @@ export interface Confirmation {
 }
 
 @Component({
-  selector: 'app-confirm-dialog',
   imports: [
     MatButton,
     MatDialogActions,
@@ -25,6 +24,7 @@ export interface Confirmation {
     MatDialogTitle,
     TranslatePipe,
   ],
+  selector: 'app-confirm-dialog',
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>

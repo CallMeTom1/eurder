@@ -9,13 +9,13 @@ import { CatalogItem, toCatalogItem } from './catalog-item';
 export class CatalogService {
   private readonly http = inject(HttpClient);
 
-  findAll(): Observable<CatalogItem[]> {
+  getItems(): Observable<CatalogItem[]> {
     return this.http
       .get<CatalogItemDto[]>(ApiRoutes.catalog.all)
       .pipe(map((items) => items.map(toCatalogItem)));
   }
 
-  findOne(id: string): Observable<CatalogItem> {
+  getItem(id: string): Observable<CatalogItem> {
     return this.http.get<CatalogItemDto>(ApiRoutes.catalog.one(id)).pipe(map(toCatalogItem));
   }
 }

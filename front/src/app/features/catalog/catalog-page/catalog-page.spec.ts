@@ -10,7 +10,7 @@ import { CatalogPage } from './catalog-page';
 describe('CatalogPage', () => {
   let fixture: ComponentFixture<CatalogPage>;
   let page: HTMLElement;
-  let findAll: ReturnType<typeof vi.fn>;
+  let getItems: ReturnType<typeof vi.fn>;
 
   const chair: CatalogItem = {
     id: 'i1',
@@ -43,13 +43,13 @@ describe('CatalogPage', () => {
 
   function create(answers: Observable<CatalogItem[]>[]): void {
     localStorage.clear();
-    findAll = vi.fn();
-    answers.forEach((answer) => findAll.mockReturnValueOnce(answer));
+    getItems = vi.fn();
+    answers.forEach((answer) => getItems.mockReturnValueOnce(answer));
     TestBed.configureTestingModule({
       providers: [
         provideTestTranslations(),
         provideRouter([]),
-        { provide: CatalogService, useValue: { findAll } },
+        { provide: CatalogService, useValue: { getItems } },
       ],
     });
     fixture = TestBed.createComponent(CatalogPage);

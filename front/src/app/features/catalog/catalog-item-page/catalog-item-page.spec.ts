@@ -10,16 +10,16 @@ import { CatalogItemPage } from './catalog-item-page';
 describe('CatalogItemPage', () => {
   let fixture: ComponentFixture<CatalogItemPage>;
   let page: HTMLElement;
-  let findOne: ReturnType<typeof vi.fn>;
+  let getItem: ReturnType<typeof vi.fn>;
 
   async function open(id: string, answer: Observable<CatalogItem>): Promise<void> {
     localStorage.clear();
-    findOne = vi.fn().mockReturnValue(answer);
+    getItem = vi.fn().mockReturnValue(answer);
     TestBed.configureTestingModule({
       providers: [
         provideTestTranslations(),
         provideRouter([]),
-        { provide: CatalogService, useValue: { findOne } },
+        { provide: CatalogService, useValue: { getItem } },
       ],
     });
     fixture = TestBed.createComponent(CatalogItemPage);
@@ -36,7 +36,7 @@ describe('CatalogItemPage', () => {
 
     const heading = page.querySelector('h1');
 
-    expect(findOne).toHaveBeenCalledWith('i1');
+    expect(getItem).toHaveBeenCalledWith('i1');
     expect(heading?.textContent?.trim()).toBe('Chair');
     expect(page.textContent).toContain('Wooden chair');
     expect(page.textContent).toContain('€49.99');

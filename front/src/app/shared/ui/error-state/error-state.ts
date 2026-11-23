@@ -4,8 +4,8 @@ import { MatIcon } from '@angular/material/icon';
 import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
-  selector: 'app-error-state',
   imports: [MatButton, MatIcon, TranslatePipe],
+  selector: 'app-error-state',
   template: `
     <div
       role="alert"

@@ -1,4 +1,3 @@
-import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -10,7 +9,7 @@ describe('CatalogService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClientTesting()],
     });
     catalog = TestBed.inject(CatalogService);
     backend = TestBed.inject(HttpTestingController);
@@ -19,7 +18,7 @@ describe('CatalogService', () => {
   afterEach(() => backend.verify());
 
   it('given the catalog of the API, when listing it, then the items come with their price in cents', async () => {
-    const items = firstValueFrom(catalog.findAll());
+    const items = firstValueFrom(catalog.getItems());
 
     backend
       .expectOne('/api/catalog')
@@ -31,7 +30,7 @@ describe('CatalogService', () => {
   });
 
   it('given an item id, when finding it, then it asks the API for that item', async () => {
-    const item = firstValueFrom(catalog.findOne('i1'));
+    const item = firstValueFrom(catalog.getItem('i1'));
 
     backend
       .expectOne('/api/catalog/i1')
