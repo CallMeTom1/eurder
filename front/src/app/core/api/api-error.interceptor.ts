@@ -20,7 +20,7 @@ export const apiErrorInterceptor: HttpInterceptorFn = (request, next) => {
         return throwError(() => error);
       }
       const problem = toApiProblem(error);
-      if (pageCannotHandle(problem)) {
+      if (isGlobalProblem(problem)) {
         snackBar.open(translate.instant(problem.code, problem.params), undefined, {
           duration: SNACK_BAR_DURATION,
         });
@@ -30,6 +30,6 @@ export const apiErrorInterceptor: HttpInterceptorFn = (request, next) => {
   );
 };
 
-function pageCannotHandle(problem: ApiProblem): boolean {
+export function isGlobalProblem(problem: ApiProblem): boolean {
   return problem.status === 0 || problem.status === 403 || problem.status >= 500;
 }

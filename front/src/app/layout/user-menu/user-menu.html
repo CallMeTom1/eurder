@@ -1,0 +1,28 @@
+@if (security.currentUser(); as user) {
+  <button matButton [matMenuTriggerFor]="menu">
+    <mat-icon>account_circle</mat-icon>
+    {{ user.displayName }}
+  </button>
+
+  <mat-menu #menu="matMenu" xPosition="before">
+    @if (security.isCustomer()) {
+      <a mat-menu-item routerLink="/my-orders">
+        <mat-icon aria-hidden="true">receipt_long</mat-icon>
+        <span>{{ 'nav.myOrders' | translate }}</span>
+      </a>
+    }
+    @if (security.isAdmin()) {
+      <a mat-menu-item routerLink="/admin">
+        <mat-icon aria-hidden="true">dashboard</mat-icon>
+        <span>{{ 'nav.backOffice' | translate }}</span>
+      </a>
+    }
+    <mat-divider />
+    <button mat-menu-item (click)="logout()">
+      <mat-icon aria-hidden="true">logout</mat-icon>
+      <span>{{ 'account.logout' | translate }}</span>
+    </button>
+  </mat-menu>
+} @else {
+  <a matButton="filled" routerLink="/login">{{ 'nav.login' | translate }}</a>
+}

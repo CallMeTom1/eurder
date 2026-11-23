@@ -91,5 +91,11 @@
   },
   "footer": {
     "copyright": "© {{year}} Eurder"
+  },
+  "account": {
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "noAccount": "Pas encore de compte ?",
+    "logout": "Se déconnecter"
   }
 }

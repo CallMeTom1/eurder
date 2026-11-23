@@ -29,6 +29,21 @@ export class SecurityService {
     );
   }
 
+  login(email: string, password: string): Observable<CurrentUser> {
+    return this.http.post<CurrentUserDto>(ApiRoutes.auth.login, { email, password }).pipe(
+      map(toCurrentUser),
+      tap((user) => this.user.set(user)),
+    );
+  }
+
+  logout(): Observable<void> {
+    return this.http.post<void>(ApiRoutes.auth.logout, null).pipe(
+      catchError(() => of(undefined)),
+      map(() => undefined),
+      finalize(() => this.user.set(null)),
+    );
+  }
+
   refreshSession(): Observable<CurrentUser> {
     this.refreshing ??= this.http.post<CurrentUserDto>(ApiRoutes.auth.refresh, null).pipe(
       map(toCurrentUser),

@@ -6,6 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LanguageSwitcher } from '@shared/ui/language-switcher/language-switcher';
 import { Logo } from '@shared/ui/logo/logo';
 import { ThemeToggle } from '@shared/ui/theme-toggle/theme-toggle';
+import { UserMenu } from '@layout/user-menu/user-menu';
 
 interface NavigationLink {
   path: string;
@@ -25,6 +26,7 @@ interface NavigationLink {
     RouterOutlet,
     ThemeToggle,
     TranslatePipe,
+    UserMenu,
   ],
   templateUrl: './back-office-layout.html',
   host: { class: 'flex min-h-full flex-col' },

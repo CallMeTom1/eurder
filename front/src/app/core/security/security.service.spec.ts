@@ -90,6 +90,60 @@ describe('SecurityService', () => {
     expect(security.currentUser()).toBeNull();
   });
 
+  it('given the right credentials, when logging in, then the API sets the cookies and the service knows the user', async () => {
+    const login = firstValueFrom(security.login('jane@doe.be', 'secret123'));
+    const request = backend.expectOne('/api/auth/login');
+
+    request.flush(jane);
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ email: 'jane@doe.be', password: 'secret123' });
+    expect((await login).displayName).toBe('Jane Doe');
+    expect(security.isCustomer()).toBe(true);
+  });
+
+  it('given wrong credentials, when logging in, then the caller gets the problem and nobody is logged in', async () => {
+    const login = firstValueFrom(security.login('jane@doe.be', 'wrong')).catch(
+      (error: unknown) => error,
+    );
+
+    backend
+      .expectOne('/api/auth/login')
+      .flush(
+        { status: 401, code: 'error.security.invalid-credentials', params: {} },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+
+    expect(await login).toMatchObject({ code: 'error.security.invalid-credentials' });
+    expect(security.isAuthenticated()).toBe(false);
+  });
+
+  it('given a logged-in user, when logging out, then the API revokes the session and nobody is logged in', async () => {
+    const loading = firstValueFrom(security.loadCurrentUser());
+    backend.expectOne('/api/auth/me').flush(jane);
+    await loading;
+
+    const logout = firstValueFrom(security.logout());
+    const request = backend.expectOne('/api/auth/logout');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await logout;
+
+    expect(request.request.method).toBe('POST');
+    expect(security.isAuthenticated()).toBe(false);
+  });
+
+  it('given the API is down, when logging out, then the user is logged out of the front anyway', async () => {
+    const loading = firstValueFrom(security.loadCurrentUser());
+    backend.expectOne('/api/auth/me').flush(jane);
+    await loading;
+
+    const logout = firstValueFrom(security.logout());
+    backend.expectOne('/api/auth/logout').error(new ProgressEvent('error'));
+
+    await expect(logout).resolves.toBeUndefined();
+    expect(security.isAuthenticated()).toBe(false);
+  });
+
   it('given the API never answers, when 5 seconds pass, then loading gives up with nobody logged in', async () => {
     vi.useFakeTimers();
     const loading = firstValueFrom(security.loadCurrentUser());

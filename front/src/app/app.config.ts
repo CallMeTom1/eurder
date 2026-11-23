@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { MatIconRegistry } from '@angular/material/icon';
-import { provideRouter, TitleStrategy } from '@angular/router';
+import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 import { apiErrorInterceptor } from '@core/api/api-error.interceptor';
 import { DEFAULT_LANGUAGE, LanguageService } from '@core/i18n/language.service';
 import { TranslatedTitleStrategy } from '@core/i18n/translated-title-strategy';
@@ -21,7 +21,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
     provideHttpClient(
       withInterceptors([apiErrorInterceptor, authInterceptor]),
