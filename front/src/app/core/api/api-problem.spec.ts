@@ -1,0 +1,67 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { isApiProblem, toApiProblem } from './api-problem';
+
+describe('toApiProblem', () => {
+  it('given a ProblemDetail of the API, when converting, then keeps its status, code and params', () => {
+    const response = new HttpErrorResponse({
+      status: 404,
+      error: {
+        status: 404,
+        title: 'Not Found',
+        detail: 'No item found for id 3f2a',
+        instance: '/api/catalog/3f2a',
+        code: 'error.item.not-found',
+        params: { id: '3f2a' },
+      },
+    });
+
+    const problem = toApiProblem(response);
+
+    expect(problem).toEqual({
+      status: 404,
+      code: 'error.item.not-found',
+      params: { id: '3f2a' },
+      errors: [],
+    });
+  });
+
+  it('given a validation error, when converting, then keeps the error of each field', () => {
+    const response = new HttpErrorResponse({
+      status: 400,
+      error: {
+        status: 400,
+        code: 'error.common.validation-failed',
+        params: {},
+        errors: [{ field: 'name', code: 'validation.required', params: {} }],
+      },
+    });
+
+    const problem = toApiProblem(response);
+
+    expect(problem.errors).toEqual([{ field: 'name', code: 'validation.required', params: {} }]);
+  });
+
+  it.each([
+    ['the network is down', 0, null],
+    ['a proxy answers with an HTML page', 502, '<html>Bad Gateway</html>'],
+  ])(
+    'given %s, when converting, then the problem is unexpected and keeps the status',
+    (_, status, body) => {
+      const response = new HttpErrorResponse({ status, error: body });
+
+      const problem = toApiProblem(response);
+
+      expect(problem).toEqual({ status, code: 'error.common.unexpected', params: {}, errors: [] });
+    },
+  );
+});
+
+describe('isApiProblem', () => {
+  it('given a converted problem or anything else, when checking, then only the problem is recognised', () => {
+    const problem = toApiProblem(new HttpErrorResponse({ status: 0 }));
+
+    const answers = [isApiProblem(problem), isApiProblem(new Error('boom')), isApiProblem(null)];
+
+    expect(answers).toEqual([true, false, false]);
+  });
+});

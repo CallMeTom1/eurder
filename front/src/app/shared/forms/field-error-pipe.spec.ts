@@ -29,6 +29,12 @@ describe('FieldErrorPipe', () => {
     expect(error).toEqual({ key, params });
   });
 
+  it('given an error of the API, when translating, then the key and the params are those of the API', () => {
+    const error = pipe.transform({ api: { code: 'validation.too-long', params: { max: 50 } } });
+
+    expect(error).toEqual({ key: 'validation.too-long', params: { max: 50 } });
+  });
+
   it('given several errors, when translating, then only the first one is shown', () => {
     const error = pipe.transform({ required: true, maxlength: { requiredLength: 5 } });
 

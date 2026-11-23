@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CharCounter } from '@shared/directives/char-counter';
+import { applyApiErrors } from '@shared/forms/api-errors';
 import { EurderValidators } from '@shared/forms/eurder-validators';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { PricePipe } from '@shared/pipes/price-pipe';
@@ -70,6 +71,18 @@ export class DesignSystem {
     { name: 'surface', colors: 'bg-surface text-on-surface border border-outline-variant' },
     { name: 'surface-container', colors: 'bg-surface-container text-on-surface' },
   ];
+
+  protected simulateApiErrors(): void {
+    applyApiErrors(new FormGroup({ name: this.name, price: this.price }), {
+      status: 400,
+      code: 'error.common.validation-failed',
+      params: {},
+      errors: [
+        { field: 'name', code: 'validation.too-long', params: { max: 100 } },
+        { field: 'price', code: 'validation.must-be-positive', params: {} },
+      ],
+    });
+  }
 
   protected askToDelete(): void {
     this.confirmation

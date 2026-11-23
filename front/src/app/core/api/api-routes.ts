@@ -1,4 +1,4 @@
-const API = '/api';
+export const API = '/api';
 
 export const ApiRoutes = {
   auth: {

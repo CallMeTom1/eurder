@@ -57,6 +57,9 @@
 
   <section class="flex flex-col gap-4" aria-labelledby="fields-title">
     <h2 id="fields-title" class="[font:var(--mat-sys-title-large)]">Fields</h2>
+    <div>
+      <button mat-stroked-button (click)="simulateApiErrors()">Simulate API errors</button>
+    </div>
     <div class="flex max-w-xl flex-wrap gap-4">
       <mat-form-field class="grow">
         <mat-label>Name</mat-label>

@@ -719,7 +719,9 @@ export interface components {
          *       "max": 255
          *     }
          */
-        params: Record<string, never>;
+        params: {
+          [key: string]: unknown;
+        };
       }[];
       /** @example /items */
       instance: string;
@@ -729,7 +731,9 @@ export interface components {
        *       "max": 255
        *     }
        */
-      params: Record<string, never>;
+      params: {
+        [key: string]: unknown;
+      };
       /**
        * Format: int32
        * @example 400

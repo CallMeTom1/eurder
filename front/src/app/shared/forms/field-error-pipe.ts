@@ -9,6 +9,10 @@ export interface FieldError {
 type ErrorTranslation = (error: Record<string, unknown>) => FieldError;
 
 const TRANSLATIONS: Record<string, ErrorTranslation> = {
+  api: (error) => ({
+    key: String(error['code']),
+    params: (error['params'] as Record<string, unknown>) ?? {},
+  }),
   required: () => ({ key: 'validation.required', params: {} }),
   email: () => ({ key: 'validation.invalid-format', params: {} }),
   pattern: () => ({ key: 'validation.invalid-format', params: {} }),
