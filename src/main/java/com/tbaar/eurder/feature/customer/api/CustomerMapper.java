@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.customer.api;
 
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.api.dto.UpdateCustomerDto;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,10 @@ public class CustomerMapper {
 
     public Customer toEntity(CreateCustomerDto dto, Credentials credentials) {
         return new Customer(credentials, dto.firstName(), dto.lastName(), addressMapper.toEntity(dto.address()), dto.phoneNumber());
+    }
+
+    public void update(Customer customer, UpdateCustomerDto dto) {
+        customer.update(dto.firstName(), dto.lastName(), addressMapper.toEntity(dto.address()), dto.phoneNumber());
     }
 
     public CustomerDto toDto(Customer customer) {

@@ -17,6 +17,8 @@ class RoleTest {
             "ADMIN,    VIEW_ITEM_OVERVIEW,  true",
             "ADMIN,    VIEW_SHIPPING_TODAY, true",
             "ADMIN,    REGISTER_ADMIN,      true",
+            "ADMIN,    MANAGE_CUSTOMERS,    true",
+            "ADMIN,    VIEW_CUSTOMER_EURDERS, true",
             "ADMIN,    ORDER_ITEMS,         false",
             "ADMIN,    VIEW_OWN_EURDERS,    false",
             "CUSTOMER, VIEW_CUSTOMERS,      false",
@@ -24,6 +26,8 @@ class RoleTest {
             "CUSTOMER, VIEW_ITEM_OVERVIEW,  false",
             "CUSTOMER, VIEW_SHIPPING_TODAY, false",
             "CUSTOMER, REGISTER_ADMIN,      false",
+            "CUSTOMER, MANAGE_CUSTOMERS,    false",
+            "CUSTOMER, VIEW_CUSTOMER_EURDERS, false",
             "CUSTOMER, ORDER_ITEMS,         true",
             "CUSTOMER, VIEW_OWN_EURDERS,    true"
     })

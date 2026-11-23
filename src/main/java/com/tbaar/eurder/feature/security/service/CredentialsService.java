@@ -40,6 +40,22 @@ public class CredentialsService {
         }
     }
 
+    public void changeEmail(Credentials credentials, String email) {
+        String normalizedEmail = Credentials.normalizeEmail(email);
+        if (normalizedEmail.equals(credentials.getEmail())) {
+            return;
+        }
+        if (credentialsRepository.existsByEmail(normalizedEmail)) {
+            throw new EmailAlreadyUsedException(normalizedEmail);
+        }
+        credentials.changeEmail(normalizedEmail);
+        try {
+            credentialsRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new EmailAlreadyUsedException(normalizedEmail, e);
+        }
+    }
+
     public AdminDto createAdmin(CreateAdminDto dto) {
         Credentials adminCred = create(dto.email(), dto.password(), Role.ADMIN);
         return adminMapper.toDto(adminCred);

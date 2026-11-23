@@ -20,7 +20,7 @@ class AuthenticatedUserTest {
         assertThat(user.getAuthorities())
                 .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("VIEW_CUSTOMERS", "MANAGE_ITEMS", "VIEW_ITEM_OVERVIEW",
-                        "VIEW_SHIPPING_TODAY", "REGISTER_ADMIN");
+                        "VIEW_SHIPPING_TODAY", "REGISTER_ADMIN", "MANAGE_CUSTOMERS", "VIEW_CUSTOMER_EURDERS");
     }
 
     @Test

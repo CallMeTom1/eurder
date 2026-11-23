@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.eurder.service;
 
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
+import com.tbaar.eurder.feature.customer.exception.CustomerNotFoundException;
 import com.tbaar.eurder.feature.eurder.api.EurderMapper;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
@@ -101,6 +102,14 @@ public class EurderService {
     @Transactional(readOnly = true)
     public ReportDto findReport(UUID credentialsId) {
         return eurderMapper.toReportDto(eurderRepository.findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(credentialsId));
+    }
+
+    @Transactional(readOnly = true)
+    public ReportDto findReportOfCustomer(UUID customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new CustomerNotFoundException(customerId);
+        }
+        return eurderMapper.toReportDto(eurderRepository.findAllByCustomerIdOrderByOrderedAtAscIdAsc(customerId));
     }
 
     @Transactional(readOnly = true)

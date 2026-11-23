@@ -16,6 +16,9 @@ public interface EurderRepository extends JpaRepository<Eurder, UUID> {
     List<Eurder> findAllByCustomerCredentialsIdOrderByOrderedAtAscIdAsc(UUID credentialsId);
 
     @EntityGraph(attributePaths = "itemGroups")
+    List<Eurder> findAllByCustomerIdOrderByOrderedAtAscIdAsc(UUID customerId);
+
+    @EntityGraph(attributePaths = "itemGroups")
     Optional<Eurder> findByIdAndCustomerCredentialsId(UUID id, UUID credentialsId);
 
     @Query("""

@@ -343,6 +343,99 @@ class CustomerEndToEndTest {
         response.then().statusCode(HttpStatus.UNAUTHORIZED.value());
     }
 
+    @Test
+    void givenARegisteredCustomer_whenTheAdminUpdatesIt_thenReturnsTheNewDetailsAndTheCustomerLogsInWithTheNewEmail() {
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+        String newEmail = UniqueEmail.of("janet");
+
+        Response response = authenticatedAs("admin@eurder.be", "admin")
+                .contentType(ContentType.JSON)
+                .body(update(newEmail.toUpperCase(Locale.ROOT), "Janet", "Liège", "FRANCE"))
+                .put("/customers/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("id", equalTo(id))
+                .body("firstName", equalTo("Janet"))
+                .body("email", equalTo(newEmail))
+                .body("address.city", equalTo("Liège"))
+                .body("address.country", equalTo("FRANCE"));
+        authenticatedAs("admin@eurder.be", "admin").get("/customers/" + id).then().body("firstName", equalTo("Janet"));
+        assertThat(AccessTokens.of(port, newEmail, "secret123")).isNotBlank();
+    }
+
+    @Test
+    void givenItsOwnEmail_whenTheAdminUpdatesACustomer_thenTheEmailIsKept() {
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+
+        Response response = authenticatedAs("admin@eurder.be", "admin")
+                .contentType(ContentType.JSON)
+                .body(update(janeEmail, "Jane", "Bruxelles", "BELGIUM"))
+                .put("/customers/" + id);
+
+        response.then().statusCode(HttpStatus.OK.value()).body("email", equalTo(janeEmail));
+    }
+
+    @Test
+    void givenTheEmailOfAnotherAccount_whenTheAdminUpdatesACustomer_thenReturns409() {
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+
+        Response response = authenticatedAs("admin@eurder.be", "admin")
+                .contentType(ContentType.JSON)
+                .body(update("admin@eurder.be", "Jane", "Bruxelles", "BELGIUM"))
+                .put("/customers/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.CONFLICT.value())
+                .body("code", equalTo("error.security.email-already-used"));
+    }
+
+    @Test
+    void givenUnknownId_whenTheAdminUpdatesACustomer_thenReturns404() {
+        Response response = authenticatedAs("admin@eurder.be", "admin")
+                .contentType(ContentType.JSON)
+                .body(update(janeEmail, "Jane", "Bruxelles", "BELGIUM"))
+                .put("/customers/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("code", equalTo("error.customer.not-found"));
+    }
+
+    @Test
+    void givenABlankFirstName_whenTheAdminUpdatesACustomer_thenReturns400NamingTheField() {
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+
+        Response response = authenticatedAs("admin@eurder.be", "admin")
+                .contentType(ContentType.JSON)
+                .body(update(janeEmail, " ", "Bruxelles", "BELGIUM"))
+                .put("/customers/" + id);
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.field", hasItem("firstName"));
+    }
+
+    @Test
+    void givenACustomer_whenUpdatingACustomer_thenReturns403() {
+        String id = jsonRequest(registrationOf(janeEmail, "Jane", "Doe")).post("/customers").path("id");
+
+        Response response = authenticatedAs(janeEmail, "secret123")
+                .contentType(ContentType.JSON)
+                .body(update(janeEmail, "Janet", "Bruxelles", "BELGIUM"))
+                .put("/customers/" + id);
+
+        response.then().statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    private static String update(String email, String firstName, String city, String country) {
+        return """
+                {"firstName": "%s", "lastName": "Doe", "email": "%s",
+                 "address": {"street": "Rue Haute", "houseNumber": "2", "postalCode": "4000", "city": "%s", "country": "%s"},
+                 "phoneNumber": "0470123456"}
+                """.formatted(firstName, email, city, country);
+    }
+
     private RequestSpecification authenticatedAs(String email, String password) {
         return EurderApi.given(port)
                 .auth().oauth2(AccessTokens.of(port, email, password));

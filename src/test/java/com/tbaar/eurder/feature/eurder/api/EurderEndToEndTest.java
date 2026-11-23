@@ -246,6 +246,43 @@ class EurderEndToEndTest {
     }
 
     @Test
+    void givenTheEurdersOfACustomer_whenTheAdminGetsTheReportOfThatCustomer_thenReturnsTheSameReportAsTheCustomerSees() {
+        String chairId = createItem("Chair", "49.99", 10);
+        order(janeEmail, chairId, 2);
+        registerCustomer(zoeEmail);
+        order(zoeEmail, chairId, 1);
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/eurders/reports/" + customerIdOf(janeEmail));
+
+        response.then()
+                .statusCode(HttpStatus.OK.value())
+                .body("eurders.size()", equalTo(1))
+                .body("eurders[0].itemGroups[0].amount", equalTo(2))
+                .body("totalPrice", equalTo(new BigDecimal("99.98")));
+    }
+
+    @Test
+    void givenAnUnknownCustomer_whenTheAdminGetsItsReport_thenReturns404() {
+        RequestSpecification request = authenticatedAs("admin@eurder.be", "admin");
+
+        Response response = request.get("/eurders/reports/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90");
+
+        response.then()
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .body("code", equalTo("error.customer.not-found"));
+    }
+
+    @Test
+    void givenACustomer_whenGettingTheReportOfACustomer_thenReturns403() {
+        RequestSpecification request = authenticatedAs(janeEmail, "secret123");
+
+        Response response = request.get("/eurders/reports/" + customerIdOf(janeEmail));
+
+        response.then().statusCode(HttpStatus.FORBIDDEN.value());
+    }
+
+    @Test
     void givenNoAuthorizationHeader_whenGettingTheReport_thenReturns401() {
         RequestSpecification request = EurderApi.given(port);
 
@@ -412,6 +449,11 @@ class EurderEndToEndTest {
 
     private long availableUnits(String itemId) {
         return itemUnitRepository.countAvailableUnits(List.of(UUID.fromString(itemId))).stream().mapToLong(AvailableUnits::count).sum();
+    }
+
+    private String customerIdOf(String email) {
+        return authenticatedAs("admin@eurder.be", "admin").get("/customers").jsonPath()
+                .getString("find { it.email == '%s' }.id".formatted(email));
     }
 
     private void registerCustomer(String email) {

@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.customer.service;
 import com.tbaar.eurder.feature.customer.api.CustomerMapper;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.api.dto.UpdateCustomerDto;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.customer.exception.CustomerNotFoundException;
@@ -32,6 +33,14 @@ public class CustomerService {
     public CustomerDto register(CreateCustomerDto request) {
         Credentials credentials = credentialsService.create(request.email(), request.password(), Role.CUSTOMER);
         Customer customer = customerRepository.save(customerMapper.toEntity(request, credentials));
+        return customerMapper.toDto(customer);
+    }
+
+    public CustomerDto update(UUID id, UpdateCustomerDto request) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException(id));
+        credentialsService.changeEmail(customer.getCredentials(), request.email());
+        customerMapper.update(customer, request);
         return customerMapper.toDto(customer);
     }
 

@@ -58,6 +58,16 @@ public class EurderController {
         return eurderService.findReport(customer.id());
     }
 
+    @GetMapping(path = "/reports/{customerId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Report of the eurders of one customer with their totals, oldest first, for the admin")
+    @ApiResponse(responseCode = "200", description = "The report of the customer", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", description = "No such customer")
+    @SecurityRequirement(name = "bearerAuth")
+    @Secured("VIEW_CUSTOMER_EURDERS")
+    public ReportDto findReportOfCustomer(@PathVariable UUID customerId) {
+        return eurderService.findReportOfCustomer(customerId);
+    }
+
     @GetMapping(path = "/shipping-today", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Eurders with item groups to ship today, with the customer's address")
     @SecurityRequirement(name = "bearerAuth")

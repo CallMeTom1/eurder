@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.customer.api;
 
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.api.dto.UpdateCustomerDto;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +15,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,5 +63,16 @@ public class CustomerController {
     @Secured("VIEW_CUSTOMERS")
     public CustomerDto findById(@PathVariable UUID id) {
         return customerService.findById(id);
+    }
+
+    @PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Change the details of one customer, its email included, not its password")
+    @ApiResponse(responseCode = "200", description = "Customer updated", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "404", description = "No such customer")
+    @ApiResponse(responseCode = "409", description = "Email already in use by another account")
+    @SecurityRequirement(name = "bearerAuth")
+    @Secured("MANAGE_CUSTOMERS")
+    public CustomerDto update(@PathVariable UUID id, @Valid @RequestBody UpdateCustomerDto request) {
+        return customerService.update(id, request);
     }
 }

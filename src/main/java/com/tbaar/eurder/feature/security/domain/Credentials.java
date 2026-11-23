@@ -51,6 +51,10 @@ public class Credentials {
         return role;
     }
 
+    public void changeEmail(String normalizedEmail) {
+        this.email = normalizedEmail;
+    }
+
     public static String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }

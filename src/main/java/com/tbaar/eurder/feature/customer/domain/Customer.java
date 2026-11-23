@@ -46,6 +46,13 @@ public class Customer {
         this.phoneNumber = phoneNumber;
     }
 
+    public void update(String firstName, String lastName, Address address, String phoneNumber) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+    }
+
     public UUID getId() {
         return id;
     }
