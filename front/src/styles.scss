@@ -14,3 +14,9 @@ body {
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 }
+
+main > :not(router-outlet) {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
