@@ -14,6 +14,11 @@ export const ApiRoutes = {
   customers: {
     all: `${API}/customers`,
   },
+  items: {
+    all: `${API}/items`,
+    one: (id: string) => `${API}/items/${id}`,
+    units: (id: string) => `${API}/items/${id}/units`,
+  },
   eurders: {
     all: `${API}/eurders`,
   },

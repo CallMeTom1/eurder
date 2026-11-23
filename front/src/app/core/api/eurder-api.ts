@@ -493,7 +493,7 @@ export interface components {
     };
     CreateItemDto: {
       /**
-       * @description Description of the item, up to 1000 characters
+       * @description Description of the item, up to 255 characters
        * @example Wooden chair
        */
       description: string;
@@ -781,7 +781,7 @@ export interface components {
     };
     UpdateItemDto: {
       /**
-       * @description Description of the item, up to 1000 characters
+       * @description Description of the item, up to 255 characters
        * @example Wooden chair
        */
       description: string;
