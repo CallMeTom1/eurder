@@ -11,4 +11,7 @@ export const ApiRoutes = {
     all: `${API}/catalog`,
     one: (id: string) => `${API}/catalog/${id}`,
   },
+  customers: {
+    all: `${API}/customers`,
+  },
 } as const;

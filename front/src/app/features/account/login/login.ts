@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { booleanAttribute, Component, inject, input, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
@@ -35,6 +35,7 @@ import { finalize } from 'rxjs';
 })
 export class Login {
   readonly returnUrl = input<string>();
+  readonly registered = input(false, { transform: booleanAttribute });
 
   private readonly security = inject(SecurityService);
   private readonly router = inject(Router);

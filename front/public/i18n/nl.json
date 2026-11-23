@@ -96,6 +96,24 @@
     "email": "E-mailadres",
     "password": "Wachtwoord",
     "noAccount": "Nog geen account?",
-    "logout": "Afmelden"
+    "logout": "Afmelden",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "phoneNumber": "Telefoonnummer",
+    "address": "Adres",
+    "street": "Straat",
+    "houseNumber": "Huisnummer",
+    "postalCode": "Postcode",
+    "city": "Gemeente",
+    "country": "Land",
+    "passwordHint": "8 tot 72 tekens",
+    "createAccount": "Mijn account aanmaken",
+    "alreadyCustomer": "Al klant?",
+    "created": "Je account is klaar. Je kunt je nu aanmelden."
+  },
+  "country": {
+    "BELGIUM": "België",
+    "FRANCE": "Frankrijk",
+    "GERMANY": "Duitsland"
   }
 }

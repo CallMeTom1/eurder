@@ -6,6 +6,14 @@
   class="flex w-full max-w-sm flex-col gap-2"
   novalidate
 >
+  @if (registered() && !problem()) {
+    <p
+      role="status"
+      class="flex items-center gap-2 rounded-md bg-success-container p-4 text-on-success-container"
+    >
+      {{ 'account.created' | translate }}
+    </p>
+  }
   @if (problem(); as problem) {
     <app-error-state [message]="problem.code | translate: problem.params" />
   }

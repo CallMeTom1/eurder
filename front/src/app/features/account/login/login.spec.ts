@@ -61,6 +61,25 @@ describe('Login', () => {
     await submit();
   }
 
+  it('given a customer who just registered, when the login opens, then it confirms that the account is ready', async () => {
+    await open(of(customer));
+
+    fixture.componentRef.setInput('registered', 'true');
+    await fixture.whenStable();
+
+    expect(page.querySelector('[role="status"]')?.textContent).toContain(
+      'Your account is ready. You can log in now.',
+    );
+  });
+
+  it('given a usual visit, when the login opens, then there is no confirmation', async () => {
+    await open(of(customer));
+
+    const status = page.querySelector('[role="status"]');
+
+    expect(status).toBeNull();
+  });
+
   it('given empty fields, when submitting, then both fields say they are required and nothing is sent', async () => {
     await open(of(customer));
 

@@ -96,6 +96,24 @@
     "email": "Email",
     "password": "Password",
     "noAccount": "No account yet?",
-    "logout": "Log out"
+    "logout": "Log out",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phoneNumber": "Phone number",
+    "address": "Address",
+    "street": "Street",
+    "houseNumber": "Number",
+    "postalCode": "Postal code",
+    "city": "City",
+    "country": "Country",
+    "passwordHint": "8 to 72 characters",
+    "createAccount": "Create my account",
+    "alreadyCustomer": "Already a customer?",
+    "created": "Your account is ready. You can log in now."
+  },
+  "country": {
+    "BELGIUM": "Belgium",
+    "FRANCE": "France",
+    "GERMANY": "Germany"
   }
 }

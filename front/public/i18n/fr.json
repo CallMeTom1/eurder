@@ -96,6 +96,24 @@
     "email": "E-mail",
     "password": "Mot de passe",
     "noAccount": "Pas encore de compte ?",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phoneNumber": "Téléphone",
+    "address": "Adresse",
+    "street": "Rue",
+    "houseNumber": "Numéro",
+    "postalCode": "Code postal",
+    "city": "Ville",
+    "country": "Pays",
+    "passwordHint": "De 8 à 72 caractères",
+    "createAccount": "Créer mon compte",
+    "alreadyCustomer": "Déjà client ?",
+    "created": "Votre compte est prêt. Vous pouvez vous connecter."
+  },
+  "country": {
+    "BELGIUM": "Belgique",
+    "FRANCE": "France",
+    "GERMANY": "Allemagne"
   }
 }

@@ -375,6 +375,12 @@ export interface components {
        */
       city: string;
       /**
+       * @description Country, among those Eurder ships to
+       * @example BELGIUM
+       * @enum {string}
+       */
+      country: 'BELGIUM' | 'FRANCE' | 'GERMANY';
+      /**
        * @description House number
        * @example 1
        */
@@ -1776,6 +1782,9 @@ type ReadonlyArray<T> = [Exclude<T, undefined>] extends [unknown[]]
 export const pathsItemsGetParametersQueryUrgencyValues: ReadonlyArray<
   FlattenedDeepRequired<paths>['/items']['get']['parameters']['query']['urgency']
 > = ['STOCK_LOW', 'STOCK_MEDIUM', 'STOCK_HIGH'];
+export const addressDtoCountryValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AddressDto']['country']
+> = ['BELGIUM', 'FRANCE', 'GERMANY'];
 export const addUnitsDtoStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AddUnitsDto']['state']
 > = ['PRISTINE', 'SLIGHTLY_DAMAGED', 'DAMAGED'];
