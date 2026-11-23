@@ -62,6 +62,8 @@ Change this password before any real deployment.
 
 An admin creates another admin with `POST /administrators` and the body `{"email": "...", "password": "..."}`. An admin only has credentials: no address, no phone number, and it does not appear among the customers.
 
+The address of a customer holds a country among those Eurder ships to: `BELGIUM`, `FRANCE` or `GERMANY`. Customers registered before the country existed live in Belgium (migration `V12`).
+
 Only the customer account creation (`POST /customers`), the catalog (`GET /catalog`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
 
 ## Authentication

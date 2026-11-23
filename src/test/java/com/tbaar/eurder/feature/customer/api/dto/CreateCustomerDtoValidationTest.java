@@ -1,5 +1,6 @@
 package com.tbaar.eurder.feature.customer.api.dto;
 
+import com.tbaar.eurder.feature.customer.domain.Country;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -89,11 +90,12 @@ class CreateCustomerDtoValidationTest {
                 Arguments.of("phoneNumber", withPhoneNumber(null), "Phone number is required"),
                 Arguments.of("phoneNumber", withPhoneNumber("abc"), "Phone number must be valid"),
                 Arguments.of("address", withAddress(null), "Address is required"),
-                Arguments.of("address.street", withAddress(new AddressDto(" ", "1", "1000", "Bruxelles")), "Street is required"),
-                Arguments.of("address.houseNumber", withAddress(new AddressDto("Rue Haute", "", "1000", "Bruxelles")), "House number is required"),
-                Arguments.of("address.houseNumber", withAddress(new AddressDto("Rue Haute", "1".repeat(21), "1000", "Bruxelles")), "House number must be at most 20 characters"),
-                Arguments.of("address.postalCode", withAddress(new AddressDto("Rue Haute", "1", null, "Bruxelles")), "Postal code is required"),
-                Arguments.of("address.city", withAddress(new AddressDto("Rue Haute", "1", "1000", "  ")), "City is required")
+                Arguments.of("address.street", withAddress(new AddressDto(" ", "1", "1000", "Bruxelles", Country.BELGIUM)), "Street is required"),
+                Arguments.of("address.houseNumber", withAddress(new AddressDto("Rue Haute", "", "1000", "Bruxelles", Country.BELGIUM)), "House number is required"),
+                Arguments.of("address.houseNumber", withAddress(new AddressDto("Rue Haute", "1".repeat(21), "1000", "Bruxelles", Country.BELGIUM)), "House number must be at most 20 characters"),
+                Arguments.of("address.postalCode", withAddress(new AddressDto("Rue Haute", "1", null, "Bruxelles", Country.BELGIUM)), "Postal code is required"),
+                Arguments.of("address.city", withAddress(new AddressDto("Rue Haute", "1", "1000", "  ", Country.BELGIUM)), "City is required"),
+                Arguments.of("address.country", withAddress(new AddressDto("Rue Haute", "1", "1000", "Bruxelles", null)), "Country is required")
         );
     }
 
@@ -108,7 +110,7 @@ class CreateCustomerDtoValidationTest {
     }
 
     private static AddressDto validAddress() {
-        return new AddressDto("Rue Haute", "1", "1000", "Bruxelles");
+        return new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM);
     }
 
     private static CreateCustomerDto withFirstName(String firstName) {

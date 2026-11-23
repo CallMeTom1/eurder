@@ -417,7 +417,7 @@ class EurderEndToEndTest {
     private void registerCustomer(String email) {
         EurderApi.given(port).contentType(ContentType.JSON).body("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """.formatted(email)).post("/customers").then().statusCode(HttpStatus.CREATED.value());
     }

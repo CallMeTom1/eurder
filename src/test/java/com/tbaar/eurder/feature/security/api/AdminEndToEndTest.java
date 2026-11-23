@@ -239,7 +239,7 @@ class AdminEndToEndTest {
                 .contentType(ContentType.JSON)
                 .body("""
                         {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "%s",
-                         "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                         "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                          "phoneNumber": "0470123456"}
                         """.formatted(email, PASSWORD))
                 .post("/customers")

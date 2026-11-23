@@ -4,6 +4,7 @@ import com.tbaar.eurder.common.MutableClock;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.service.CustomerService;
 import com.tbaar.eurder.feature.eurder.api.dto.CreateEurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
@@ -98,7 +99,7 @@ class EurderServiceIntegrationTest {
     void registerJane() {
         clock.setTo(NEW_YEARS_EVE);
         customerService.register(new CreateCustomerDto("Jane", "Doe", janeEmail, "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456"));
         janeCredentialsId = credentialsRepository.findByEmail(janeEmail).orElseThrow().getId();
     }
 
@@ -195,7 +196,7 @@ class EurderServiceIntegrationTest {
         assertThat(shipping).filteredOn(toShip -> toShip.eurderId().equals(eurder.id())).singleElement().satisfies(toShip -> {
             assertThat(toShip.eurderId()).isEqualTo(eurder.id());
             assertThat(toShip.customerName()).isEqualTo("Jane Doe");
-            assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles"));
+            assertThat(toShip.address()).isEqualTo(new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM));
             assertThat(toShip.itemGroups()).containsExactly(new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 3));
         });
     }
@@ -297,7 +298,7 @@ class EurderServiceIntegrationTest {
 
     private UUID registerCustomer(String email) {
         customerService.register(new CreateCustomerDto("Zoe", "Adams", email, "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456"));
         return credentialsRepository.findByEmail(email).orElseThrow().getId();
     }
 }

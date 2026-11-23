@@ -4,6 +4,7 @@ import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.security.domain.CredentialsRepository;
 import org.junit.jupiter.api.Test;
@@ -79,11 +80,11 @@ class CustomerServiceIntegrationTest {
 
     private CreateCustomerDto registration(String houseNumber) {
         return new CreateCustomerDto("Jane", "Doe", janeEmail, "secret123",
-                new AddressDto("Rue Haute", houseNumber, "1000", "Bruxelles"), "0470123456");
+                new AddressDto("Rue Haute", houseNumber, "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 
     private static CreateCustomerDto registration(String email, String firstName, String lastName) {
         return new CreateCustomerDto(firstName, lastName, email, "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

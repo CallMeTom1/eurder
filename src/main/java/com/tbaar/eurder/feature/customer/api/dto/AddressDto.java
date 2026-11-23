@@ -1,7 +1,9 @@
 package com.tbaar.eurder.feature.customer.api.dto;
 
+import com.tbaar.eurder.feature.customer.domain.Country;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record AddressDto(
@@ -23,5 +25,9 @@ public record AddressDto(
         @NotBlank(message = "City is required")
         @Size(max = 255, message = "City must be at most 255 characters")
         @Schema(description = "City", example = "Bruxelles")
-        String city) {
+        String city,
+
+        @NotNull(message = "Country is required")
+        @Schema(description = "Country, among those Eurder ships to", example = "BELGIUM")
+        Country country) {
 }

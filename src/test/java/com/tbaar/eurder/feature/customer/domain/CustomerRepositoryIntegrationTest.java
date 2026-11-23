@@ -66,11 +66,11 @@ class CustomerRepositoryIntegrationTest {
     }
 
     private static Customer aCustomer(Credentials credentials) {
-        return new Customer(credentials, "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+        return new Customer(credentials, "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 
     private static Customer aCustomer(String email, String firstName, String lastName) {
         return new Customer(new Credentials(email, "hash", Role.CUSTOMER), firstName, lastName,
-                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

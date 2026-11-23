@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.eurder.domain;
 
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.item.domain.Item;
@@ -124,7 +125,7 @@ class EurderRepositoryIntegrationTest {
     void givenItemGroupsShippingOnDifferentDays_whenFindingThoseShippingOnADate_thenReturnsOnlyThatDayInOneQuery() {
         Customer jane = customerRepository.save(aCustomer(UniqueEmail.of("jane")));
         Customer zoe = customerRepository.save(new Customer(new Credentials(UniqueEmail.of("zoe"), "hash", Role.CUSTOMER),
-                "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "0470654321"));
+                "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles", Country.BELGIUM), "0470654321"));
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
         Item table = itemRepository.save(new Item("Table", "Oak table", new BigDecimal("199.00")));
         LocalDate newYearsEve = LocalDate.of(2026, 12, 31);
@@ -175,6 +176,6 @@ class EurderRepositoryIntegrationTest {
 
     private static Customer aCustomer(String email) {
         return new Customer(new Credentials(email, "hash", Role.CUSTOMER),
-                "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

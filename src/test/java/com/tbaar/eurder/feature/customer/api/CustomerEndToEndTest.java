@@ -81,10 +81,45 @@ class CustomerEndToEndTest {
     }
 
     @Test
+    void givenAFrenchAddress_whenPostingCustomer_thenTheCustomerLivesInFrance() {
+        RequestSpecification request = jsonRequest(registration(janeEmail, "secret123", "Lille").replace("BELGIUM", "FRANCE"));
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.CREATED.value())
+                .body("address.city", equalTo("Lille"))
+                .body("address.country", equalTo("FRANCE"));
+    }
+
+    @Test
+    void givenNoCountry_whenPostingCustomer_thenReturns400NamingTheCountry() {
+        RequestSpecification request = jsonRequest(registration(janeEmail, "secret123", "Bruxelles").replace(", \"country\": \"BELGIUM\"", ""));
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body(codesOf("address.country"), contains("validation.required"));
+    }
+
+    @Test
+    void givenACountryWeDoNotShipTo_whenPostingCustomer_thenReturns400NamingTheCountry() {
+        RequestSpecification request = jsonRequest(registration(janeEmail, "secret123", "Madrid").replace("BELGIUM", "SPAIN"));
+
+        Response response = request.post("/customers");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("code", equalTo("error.common.invalid-value"))
+                .body("params.field", equalTo("address.country"));
+    }
+
+    @Test
     void givenSeveralInvalidFields_whenPostingCustomer_thenReturns400ListingEachFieldWithItsMessage() {
         RequestSpecification request = jsonRequest("""
                 {"firstName": " ", "lastName": "Doe", "email": "jane", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": ""},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """);
 
@@ -115,7 +150,7 @@ class CustomerEndToEndTest {
     void givenRoleAdminInTheRequest_whenPostingCustomer_thenTheAccountIsStillACustomer() {
         RequestSpecification request = jsonRequest("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                  "phoneNumber": "0470123456", "role": "ADMIN"}
                 """.formatted(janeEmail));
 
@@ -166,7 +201,7 @@ class CustomerEndToEndTest {
     void givenNestedFieldWithTheWrongType_whenPostingCustomer_thenReturns400NamingTheFullPath() {
         RequestSpecification request = jsonRequest("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "jane@doe.be", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": ["1", "2"], "postalCode": "1000", "city": "Bruxelles"},
+                 "address": {"street": "Rue Haute", "houseNumber": ["1", "2"], "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """);
 
@@ -316,7 +351,7 @@ class CustomerEndToEndTest {
     private static String registrationOf(String email, String firstName, String lastName) {
         return """
                 {"firstName": "%s", "lastName": "%s", "email": "%s", "password": "secret123",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """.formatted(firstName, lastName, email);
     }
@@ -330,7 +365,7 @@ class CustomerEndToEndTest {
     private static String registration(String email, String password, String city) {
         return """
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "%s",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "%s"},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "%s", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """.formatted(email, password, city);
     }

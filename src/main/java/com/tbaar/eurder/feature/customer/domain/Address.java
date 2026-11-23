@@ -1,6 +1,8 @@
 package com.tbaar.eurder.feature.customer.domain;
 
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Embeddable
 public class Address {
@@ -13,14 +15,18 @@ public class Address {
 
     private String city;
 
+    @Enumerated(EnumType.STRING)
+    private Country country;
+
     protected Address() {
     }
 
-    public Address(String street, String houseNumber, String postalCode, String city) {
+    public Address(String street, String houseNumber, String postalCode, String city, Country country) {
         this.street = street;
         this.houseNumber = houseNumber;
         this.postalCode = postalCode;
         this.city = city;
+        this.country = country;
     }
 
     public String getStreet() {
@@ -37,5 +43,9 @@ public class Address {
 
     public String getCity() {
         return city;
+    }
+
+    public Country getCountry() {
+        return country;
     }
 }

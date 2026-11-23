@@ -540,7 +540,7 @@ class AuthenticationEndToEndTest {
     private void registerCustomer(String customerEmail, String password) {
         jsonWithBody("""
                 {"firstName": "Jane", "lastName": "Doe", "email": "%s", "password": "%s",
-                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles"},
+                 "address": {"street": "Rue Haute", "houseNumber": "1", "postalCode": "1000", "city": "Bruxelles", "country": "BELGIUM"},
                  "phoneNumber": "0470123456"}
                 """.formatted(customerEmail, password)).post("/customers").then().statusCode(HttpStatus.CREATED.value());
     }

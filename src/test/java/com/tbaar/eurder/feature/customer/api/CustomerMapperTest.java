@@ -4,6 +4,7 @@ import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.security.domain.Credentials;
 import com.tbaar.eurder.feature.security.domain.Role;
@@ -18,7 +19,7 @@ class CustomerMapperTest {
     @Test
     void givenCreateCustomerDtoAndItsCredentials_whenMappingToEntity_thenCopiesEveryField() {
         CreateCustomerDto dto = new CreateCustomerDto("Jane", "Doe", "jane@doe.be", "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
         Credentials credentials = new Credentials("jane@doe.be", "hash", Role.CUSTOMER);
 
         Customer customer = customerMapper.toEntity(dto, credentials);
@@ -35,11 +36,11 @@ class CustomerMapperTest {
     @Test
     void givenCustomer_whenMappingToDto_thenExposesItsCredentialsEmailButNoPassword() {
         Customer customer = new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER),
-                "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                "Jane", "Doe", new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
 
         CustomerDto dto = customerMapper.toDto(customer);
 
         assertThat(dto).isEqualTo(new CustomerDto(customer.getId(), "Jane", "Doe", "jane@doe.be",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456"));
     }
 }

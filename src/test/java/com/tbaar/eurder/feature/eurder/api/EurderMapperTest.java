@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.eurder.api;
 import com.tbaar.eurder.feature.customer.api.AddressMapper;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderDto;
 import com.tbaar.eurder.feature.eurder.api.dto.EurderReportDto;
@@ -84,23 +85,23 @@ class EurderMapperTest {
     void givenItemGroupsToShipFromTwoEurders_whenMappingToShippingDtos_thenGroupsThemByEurderInTheGivenOrder() {
         UUID janesEurder = UUID.randomUUID();
         UUID zoesEurder = UUID.randomUUID();
-        Address janesAddress = new Address("Rue Haute", "1", "1000", "Bruxelles");
+        Address janesAddress = new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM);
         List<ItemGroupToShip> toShip = List.of(
                 new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Chair", ItemState.PRISTINE, 3),
                 new ItemGroupToShip(janesEurder, "Jane", "Doe", janesAddress, "Lamp", ItemState.DAMAGED, 1),
-                new ItemGroupToShip(zoesEurder, "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles"), "Chair", ItemState.PRISTINE, 2));
+                new ItemGroupToShip(zoesEurder, "Zoe", "Adams", new Address("Rue Neuve", "8", "1000", "Bruxelles", Country.BELGIUM), "Chair", ItemState.PRISTINE, 2));
 
         List<ShippingEurderDto> shipping = eurderMapper.toShippingDtos(toShip);
 
         assertThat(shipping).containsExactly(
-                new ShippingEurderDto(janesEurder, "Jane Doe", new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), List.of(
+                new ShippingEurderDto(janesEurder, "Jane Doe", new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), List.of(
                         new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 3), new ShippingItemGroupDto("Lamp", ItemState.DAMAGED, 1))),
-                new ShippingEurderDto(zoesEurder, "Zoe Adams", new AddressDto("Rue Neuve", "8", "1000", "Bruxelles"), List.of(
+                new ShippingEurderDto(zoesEurder, "Zoe Adams", new AddressDto("Rue Neuve", "8", "1000", "Bruxelles", Country.BELGIUM), List.of(
                         new ShippingItemGroupDto("Chair", ItemState.PRISTINE, 2))));
     }
 
     private static Customer aCustomer() {
         return new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER), "Jane", "Doe",
-                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

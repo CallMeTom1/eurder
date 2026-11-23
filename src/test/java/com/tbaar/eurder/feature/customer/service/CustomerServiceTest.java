@@ -6,6 +6,7 @@ import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
 import com.tbaar.eurder.feature.customer.api.dto.CustomerDto;
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.customer.exception.CustomerNotFoundException;
@@ -128,11 +129,11 @@ class CustomerServiceTest {
 
     private static Customer customer(String email, String firstName, String lastName) {
         return new Customer(new Credentials(email, "hash", Role.CUSTOMER), firstName, lastName,
-                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 
     private static CreateCustomerDto registration(String email) {
         return new CreateCustomerDto("Jane", "Doe", email, "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

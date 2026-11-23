@@ -1,6 +1,7 @@
 package com.tbaar.eurder.feature.eurder.domain;
 
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.item.domain.Item;
 import com.tbaar.eurder.feature.item.domain.ItemState;
@@ -58,6 +59,6 @@ class EurderTest {
 
     private static Customer aCustomer() {
         return new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER), "Jane", "Doe",
-                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 }

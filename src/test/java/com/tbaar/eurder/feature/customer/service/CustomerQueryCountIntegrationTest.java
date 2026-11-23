@@ -3,6 +3,7 @@ package com.tbaar.eurder.feature.customer.service;
 import com.tbaar.eurder.common.UniqueEmail;
 import com.tbaar.eurder.feature.customer.api.dto.AddressDto;
 import com.tbaar.eurder.feature.customer.api.dto.CreateCustomerDto;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -38,6 +39,6 @@ class CustomerQueryCountIntegrationTest {
 
     private void registerCustomer(String email, String lastName) {
         customerService.register(new CreateCustomerDto("Jane", lastName, email, "secret123",
-                new AddressDto("Rue Haute", "1", "1000", "Bruxelles"), "0470123456"));
+                new AddressDto("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456"));
     }
 }

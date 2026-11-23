@@ -2,6 +2,7 @@ package com.tbaar.eurder.feature.eurder.service;
 
 import com.tbaar.eurder.feature.customer.api.AddressMapper;
 import com.tbaar.eurder.feature.customer.domain.Address;
+import com.tbaar.eurder.feature.customer.domain.Country;
 import com.tbaar.eurder.feature.customer.domain.Customer;
 import com.tbaar.eurder.feature.customer.domain.CustomerRepository;
 import com.tbaar.eurder.feature.eurder.api.EurderMapper;
@@ -186,7 +187,7 @@ class EurderServiceTest {
     @Test
     void givenItemGroupsShippingOnTheDateOfTheClock_whenFindingWhatShipsToday_thenReturnsThemGroupedByEurder() {
         UUID eurderId = UUID.randomUUID();
-        Address address = new Address("Rue Haute", "1", "1000", "Bruxelles");
+        Address address = new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM);
         when(eurderRepository.findItemGroupsShippingOn(LocalDate.of(2026, 12, 31))).thenReturn(List.of(
                 new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Chair", ItemState.PRISTINE, 3),
                 new ItemGroupToShip(eurderId, "Jane", "Doe", address, "Lamp", ItemState.PRISTINE, 1)));
@@ -218,7 +219,7 @@ class EurderServiceTest {
 
     private static Customer aCustomer() {
         return new Customer(new Credentials("jane@doe.be", "hash", Role.CUSTOMER), "Jane", "Doe",
-                new Address("Rue Haute", "1", "1000", "Bruxelles"), "0470123456");
+                new Address("Rue Haute", "1", "1000", "Bruxelles", Country.BELGIUM), "0470123456");
     }
 
     private void givenItem(UUID id, String name, String price, int availablePristineUnits) {
