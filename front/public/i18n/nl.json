@@ -66,5 +66,30 @@
       "STOCK_MEDIUM": "Gemiddelde voorraad",
       "STOCK_HIGH": "Hoge voorraad"
     }
+  },
+  "nav": {
+    "main": "Hoofdmenu",
+    "catalog": "Catalogus",
+    "basket": "Winkelmandje",
+    "login": "Aanmelden",
+    "register": "Account aanmaken",
+    "myOrders": "Mijn bestellingen",
+    "backOffice": "Backoffice",
+    "shop": "Terug naar de winkel"
+  },
+  "admin": {
+    "nav": {
+      "label": "Backoffice",
+      "items": "Artikelen",
+      "customers": "Klanten",
+      "shipping": "Leveringen van vandaag"
+    }
+  },
+  "page": {
+    "comingSoon": "Deze pagina komt binnenkort.",
+    "notFound": "Pagina niet gevonden"
+  },
+  "footer": {
+    "copyright": "© {{year}} Eurder"
   }
 }

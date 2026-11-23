@@ -1,0 +1,38 @@
+<header class="border-b border-outline-variant bg-surface-container-low">
+  <div class="flex items-center gap-4 px-6 py-3">
+    <a routerLink="/admin" class="rounded-md"><app-logo /></a>
+    <span class="text-on-surface-variant">{{ 'admin.nav.label' | translate }}</span>
+    <div class="ml-auto flex items-center gap-1">
+      <app-language-switcher />
+      <app-theme-toggle />
+    </div>
+  </div>
+</header>
+
+<div class="grid flex-1 md:grid-cols-[15rem_1fr]">
+  <nav
+    [attr.aria-label]="'admin.nav.label' | translate"
+    class="border-b border-outline-variant p-2 md:border-r md:border-b-0"
+  >
+    <mat-nav-list>
+      @for (link of links; track link.path) {
+        <a
+          mat-list-item
+          [routerLink]="link.path"
+          routerLinkActive
+          #active="routerLinkActive"
+          [activated]="active.isActive"
+          ariaCurrentWhenActive="page"
+        >
+          {{ link.labelKey | translate }}
+        </a>
+      }
+      <mat-divider />
+      <a mat-list-item routerLink="/catalog">{{ 'nav.shop' | translate }}</a>
+    </mat-nav-list>
+  </nav>
+
+  <main class="flex flex-col gap-6 p-8">
+    <router-outlet />
+  </main>
+</div>

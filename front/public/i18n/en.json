@@ -66,5 +66,30 @@
       "STOCK_MEDIUM": "Medium stock",
       "STOCK_HIGH": "High stock"
     }
+  },
+  "nav": {
+    "main": "Main",
+    "catalog": "Catalog",
+    "basket": "Basket",
+    "login": "Log in",
+    "register": "Create an account",
+    "myOrders": "My orders",
+    "backOffice": "Back office",
+    "shop": "Back to the shop"
+  },
+  "admin": {
+    "nav": {
+      "label": "Back office",
+      "items": "Items",
+      "customers": "Customers",
+      "shipping": "Shipping today"
+    }
+  },
+  "page": {
+    "comingSoon": "This page is coming soon.",
+    "notFound": "Page not found"
+  },
+  "footer": {
+    "copyright": "© {{year}} Eurder"
   }
 }

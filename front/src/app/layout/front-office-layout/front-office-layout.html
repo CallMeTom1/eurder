@@ -1,0 +1,33 @@
+<header class="border-b border-outline-variant">
+  <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
+    <a routerLink="/" class="rounded-md"><app-logo /></a>
+
+    <nav [attr.aria-label]="'nav.main' | translate" class="flex gap-1">
+      @for (link of links; track link.path) {
+        <a
+          [matButton]="active.isActive ? 'tonal' : 'text'"
+          [routerLink]="link.path"
+          routerLinkActive
+          #active="routerLinkActive"
+          ariaCurrentWhenActive="page"
+        >
+          {{ link.labelKey | translate }}
+        </a>
+      }
+    </nav>
+
+    <div class="ml-auto flex items-center gap-1">
+      <app-language-switcher />
+      <app-theme-toggle />
+      <a matButton="filled" routerLink="/login">{{ 'nav.login' | translate }}</a>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
+  <router-outlet />
+</main>
+
+<footer class="border-t border-outline-variant py-4 text-center text-sm text-on-surface-variant">
+  {{ 'footer.copyright' | translate: { year } }}
+</footer>
