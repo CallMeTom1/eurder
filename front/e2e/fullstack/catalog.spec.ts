@@ -17,17 +17,16 @@ test('given an item added by the admin, when a visitor browses the shop, then th
   });
 
   await page.goto('/catalog');
-  await page.getByPlaceholder('Filter by name…').fill(name.toUpperCase());
+  await page.getByLabel('Search an item').fill(name.toUpperCase());
 
   const card = page.getByTestId('catalog-item');
   await expect(card.getByRole('heading')).toHaveText([name]);
-  await expect(card).toContainText('Price: €49.99');
-  await expect(card).toContainText('Low stock');
+  await expect(card).toContainText('€49.99');
   await card.getByRole('link').click();
   await expect(page).toHaveURL(`/catalog/${id}`);
-  await expect(page.getByLabel('Name')).toHaveValue(name);
-  await expect(page.getByLabel('Description')).toHaveValue('A chair with stripes');
-  await expect(page.getByLabel('Amount of stock')).toHaveValue('3');
+  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible();
+  await expect(page.getByText('A chair with stripes')).toBeVisible();
+  await expect(page.getByText('Low stock')).toBeVisible();
 });
 
 test('given an unknown item, when opening its address, then the page says it does not exist', async ({
@@ -58,7 +57,7 @@ test('given a customer with an item in the basket, when placing the order, then 
   await page.goto(`/catalog/${id}`);
   await page.getByRole('main').getByRole('button', { name: 'Add to basket' }).click();
   await page.getByRole('main').getByRole('button', { name: 'Add to basket' }).click();
-  await page.getByRole('link', { name: 'View basket' }).click();
+  await page.getByRole('link', { name: 'Basket, 2 items' }).click();
 
   await page.getByRole('button', { name: 'Place order' }).click();
   await expect(page.getByRole('dialog', { name: 'Order placed' })).toBeVisible();

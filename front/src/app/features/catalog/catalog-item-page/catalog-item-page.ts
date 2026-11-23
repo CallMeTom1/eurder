@@ -1,8 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatAnchor } from '@angular/material/button';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
+import { MatIcon } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { problemOf } from '@core/api/api-problem';
 import { SecurityService } from '@core/security/security.service';
@@ -12,6 +11,7 @@ import { PricePipe } from '@shared/pipes/price-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { LoadingState } from '@shared/ui/loading-state/loading-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
+import { StockUrgencyBadge } from '@shared/ui/stock-urgency-badge/stock-urgency-badge';
 import { CatalogService } from '../catalog.service';
 
 @Component({
@@ -20,12 +20,11 @@ import { CatalogService } from '../catalog.service';
     ErrorState,
     LoadingState,
     MatAnchor,
-    MatFormField,
-    MatInput,
-    MatLabel,
+    MatIcon,
     PageHeader,
     PricePipe,
     RouterLink,
+    StockUrgencyBadge,
     TranslatePipe,
   ],
   selector: 'app-catalog-item-page',
@@ -36,6 +35,7 @@ export class CatalogItemPage {
   readonly back = input<string>();
 
   protected readonly backLink = computed(() => this.back() ?? '/catalog');
+  protected readonly backLabel = computed(() => (this.back() ? 'common.back' : 'catalog.back'));
 
   private readonly catalog = inject(CatalogService);
   protected readonly security = inject(SecurityService);

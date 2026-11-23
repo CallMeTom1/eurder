@@ -93,7 +93,9 @@
       "empty": "No item yet.",
       "create": "Create item",
       "createButton": "Create",
-      "updateButton": "Update"
+      "updateButton": "Update",
+      "urgency": "Urgency",
+      "edit": "Edit {{name}}"
     }
   },
   "page": {
@@ -131,14 +133,14 @@
     "empty": "No item for sale yet.",
     "noMatch": "No item starts with “{{query}}”.",
     "item": "Item",
-    "price": "Price: {{price}}",
-    "filter": "Filter by name…",
     "field": {
       "name": "Name",
       "description": "Description",
       "price": "Price",
       "stock": "Amount of stock"
-    }
+    },
+    "search": "Search an item",
+    "back": "Back to the catalog"
   },
   "basket": {
     "add": "Add to basket",

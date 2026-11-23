@@ -93,7 +93,9 @@
       "empty": "Nog geen artikels.",
       "create": "Artikel aanmaken",
       "createButton": "Aanmaken",
-      "updateButton": "Bijwerken"
+      "updateButton": "Bijwerken",
+      "urgency": "Urgentie",
+      "edit": "{{name}} bewerken"
     }
   },
   "page": {
@@ -131,14 +133,14 @@
     "empty": "Nog geen artikels te koop.",
     "noMatch": "Geen artikel begint met “{{query}}”.",
     "item": "Artikel",
-    "price": "Prijs: {{price}}",
-    "filter": "Filteren op naam…",
     "field": {
       "name": "Naam",
       "description": "Beschrijving",
       "price": "Prijs",
       "stock": "Aantal in voorraad"
-    }
+    },
+    "search": "Een artikel zoeken",
+    "back": "Terug naar de catalogus"
   },
   "basket": {
     "add": "In winkelmandje",

@@ -6,17 +6,16 @@ import { ItemCard } from './item-card';
 
 @Component({
   imports: [ItemCard],
-  template: `<app-item-card
-    name="Chair"
-    [priceInCents]="4999"
-    urgency="STOCK_MEDIUM"
-    [link]="['/catalog', 'i1']"
-  />`,
+  template: `
+    <app-item-card name="Chair" [priceInCents]="4999" [link]="['/catalog', 'i1']">
+      <button type="button">Add</button>
+    </app-item-card>
+  `,
 })
 class HostPage {}
 
 describe('ItemCard', () => {
-  it('given an item, when rendered, then its name and image lead to it, with its price and its stock urgency', async () => {
+  it('given an item, when rendered, then its image, name and price lead to it, with the actions below', async () => {
     localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [HostPage],
@@ -29,9 +28,10 @@ describe('ItemCard', () => {
     const card = fixture.nativeElement as HTMLElement;
     const link = card.querySelector('a');
     expect(link?.getAttribute('href')).toBe('/catalog/i1');
+    expect(link?.querySelector('[data-testid="item-image"]')).not.toBeNull();
     expect(link?.querySelector('h2')?.textContent?.trim()).toBe('Chair');
-    expect(link?.querySelector('app-image-placeholder')).not.toBeNull();
-    expect(card.textContent).toContain('Price: €49.99');
-    expect(card.querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe('Medium stock');
+    expect(link?.textContent).toContain('€49.99');
+    expect(link?.querySelector('button')).toBeNull();
+    expect(card.querySelector('button')?.textContent).toBe('Add');
   });
 });

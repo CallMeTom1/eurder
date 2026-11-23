@@ -54,45 +54,30 @@ describe('CatalogItemPage', () => {
     await loaded;
   }
 
-  function field(label: string): string | undefined {
-    const formField = [...page().querySelectorAll('mat-form-field')].find(
-      (candidate) => candidate.querySelector('mat-label')?.textContent?.trim() === label,
-    );
-    const control = formField?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
-      'input, textarea',
-    );
-    return control?.readOnly ? control.value : undefined;
-  }
-
   function link(name: string): string | null | undefined {
     return [...page().querySelectorAll('a')]
       .find((candidate) => candidate.textContent?.trim() === name)
       ?.getAttribute('href');
   }
 
-  it('given an item, when opening its page, then its id heads the page and its details are read-only fields', async () => {
+  it('given an item, when opening its page, then it shows its name, price, stock and description and leads back to the catalog', async () => {
     await open(chair);
 
-    const heading = page().querySelector('app-page-header');
+    const text = page().textContent;
 
-    expect(heading?.querySelector('h1')?.textContent?.trim()).toBe('Item');
-    expect(heading?.textContent).toContain('i1');
-    expect(field('Name')).toBe('Chair');
-    expect(field('Description')).toBe('Wooden chair');
-    expect(field('Price')).toBe('€49.99');
-    expect(field('Amount of stock')).toBe('15');
+    expect(page().querySelector('h1')?.textContent?.trim()).toBe('Chair');
+    expect(text).toContain('€49.99');
+    expect(text).toContain('Wooden chair');
+    expect(page().querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe('High stock');
+    expect(link('Back to the catalog')).toBe('/catalog');
   });
 
-  it('given a visitor, when opening an item, then they can add it to the basket, view the basket or go back', async () => {
+  it('given a visitor, when opening an item, then they can add it to the basket but not edit it', async () => {
     await open(chair);
 
-    const buttons = [...page().querySelectorAll('button')].map((button) =>
-      button.textContent?.trim(),
-    );
+    const button = page().querySelector('app-add-to-basket-button button');
 
-    expect(buttons).toContainEqual(expect.stringContaining('Add to basket'));
-    expect(link('View basket')).toBe('/basket');
-    expect(link('Back')).toBe('/catalog');
+    expect(button?.textContent).toContain('Add to basket');
     expect(link('Edit')).toBeUndefined();
   });
 
@@ -108,7 +93,6 @@ describe('CatalogItemPage', () => {
     await open(chair);
 
     expect(link('Edit')).toBe('/admin/items/i1/edit');
-    expect(link('View basket')).toBeUndefined();
     expect(page().querySelector('app-add-to-basket-button button')).toBeNull();
   });
 
@@ -125,7 +109,7 @@ describe('CatalogItemPage', () => {
     backend.expectOne('/api/catalog/i1').flush(chair);
     await harness.fixture.whenStable();
 
-    expect(field('Name')).toBe('Chair');
+    expect(page().querySelector('h1')?.textContent?.trim()).toBe('Chair');
     expect(link('Back')).toBe('/admin/items');
     expect(link('Edit')).toBe('/admin/items/i1/edit');
   });
@@ -153,6 +137,6 @@ describe('CatalogItemPage', () => {
     expect(page().querySelector('[role="alert"]')?.textContent).toContain(
       'This item does not exist.',
     );
-    expect(link('Back')).toBe('/catalog');
+    expect(link('Back to the catalog')).toBe('/catalog');
   });
 });

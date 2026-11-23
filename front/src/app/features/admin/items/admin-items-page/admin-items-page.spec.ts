@@ -48,25 +48,42 @@ describe('AdminItemsPage', () => {
   }
 
   function names(): string[] {
-    return [...page.querySelectorAll('app-item-card h2')].map((name) => name.textContent!.trim());
+    return [...page.querySelectorAll('[data-testid="admin-item"] th')].map((name) =>
+      name.textContent!.trim(),
+    );
   }
 
-  it('given the items, when the page opens, then they come in the order of the API, the most urgent first, each leading to its admin detail', async () => {
+  it('given the items, when the page opens, then each row shows the name, price, whole stock and urgency, the most urgent first', async () => {
     await answer([lamp, chair]);
 
-    const firstLink = page.querySelector('app-item-card a');
+    const chairRow = page.querySelectorAll('[data-testid="admin-item"]')[1];
 
     expect(page.querySelector('h1')?.textContent?.trim()).toBe('Items');
     expect(names()).toEqual(['Lamp', 'Chair']);
-    expect(firstLink?.getAttribute('href')).toBe('/admin/items/i2');
-    expect(page.querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe('Low stock');
+    expect(
+      [...chairRow.querySelectorAll('td')].slice(0, 2).map((cell) => cell.textContent?.trim()),
+    ).toEqual(['€49.99', '12']);
+    expect(chairRow.querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe(
+      'High stock',
+    );
+  });
+
+  it('given an item row, when reading it, then its name leads to its detail and the pencil to its edit page', async () => {
+    await answer([chair]);
+
+    const row = page.querySelector('[data-testid="admin-item"]')!;
+
+    expect(row.querySelector('th a')?.getAttribute('href')).toBe('/admin/items/i1');
+    expect(row.querySelector('a[aria-label="Edit Chair"]')?.getAttribute('href')).toBe(
+      '/admin/items/i1/edit',
+    );
   });
 
   it('given the items, when the page opens, then it offers to create a new item', async () => {
     await answer([lamp]);
 
-    const link = [...page.querySelectorAll('a')].find(
-      (candidate) => candidate.textContent?.trim() === 'New item',
+    const link = [...page.querySelectorAll('a')].find((candidate) =>
+      candidate.textContent?.includes('New item'),
     );
 
     expect(link?.getAttribute('href')).toBe('/admin/items/new');

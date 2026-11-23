@@ -1,17 +1,14 @@
 <app-page-header [title]="'admin.nav.items' | translate">
   <div actions class="flex flex-wrap items-center gap-3">
     <mat-form-field subscriptSizing="dynamic" class="w-72">
-      <input
-        matInput
-        type="search"
-        name="query"
-        [placeholder]="'catalog.filter' | translate"
-        [attr.aria-label]="'catalog.filter' | translate"
-        [(ngModel)]="query"
-      />
+      <mat-label>{{ 'catalog.search' | translate }}</mat-label>
+      <input matInput type="search" name="query" [(ngModel)]="query" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
-    <a matButton="filled" routerLink="/admin/items/new">{{ 'admin.items.new' | translate }}</a>
+    <a matButton="filled" routerLink="/admin/items/new">
+      <mat-icon>add</mat-icon>
+      {{ 'admin.items.new' | translate }}
+    </a>
   </div>
 </app-page-header>
 
@@ -31,16 +28,42 @@
     [message]="'catalog.noMatch' | translate: { query: query().trim() }"
   />
 } @else {
-  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-8 gap-y-6">
-    @for (item of visibleItems(); track item.id) {
-      <li>
-        <app-item-card
-          [name]="item.name"
-          [priceInCents]="item.priceInCents"
-          [urgency]="item.urgency"
-          [link]="['/admin/items', item.id]"
-        />
-      </li>
-    }
-  </ul>
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse">
+      <thead class="text-left text-on-surface-variant">
+        <tr class="border-b border-outline-variant">
+          <th scope="col" class="py-2 pr-4 font-medium">{{ 'catalog.field.name' | translate }}</th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">
+            {{ 'catalog.field.price' | translate }}
+          </th>
+          <th scope="col" class="py-2 pr-4 text-right font-medium">
+            {{ 'catalog.field.stock' | translate }}
+          </th>
+          <th scope="col" class="py-2 pr-4 font-medium">{{ 'admin.items.urgency' | translate }}</th>
+          <td></td>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of visibleItems(); track item.id) {
+          <tr data-testid="admin-item" class="border-b border-outline-variant">
+            <th scope="row" class="py-2 pr-4 text-left font-normal">
+              <a [routerLink]="['/admin/items', item.id]" class="underline">{{ item.name }}</a>
+            </th>
+            <td class="py-2 pr-4 text-right">{{ item.priceInCents | price }}</td>
+            <td class="py-2 pr-4 text-right">{{ item.stock }}</td>
+            <td class="py-2 pr-4"><app-stock-urgency-badge [urgency]="item.urgency" /></td>
+            <td class="py-2 text-right">
+              <a
+                matIconButton
+                [routerLink]="['/admin/items', item.id, 'edit']"
+                [attr.aria-label]="'admin.items.edit' | translate: { name: item.name }"
+              >
+                <mat-icon>edit</mat-icon>
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 }

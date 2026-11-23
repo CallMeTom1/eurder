@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatFormField, MatSuffix } from '@angular/material/form-field';
+import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { problemOf } from '@core/api/api-problem';
+import { AddToBasketButton } from '@features/basket/add-to-basket-button/add-to-basket-button';
 import { TranslatePipe } from '@ngx-translate/core';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { ErrorState } from '@shared/ui/error-state/error-state';
@@ -16,6 +17,7 @@ import { CatalogService } from '../catalog.service';
 
 @Component({
   imports: [
+    AddToBasketButton,
     EmptyState,
     ErrorState,
     FormsModule,
@@ -24,6 +26,7 @@ import { CatalogService } from '../catalog.service';
     MatFormField,
     MatIcon,
     MatInput,
+    MatLabel,
     MatSuffix,
     PageHeader,
     TranslatePipe,

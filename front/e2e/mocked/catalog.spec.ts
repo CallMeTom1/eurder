@@ -20,7 +20,7 @@ async function addToBasket(page: Page, name: string): Promise<void> {
   await expect(page.getByText(`${name} added to the basket`)).toBeVisible();
 }
 
-test('given items for sale, when opening the shop, then each one shows its name, its price and its stock urgency', async ({
+test('given items for sale, when opening the shop, then each one shows its name and price', async ({
   page,
 }) => {
   await page.goto('/catalog');
@@ -28,9 +28,7 @@ test('given items for sale, when opening the shop, then each one shows its name,
   const cards = page.getByTestId('catalog-item');
 
   await expect(cards.getByRole('heading')).toHaveText(['Armchair', 'Chair', 'Lamp']);
-  await expect(cards.nth(1)).toContainText('Price: €49.99');
-  await expect(cards.nth(1)).toContainText('Medium stock');
-  await expect(cards.nth(2)).toContainText('Low stock');
+  await expect(cards.nth(1)).toContainText('€49.99');
 });
 
 test('given items for sale, when searching, then only the names starting with the search stay', async ({
@@ -38,7 +36,7 @@ test('given items for sale, when searching, then only the names starting with th
 }) => {
   await page.goto('/catalog');
 
-  await page.getByPlaceholder('Filter by name…').fill('ch');
+  await page.getByLabel('Search an item').fill('ch');
 
   await expect(page.getByTestId('catalog-item').getByRole('heading')).toHaveText(['Chair']);
 });
@@ -51,12 +49,11 @@ test('given an item, when clicking it, then its detail opens and leads back to t
   await page.getByRole('link', { name: /Chair/ }).first().click();
 
   await expect(page).toHaveURL('/catalog/i2');
-  await expect(page.getByRole('heading', { level: 1, name: 'Item' })).toBeVisible();
-  await expect(page.getByLabel('Name')).toHaveValue('Chair');
-  await expect(page.getByLabel('Description')).toHaveValue('Wooden chair');
-  await expect(page.getByLabel('Amount of stock')).toHaveValue('7');
+  await expect(page.getByRole('heading', { level: 1, name: 'Chair' })).toBeVisible();
+  await expect(page.getByText('Wooden chair')).toBeVisible();
+  await expect(page.getByText('Medium stock')).toBeVisible();
   await expect(page).toHaveTitle('Item · Örder');
-  await page.getByRole('link', { name: 'Back', exact: true }).click();
+  await page.getByRole('link', { name: 'Back to the catalog' }).click();
   await expect(page).toHaveURL('/catalog');
 });
 

@@ -93,7 +93,9 @@
       "empty": "Aucun article pour l’instant.",
       "create": "Créer un article",
       "createButton": "Créer",
-      "updateButton": "Mettre à jour"
+      "updateButton": "Mettre à jour",
+      "urgency": "Urgence",
+      "edit": "Modifier {{name}}"
     }
   },
   "page": {
@@ -131,14 +133,14 @@
     "empty": "Aucun article en vente pour l’instant.",
     "noMatch": "Aucun article ne commence par « {{query}} ».",
     "item": "Article",
-    "price": "Prix : {{price}}",
-    "filter": "Filtrer par nom…",
     "field": {
       "name": "Nom",
       "description": "Description",
       "price": "Prix",
       "stock": "Quantité en stock"
-    }
+    },
+    "search": "Rechercher un article",
+    "back": "Retour au catalogue"
   },
   "basket": {
     "add": "Ajouter au panier",

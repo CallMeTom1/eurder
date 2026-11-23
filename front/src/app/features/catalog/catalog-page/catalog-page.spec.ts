@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import type { CatalogItemDto } from '@core/api/eurder-api';
 import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
+import { BasketService } from '@features/basket/basket.service';
 import { CatalogPage } from './catalog-page';
 
 describe('CatalogPage', () => {
@@ -75,41 +76,28 @@ describe('CatalogPage', () => {
     backend.expectOne('/api/catalog');
   });
 
-  it('given items for sale, when the page opens, then each card shows the name, an image, the price and the stock urgency', async () => {
+  it('given items for sale, when the page opens, then each one shows its name, its price and a link to its detail', async () => {
     await answer([chair, lamp]);
 
-    const [chairCard, lampCard] = page.querySelectorAll('[data-testid="catalog-item"]');
+    const firstCard = page.querySelector('[data-testid="catalog-item"]');
 
     expect(names()).toEqual(['Chair', 'Lamp']);
-    expect(chairCard.querySelector('[data-testid="item-image"]')).not.toBeNull();
-    expect(chairCard.textContent).toContain('Price: €49.99');
-    expect(chairCard.querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe(
-      'High stock',
-    );
-    expect(lampCard.querySelector('app-stock-urgency-badge')?.textContent?.trim()).toBe(
-      'Low stock',
-    );
+    expect(firstCard?.textContent).toContain('€49.99');
+    expect(firstCard?.querySelector('a')?.getAttribute('href')).toBe('/catalog/i1');
   });
 
-  it('given an item for sale, when reading its card, then its name and its image lead to its detail and nothing else is a button', async () => {
-    await answer([chair]);
+  it('given items for sale, when adding one to the basket from its card, then the basket holds it', async () => {
+    await answer([chair, lamp]);
+    const lampCard = page.querySelectorAll('[data-testid="catalog-item"]')[1];
 
-    const card = page.querySelector('[data-testid="catalog-item"]')!;
+    lampCard.querySelector<HTMLButtonElement>('app-add-to-basket-button button')!.click();
+    await fixture.whenStable();
 
-    expect(card.querySelector('a h2')?.closest('a')?.getAttribute('href')).toBe('/catalog/i1');
     expect(
-      card.querySelector('a [data-testid="item-image"]')?.closest('a')?.getAttribute('href'),
-    ).toBe('/catalog/i1');
-    expect(card.querySelector('button')).toBeNull();
-  });
-
-  it('given the catalog, when the page opens, then the filter invites to filter by name', async () => {
-    await answer([chair]);
-
-    const filter = page.querySelector<HTMLInputElement>('input[type="search"]');
-
-    expect(filter?.getAttribute('placeholder')).toBe('Filter by name…');
-    expect(filter?.getAttribute('aria-label')).toBe('Filter by name…');
+      TestBed.inject(BasketService)
+        .lines()
+        .map((line) => line.name),
+    ).toEqual(['Lamp']);
   });
 
   it('given items for sale, when searching, then only the names starting with the search stay, whatever the case', async () => {

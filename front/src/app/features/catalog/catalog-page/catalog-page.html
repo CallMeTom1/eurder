@@ -1,13 +1,7 @@
 <app-page-header [title]="'nav.catalog' | translate">
   <mat-form-field actions subscriptSizing="dynamic" class="w-72">
-    <input
-      matInput
-      type="search"
-      name="query"
-      [placeholder]="'catalog.filter' | translate"
-      [attr.aria-label]="'catalog.filter' | translate"
-      [(ngModel)]="query"
-    />
+    <mat-label>{{ 'catalog.search' | translate }}</mat-label>
+    <input matInput type="search" name="query" [(ngModel)]="query" />
     <mat-icon matSuffix>search</mat-icon>
   </mat-form-field>
 </app-page-header>
@@ -28,15 +22,16 @@
     [message]="'catalog.noMatch' | translate: { query: query().trim() }"
   />
 } @else {
-  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-x-8 gap-y-6">
+  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4">
     @for (item of visibleItems(); track item.id) {
       <li data-testid="catalog-item">
         <app-item-card
           [name]="item.name"
           [priceInCents]="item.priceInCents"
-          [urgency]="item.urgency"
           [link]="['/catalog', item.id]"
-        />
+        >
+          <app-add-to-basket-button [item]="item" />
+        </app-item-card>
       </li>
     }
   </ul>
