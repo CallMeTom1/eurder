@@ -95,7 +95,8 @@
       "createButton": "Create",
       "updateButton": "Update",
       "urgency": "Urgency",
-      "edit": "Edit {{name}}"
+      "edit": "Edit {{name}}",
+      "editTitle": "Edit item"
     }
   },
   "page": {

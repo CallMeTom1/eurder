@@ -1,0 +1,24 @@
+<app-page-header [title]="'admin.items.editTitle' | translate" [subtitle]="id()" />
+
+@if (loaded.isLoading()) {
+  <app-loading-state />
+} @else if (loaded.error()) {
+  <app-error-state [message]="loadProblem().code | translate: loadProblem().params" />
+} @else {
+  <form [formRoot]="itemForm" class="flex w-full max-w-3xl flex-col gap-2">
+    @if (problem(); as problem) {
+      <app-error-state [message]="problem.code | translate: problem.params" />
+    }
+
+    <app-item-form-fields [form]="itemForm" />
+
+    <div class="mt-2 flex justify-end gap-3">
+      <a matButton="outlined" [routerLink]="['/admin/items', id()]">
+        {{ 'common.cancel' | translate }}
+      </a>
+      <button matButton="filled" type="submit" [disabled]="itemForm().submitting()">
+        {{ 'admin.items.updateButton' | translate }}
+      </button>
+    </div>
+  </form>
+}

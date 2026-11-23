@@ -95,7 +95,8 @@
       "createButton": "Aanmaken",
       "updateButton": "Bijwerken",
       "urgency": "Urgentie",
-      "edit": "{{name}} bewerken"
+      "edit": "{{name}} bewerken",
+      "editTitle": "Artikel bewerken"
     }
   },
   "page": {

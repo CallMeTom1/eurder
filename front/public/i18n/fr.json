@@ -95,7 +95,8 @@
       "createButton": "Créer",
       "updateButton": "Mettre à jour",
       "urgency": "Urgence",
-      "edit": "Modifier {{name}}"
+      "edit": "Modifier {{name}}",
+      "editTitle": "Modifier l’article"
     }
   },
   "page": {
