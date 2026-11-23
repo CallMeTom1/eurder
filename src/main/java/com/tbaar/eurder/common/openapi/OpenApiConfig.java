@@ -75,9 +75,10 @@ public class OpenApiConfig {
     }
 
     private static Schema<Object> paramsSchema() {
-        return new MapSchema()
+        Schema<Object> schema = new MapSchema()
                 .description("Values to insert in the translation, such as an id or a maximum length")
                 .example(Map.of("max", 255));
+        return schema.additionalProperties(true);
     }
 
     @Bean

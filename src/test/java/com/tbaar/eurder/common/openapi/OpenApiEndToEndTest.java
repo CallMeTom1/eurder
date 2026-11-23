@@ -51,6 +51,16 @@ class OpenApiEndToEndTest {
     }
 
     @Test
+    void givenTheProblemDetailSchema_whenReadingTheParams_thenTheyAcceptAnyValue() {
+        String properties = "components.schemas.ProblemDetail.properties";
+
+        Object params = apiDocs.get(properties + ".params.additionalProperties");
+
+        assertThat(params).isEqualTo(true);
+        assertThat(apiDocs.<Object>get(properties + ".errors.items.properties.params.additionalProperties")).isEqualTo(true);
+    }
+
+    @Test
     void givenTheCurrentUserSchema_whenReadingTheNames_thenTheyMayBeNullForAnAdmin() {
         String properties = "components.schemas.CurrentUserDto.properties";
 
