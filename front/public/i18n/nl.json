@@ -136,6 +136,7 @@
     "total": "Totaal",
     "remove": "{{name}} verwijderen",
     "placeOrder": "Bestelling plaatsen",
-    "withCount": "Winkelmandje, {{count}} artikels"
+    "withCount": "Winkelmandje, {{count}} artikels",
+    "amountOf": "Aantal {{name}}"
   }
 }

@@ -81,3 +81,27 @@ test('given an item just added, when following the message, then the basket open
 
   await expect(page).toHaveURL('/basket');
 });
+
+test('given items in the basket, when changing an amount and removing a line, then the prices and the total follow', async ({
+  page,
+}) => {
+  await page.goto('/catalog');
+  for (const name of ['Chair', 'Lamp']) {
+    await page
+      .getByTestId('catalog-item')
+      .filter({ has: page.getByRole('heading', { name, exact: true }) })
+      .getByRole('button', { name: 'Add to basket' })
+      .click();
+  }
+  await page.getByRole('link', { name: 'Basket, 2 items' }).click();
+
+  await page.getByLabel('Amount of Lamp').fill('3');
+  await page.getByLabel('Amount of Lamp').press('Tab');
+  await expect(page.getByRole('row', { name: /Lamp/ })).toContainText('€87.00');
+  await expect(page.getByRole('row', { name: /Total/ })).toContainText('€136.99');
+  await page.getByRole('button', { name: 'Remove Chair' }).click();
+
+  await expect(page.getByRole('row', { name: /Total/ })).toContainText('€87.00');
+  await expect(page.getByRole('link', { name: 'Basket, 3 items' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Place order' })).toBeVisible();
+});

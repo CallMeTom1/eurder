@@ -27,7 +27,12 @@ export const routes: Routes = [
           ),
         title: 'catalog.item',
       },
-      { path: 'basket', loadComponent: comingSoon, title: 'nav.basket' },
+      {
+        path: 'basket',
+        loadComponent: () =>
+          import('@features/basket/basket-page/basket-page').then((m) => m.BasketPage),
+        title: 'nav.basket',
+      },
       {
         path: 'login',
         canActivate: [guestGuard],

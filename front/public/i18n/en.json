@@ -136,6 +136,7 @@
     "total": "Total",
     "remove": "Remove {{name}}",
     "placeOrder": "Place order",
-    "withCount": "Basket, {{count}} items"
+    "withCount": "Basket, {{count}} items",
+    "amountOf": "Amount of {{name}}"
   }
 }
