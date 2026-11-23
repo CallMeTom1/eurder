@@ -100,3 +100,7 @@ Conventions:
 | DTO              | `import type { CatalogItemDto } from '@core/api/eurder-api'`               | Exactly what the API sends, used with `HttpClient`                                                                                             |
 | Model and mapper | Next to the feature (`current-user.ts`: `CurrentUser` and `toCurrentUser`) | Only when the mapping adds something: a computed field, cents instead of decimal prices, `Date` instead of ISO strings. Otherwise, use the DTO |
 | Errors           | An interceptor (next step)                                                 | They stay errors, typed as `ApiProblem`. No `{ result, data }` envelope                                                                        |
+
+## Bundle budget
+
+The initial bundle warns above 800 kB (the CLI default is 500 kB). Our own code is about 23 kB: the rest is Angular and Angular Material with the CDK (about 310 kB). Compressed, the browser downloads about 160 kB. Every page but the catalog is loaded on demand with `loadComponent`, so the budget only grows with what the home page needs.
