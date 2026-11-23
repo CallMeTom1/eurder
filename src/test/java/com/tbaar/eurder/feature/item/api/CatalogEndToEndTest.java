@@ -39,7 +39,7 @@ class CatalogEndToEndTest {
         Map<String, Object> chair = itemsOfThisTest(response).stream()
                 .filter(item -> item.get("id").equals(chairId))
                 .findFirst().orElseThrow();
-        assertThat(chair).containsOnlyKeys("id", "name", "description", "price", "stock", "urgency")
+        assertThat(chair).containsOnlyKeys("id", "name", "description", "price", "stock", "urgency", "image")
                 .containsEntry("name", "Chair " + suffix)
                 .containsEntry("description", "Wooden chair")
                 .containsEntry("price", new BigDecimal("49.99"))

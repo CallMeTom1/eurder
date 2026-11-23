@@ -56,6 +56,7 @@ public class ItemService {
     public ItemDto update(UUID id, UpdateItemDto request) {
         Item item = itemRepository.findById(id).orElseThrow(() -> new ItemNotFoundException(id));
         item.update(request.name(), request.description(), request.price());
+        item.changeImage(request.image());
         return itemMapper.toDto(item, itemUnitRepository.countAvailableUnits(List.of(id)));
     }
 

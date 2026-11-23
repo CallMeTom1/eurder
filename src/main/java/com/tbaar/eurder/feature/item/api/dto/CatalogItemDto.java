@@ -16,5 +16,7 @@ public record CatalogItemDto(UUID id,
                              @Schema(description = "Number of units available to order, in any state", example = "12")
                              long stock,
                              @Schema(description = "Stock urgency from the available units: STOCK_LOW below 5, STOCK_MEDIUM below 10, STOCK_HIGH from 10")
-                             StockUrgency urgency) {
+                             StockUrgency urgency,
+                             @Schema(types = {"string", "null"}, description = "Path of an uploaded image, or null for none", example = "images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png")
+                             String image) {
 }

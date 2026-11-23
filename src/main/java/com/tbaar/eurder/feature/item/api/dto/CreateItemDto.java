@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -36,5 +37,9 @@ public record CreateItemDto(
                 @NotNull(message = "Units per state are required")
                 @PositiveOrZero(message = "Units per state must be 0 or more")
                 @Max(value = 1000, message = "Units per state must be at most 1000")
-                Integer> units) {
+                Integer> units,
+
+        @Pattern(regexp = "images/[0-9a-f-]{36}\\.(png|jpg|webp)", message = "Image must be the path of an uploaded image")
+        @Schema(types = {"string", "null"}, description = "Path of an uploaded image, or null for none", example = "images/3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90.png")
+        String image) {
 }

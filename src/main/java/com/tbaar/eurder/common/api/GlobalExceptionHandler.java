@@ -1,5 +1,6 @@
 package com.tbaar.eurder.common.api;
 
+import com.tbaar.eurder.common.exception.BadRequestException;
 import com.tbaar.eurder.common.exception.ConflictException;
 import com.tbaar.eurder.common.exception.ErrorCode;
 import com.tbaar.eurder.common.exception.EurderException;
@@ -42,12 +43,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpStatus.NOT_FOUND.value(), ErrorCode.ROUTE_NOT_FOUND,
             HttpStatus.METHOD_NOT_ALLOWED.value(), ErrorCode.METHOD_NOT_ALLOWED,
             HttpStatus.NOT_ACCEPTABLE.value(), ErrorCode.NOT_ACCEPTABLE,
-            HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ErrorCode.UNSUPPORTED_MEDIA_TYPE);
+            HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(), ErrorCode.UNSUPPORTED_MEDIA_TYPE,
+            HttpStatus.PAYLOAD_TOO_LARGE.value(), ErrorCode.FILE_TOO_LARGE);
 
     @ExceptionHandler(NotFoundException.class)
     public ProblemDetail handleNotFound(NotFoundException e) {
         log.warn("Not found: {}", e.getMessage());
         return businessProblem(HttpStatus.NOT_FOUND, e);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ProblemDetail handleBadRequest(BadRequestException e) {
+        log.warn("Bad request: {}", e.getMessage());
+        return businessProblem(HttpStatus.BAD_REQUEST, e);
     }
 
     @ExceptionHandler(ConflictException.class)

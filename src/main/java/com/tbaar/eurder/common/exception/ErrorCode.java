@@ -12,6 +12,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED("error.common.method-not-allowed"),
     NOT_ACCEPTABLE("error.common.not-acceptable"),
     UNSUPPORTED_MEDIA_TYPE("error.common.unsupported-media-type"),
+    FILE_TOO_LARGE("error.common.file-too-large"),
     CONCURRENT_MODIFICATION("error.common.concurrent-modification"),
 
     AUTHENTICATION_REQUIRED("error.security.authentication-required"),
@@ -30,6 +31,8 @@ public enum ErrorCode {
     ITEM_NOT_FOUND("error.item.not-found"),
     ITEM_UNIT_NOT_FOUND("error.item.unit-not-found"),
     ITEM_UNIT_ALREADY_SOLD("error.item.unit-already-sold"),
+    IMAGE_INVALID_TYPE("error.image.invalid-type"),
+    IMAGE_NOT_FOUND("error.image.not-found"),
 
     VALIDATION_REQUIRED("validation.required"),
     VALIDATION_TOO_SHORT("validation.too-short"),

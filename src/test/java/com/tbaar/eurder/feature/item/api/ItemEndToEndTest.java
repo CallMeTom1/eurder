@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.startsWith;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -67,7 +68,7 @@ class ItemEndToEndTest {
                 .body("availableUnits.PRISTINE", equalTo(8))
                 .body("availableUnits.SLIGHTLY_DAMAGED", equalTo(0))
                 .body("availableUnits.DAMAGED", equalTo(2))
-                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits"));
+                .body("keySet()", containsInAnyOrder("id", "name", "description", "price", "availableUnits", "image"));
         assertThat(response.getHeader(HttpHeaders.LOCATION)).isNull();
     }
 
@@ -228,6 +229,43 @@ class ItemEndToEndTest {
     }
 
     @Test
+    void givenAnUploadedImage_whenTheAdminCreatesAnItemWithIt_thenTheItemAndTheCatalogShowIt() {
+        String image = uploadImage();
+
+        Response response = asAdmin("""
+                {"name": "%s", "description": "Wooden chair", "price": 49.99, "units": {"PRISTINE": 1}, "image": "%s"}
+                """.formatted(named("Pictured chair"), image)).post("/items");
+
+        response.then().statusCode(HttpStatus.CREATED.value()).body("image", equalTo(image));
+        EurderApi.given(port).get("/catalog/" + response.path("id")).then().body("image", equalTo(image));
+    }
+
+    @Test
+    void givenAnItemWithAnImage_whenTheAdminPutsItWithoutImage_thenTheImageIsRemoved() {
+        String image = uploadImage();
+        String id = asAdmin("""
+                {"name": "Chair", "description": "Wooden chair", "price": 49.99, "units": {}, "image": "%s"}
+                """.formatted(image)).post("/items").path("id");
+
+        Response response = asAdmin(updatedItem("Chair", "49.99")).put("/items/" + id);
+
+        response.then().statusCode(HttpStatus.OK.value()).body("image", equalTo(null));
+    }
+
+    @Test
+    void givenAPathThatIsNotAnUploadedImage_whenTheAdminPostsAnItem_thenReturns400NamingTheImage() {
+        RequestSpecification request = asAdmin("""
+                {"name": "Chair", "description": "Wooden chair", "price": 49.99, "units": {}, "image": "../secret.png"}
+                """);
+
+        Response response = request.post("/items");
+
+        response.then()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .body("errors.field", hasItem("image"));
+    }
+
+    @Test
     void givenUnknownId_whenTheAdminPutsAnItem_thenReturns404WithTheId() {
         String unknownId = "3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90";
         RequestSpecification request = asAdmin(updatedItem("Armchair", "150"));
@@ -303,7 +341,7 @@ class ItemEndToEndTest {
         List<Map<String, Object>> ownItems = ownItemsIn(response);
         assertThat(ownItems).extracting(item -> item.get("name")).containsExactly(named("Lamp"), named("Chair"), named("Table"));
         assertThat(ownItems).extracting(item -> item.get("urgency")).containsExactly("STOCK_LOW", "STOCK_MEDIUM", "STOCK_HIGH");
-        assertThat(ownItems.get(0)).containsOnlyKeys("id", "name", "description", "price", "availableUnits", "urgency");
+        assertThat(ownItems.get(0)).containsOnlyKeys("id", "name", "description", "price", "availableUnits", "urgency", "image");
     }
 
     @Test
@@ -487,6 +525,16 @@ class ItemEndToEndTest {
                 """.formatted(unitsJson.strip())).post("/items")
                 .then().statusCode(HttpStatus.CREATED.value())
                 .extract().path("id");
+    }
+
+    private String uploadImage() {
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
+        return EurderApi.given(port)
+                .auth().oauth2(AccessTokens.of(port, "admin@eurder.be", "admin"))
+                .multiPart("file", "chair.png", png, "image/png")
+                .post("/images")
+                .then().statusCode(HttpStatus.CREATED.value())
+                .extract().path("path");
     }
 
     private String createItem() {

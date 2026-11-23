@@ -21,23 +21,25 @@ import java.util.Map;
 public class ItemMapper {
 
     public Item toEntity(CreateItemDto dto) {
-        return new Item(dto.name(), dto.description(), dto.price());
+        Item item = new Item(dto.name(), dto.description(), dto.price());
+        item.changeImage(dto.image());
+        return item;
     }
 
     public ItemDto toDto(Item item, List<AvailableUnits> availableUnits) {
-        return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits));
+        return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits), item.getImage());
     }
 
     public ItemOverviewDto toOverviewDto(ItemStock stock, List<AvailableUnits> availableUnits) {
         Item item = stock.item();
         return new ItemOverviewDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(), byState(availableUnits),
-                StockUrgency.from(Math.toIntExact(stock.availableUnits())));
+                StockUrgency.from(Math.toIntExact(stock.availableUnits())), item.getImage());
     }
 
     public CatalogItemDto toCatalogDto(ItemStock stock) {
         Item item = stock.item();
         return new CatalogItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(),
-                stock.availableUnits(), StockUrgency.from(Math.toIntExact(stock.availableUnits())));
+                stock.availableUnits(), StockUrgency.from(Math.toIntExact(stock.availableUnits())), item.getImage());
     }
 
     public ItemUnitDto toUnitDto(ItemUnit unit) {

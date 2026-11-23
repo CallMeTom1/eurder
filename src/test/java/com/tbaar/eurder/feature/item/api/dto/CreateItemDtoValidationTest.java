@@ -68,9 +68,9 @@ class CreateItemDtoValidationTest {
         Map<ItemState, Integer> missingCount = new HashMap<>();
         missingCount.put(ItemState.PRISTINE, null);
         return Stream.of(
-                Arguments.of("name", new CreateItemDto(" ", "Wooden chair", new BigDecimal("49.99"), Map.of()), "Name is required"),
-                Arguments.of("description", new CreateItemDto("Chair", "a".repeat(256), new BigDecimal("49.99"), Map.of()), "Description must be at most 255 characters"),
-                Arguments.of("price", new CreateItemDto("Chair", "Wooden chair", new BigDecimal("9.999"), Map.of()), "Price must have at most 8 digits before and 2 after the decimal point"),
+                Arguments.of("name", new CreateItemDto(" ", "Wooden chair", new BigDecimal("49.99"), Map.of(), null), "Name is required"),
+                Arguments.of("description", new CreateItemDto("Chair", "a".repeat(256), new BigDecimal("49.99"), Map.of(), null), "Description must be at most 255 characters"),
+                Arguments.of("price", new CreateItemDto("Chair", "Wooden chair", new BigDecimal("9.999"), Map.of(), null), "Price must have at most 8 digits before and 2 after the decimal point"),
                 Arguments.of("units", withUnits(null), "Units are required"),
                 Arguments.of("units[PRISTINE].<map value>", withUnits(missingCount), "Units per state are required"),
                 Arguments.of("units[DAMAGED].<map value>", withUnits(Map.of(ItemState.DAMAGED, -1)), "Units per state must be 0 or more"),
@@ -85,6 +85,6 @@ class CreateItemDtoValidationTest {
     }
 
     private static CreateItemDto withUnits(Map<ItemState, Integer> units) {
-        return new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), units);
+        return new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), units, null);
     }
 }

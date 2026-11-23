@@ -62,7 +62,7 @@ class ItemServiceTest {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"),
-                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1)));
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1), null));
 
         ArgumentCaptor<Item> savedItem = ArgumentCaptor.forClass(Item.class);
         verify(itemRepository).save(savedItem.capture());
@@ -79,7 +79,7 @@ class ItemServiceTest {
         when(itemRepository.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ItemDto created = itemService.create(new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49"),
-                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1)));
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1), null));
 
         assertThat(created.name()).isEqualTo("Chair");
         assertThat(created.price()).isEqualTo(new BigDecimal("49.00"));
@@ -94,7 +94,7 @@ class ItemServiceTest {
         when(itemRepository.findById(id)).thenReturn(Optional.of(chair));
         when(itemUnitRepository.countAvailableUnits(List.of(id))).thenReturn(List.of(new AvailableUnits(id, ItemState.PRISTINE, 10)));
 
-        ItemDto updated = itemService.update(id, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
+        ItemDto updated = itemService.update(id, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"), null));
 
         assertThat(updated)
                 .extracting(ItemDto::name, ItemDto::description, ItemDto::price)
@@ -108,7 +108,7 @@ class ItemServiceTest {
         UUID unknownId = UUID.randomUUID();
         when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
 
-        Throwable thrown = catchThrowable(() -> itemService.update(unknownId, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"))));
+        Throwable thrown = catchThrowable(() -> itemService.update(unknownId, new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"), null)));
 
         assertThat(thrown)
                 .isInstanceOf(ItemNotFoundException.class)

@@ -86,18 +86,18 @@ class UpdateItemDtoValidationTest {
     }
 
     private static UpdateItemDto validItem() {
-        return new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"));
+        return new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), null);
     }
 
     private static UpdateItemDto withName(String name) {
-        return new UpdateItemDto(name, "Wooden chair", new BigDecimal("49.99"));
+        return new UpdateItemDto(name, "Wooden chair", new BigDecimal("49.99"), null);
     }
 
     private static UpdateItemDto withDescription(String description) {
-        return new UpdateItemDto("Chair", description, new BigDecimal("49.99"));
+        return new UpdateItemDto("Chair", description, new BigDecimal("49.99"), null);
     }
 
     private static UpdateItemDto withPrice(BigDecimal price) {
-        return new UpdateItemDto("Chair", "Wooden chair", price);
+        return new UpdateItemDto("Chair", "Wooden chair", price, null);
     }
 }

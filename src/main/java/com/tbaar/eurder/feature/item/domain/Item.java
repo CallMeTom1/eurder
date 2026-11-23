@@ -26,6 +26,8 @@ public class Item {
 
     private BigDecimal price;
 
+    private String image;
+
     @Version
     private long version;
 
@@ -48,6 +50,14 @@ public class Item {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void changeImage(String image) {
+        this.image = image;
     }
 
     public BigDecimal getPrice() {

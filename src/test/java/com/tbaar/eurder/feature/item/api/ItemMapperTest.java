@@ -24,7 +24,7 @@ class ItemMapperTest {
 
     @Test
     void givenCreateItemDto_whenMappingToEntity_thenCopiesTheProductFields() {
-        CreateItemDto dto = new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), Map.of(ItemState.PRISTINE, 10));
+        CreateItemDto dto = new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.99"), Map.of(ItemState.PRISTINE, 10), null);
 
         Item item = itemMapper.toEntity(dto);
 
@@ -69,6 +69,6 @@ class ItemMapperTest {
 
         CatalogItemDto dto = itemMapper.toCatalogDto(new ItemStock(item, 7));
 
-        assertThat(dto).isEqualTo(new CatalogItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 7, StockUrgency.STOCK_MEDIUM));
+        assertThat(dto).isEqualTo(new CatalogItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 7, StockUrgency.STOCK_MEDIUM, null));
     }
 }

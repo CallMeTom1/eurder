@@ -199,7 +199,7 @@ class OpenApiEndToEndTest {
 
         assertThat(tags)
                 .extracting(tag -> tag.get("name"))
-                .containsExactlyInAnyOrder("Catalog", "Customers", "Items", "Eurders", "Administrators", "Authentication");
+                .containsExactlyInAnyOrder("Catalog", "Customers", "Items", "Images", "Eurders", "Administrators", "Authentication");
         assertThat(tags).allSatisfy(tag -> assertThat(tag.get("description")).isNotBlank());
     }
 

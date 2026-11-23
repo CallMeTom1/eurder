@@ -48,7 +48,7 @@ class ItemServiceIntegrationTest {
     @Test
     void givenValidItemWithUnits_whenCreating_thenTheItemAndItsAvailableUnitsAreStored() {
         CreateItemDto request = new CreateItemDto("Chair", "Wooden chair", new BigDecimal("49.9"),
-                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1));
+                Map.of(ItemState.PRISTINE, 2, ItemState.DAMAGED, 1), null);
 
         ItemDto created = itemService.create(request);
 
@@ -66,7 +66,7 @@ class ItemServiceIntegrationTest {
     void givenExistingItem_whenUpdating_thenTheNewValuesAreStoredWithoutAnExplicitSave() {
         Item chair = itemRepository.save(new Item("Chair", "Wooden chair", new BigDecimal("49.99")));
 
-        itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150")));
+        itemService.update(chair.getId(), new UpdateItemDto("Armchair", "Leather armchair", new BigDecimal("150"), null));
 
         assertThat(itemRepository.findById(chair.getId())).hasValueSatisfying(item -> {
             assertThat(item.getName()).isEqualTo("Armchair");
@@ -83,9 +83,9 @@ class ItemServiceIntegrationTest {
         concurrentTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
         Throwable thrown = catchThrowable(() -> updateTransaction.executeWithoutResult(updateStatus -> {
-            itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("39.99")));
+            itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("39.99"), null));
             concurrentTransaction.executeWithoutResult(concurrentStatus ->
-                    itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("29.99"))));
+                    itemService.update(chair.getId(), new UpdateItemDto("Chair", "Wooden chair", new BigDecimal("29.99"), null)));
         }));
 
         assertThat(thrown).isInstanceOf(OptimisticLockingFailureException.class);
