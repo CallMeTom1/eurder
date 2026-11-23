@@ -33,6 +33,12 @@ Every endpoint lives under `/api` (`server.servlet.context-path`), so that a fro
 
 The Angular front end lives in [`front/`](front/README.md): with the API running, `npm start` there and open http://localhost:4200.
 
+### Demo data
+
+With the API running, `node demo/seed.mjs` fills it through its own endpoints: 19 items with a picture and various stocks (so every urgency shows), three customers in Belgium, France and Germany who log in with the password `demo1234`, and a few orders. Running it again skips what already exists. The pictures come from Wikimedia Commons, see [demo/CREDITS.md](demo/CREDITS.md) for their authors and licenses.
+
+Uploaded pictures are stored in `data/images` (`IMAGES_DIRECTORY` to change it), outside of git.
+
 ## Configuration
 
 The application reads four required keys, with no default value:
@@ -64,7 +70,7 @@ An admin creates another admin with `POST /administrators` and the body `{"email
 
 The address of a customer holds a country among those Eurder ships to: `BELGIUM`, `FRANCE` or `GERMANY`. Customers registered before the country existed live in Belgium (migration `V12`).
 
-Only the customer account creation (`POST /customers`), the catalog (`GET /catalog`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
+Only the customer account creation (`POST /customers`), the catalog (`GET /catalog`), the pictures (`GET /images/{name}`), the `/auth` endpoints and the documentation are public. Every other request is authenticated before it reaches the API: a missing, invalid or expired access token gets a `401`, a role without the required feature gets a `403`.
 
 ## Authentication
 
