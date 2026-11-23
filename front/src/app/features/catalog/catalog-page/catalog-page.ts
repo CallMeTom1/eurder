@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { MatCard } from '@angular/material/card';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
@@ -17,6 +18,7 @@ import { CatalogService } from '../catalog.service';
 @Component({
   imports: [
     EmptyState,
+    FormsModule,
     ErrorState,
     LoadingState,
     MatCard,
@@ -49,8 +51,4 @@ export class CatalogPage {
   });
 
   protected readonly problem = computed(() => problemOf(this.items.error()));
-
-  protected search(event: Event): void {
-    this.query.set((event.target as HTMLInputElement).value);
-  }
 }

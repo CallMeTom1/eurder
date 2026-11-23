@@ -1,7 +1,7 @@
 <app-page-header [title]="'nav.catalog' | translate">
   <mat-form-field actions subscriptSizing="dynamic" class="w-72">
     <mat-label>{{ 'catalog.search' | translate }}</mat-label>
-    <input matInput type="search" [value]="query()" (input)="search($event)" />
+    <input matInput type="search" name="query" [(ngModel)]="query" />
   </mat-form-field>
 </app-page-header>
 

@@ -2,8 +2,8 @@
   <app-loading-state />
 } @else if (item.error()) {
   <app-error-state [message]="problem().code | translate: problem().params" />
-} @else if (item.value(); as item) {
-  <app-page-header [title]="item.name" />
+} @else if (item.hasValue()) {
+  <app-page-header [title]="item.value().name" />
   <article class="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
     <span
       aria-hidden="true"
@@ -12,8 +12,8 @@
       <mat-icon>image</mat-icon>
     </span>
     <div class="flex flex-col gap-4">
-      <p class="[font:var(--mat-sys-headline-small)]">{{ item.priceInCents | price }}</p>
-      <p class="whitespace-pre-line text-on-surface-variant">{{ item.description }}</p>
+      <p class="[font:var(--mat-sys-headline-small)]">{{ item.value().priceInCents | price }}</p>
+      <p class="whitespace-pre-line text-on-surface-variant">{{ item.value().description }}</p>
     </div>
   </article>
 }
