@@ -43,7 +43,7 @@ test('given an item, when clicking it, then its detail opens and leads back to t
   await expect(page).toHaveURL('/catalog/i2');
   await expect(page.getByRole('heading', { level: 1, name: 'Chair' })).toBeVisible();
   await expect(page.getByText('Wooden chair')).toBeVisible();
-  await expect(page).toHaveTitle('Item · Eurder');
+  await expect(page).toHaveTitle('Item · Örder');
   await page.getByRole('link', { name: 'Back to the catalog' }).click();
   await expect(page).toHaveURL('/catalog');
 });

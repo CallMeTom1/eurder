@@ -2,14 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { Logo } from './logo';
 
 describe('Logo', () => {
-  it('given the logo, when rendered, then it shows the name and hides its drawing from screen readers', async () => {
+  it('given the logo, when rendered, then it shows the Örder logo of the README with its name for screen readers', async () => {
     await TestBed.configureTestingModule({ imports: [Logo] }).compileComponents();
     const fixture = TestBed.createComponent(Logo);
 
     await fixture.whenStable();
 
-    const logo = fixture.nativeElement as HTMLElement;
-    expect(logo.textContent?.trim()).toBe('Eurder');
-    expect(logo.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    const image = (fixture.nativeElement as HTMLElement).querySelector('img');
+    expect(image?.getAttribute('src')).toBe('/brand/order.png');
+    expect(image?.getAttribute('alt')).toBe('Örder');
   });
 });

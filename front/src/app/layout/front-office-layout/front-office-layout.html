@@ -37,6 +37,9 @@
   <router-outlet />
 </main>
 
-<footer class="border-t border-outline-variant py-4 text-center text-sm text-on-surface-variant">
+<footer
+  class="flex flex-col items-center gap-1 border-t border-outline-variant py-4 text-sm text-on-surface-variant"
+>
+  <app-logo />
   {{ 'footer.copyright' | translate: { year } }}
 </footer>

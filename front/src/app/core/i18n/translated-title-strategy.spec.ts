@@ -32,7 +32,7 @@ describe('TranslatedTitleStrategy', () => {
 
     const title = TestBed.inject(Title).getTitle();
 
-    expect(title).toBe('Catalogue · Eurder');
+    expect(title).toBe('Catalogue · Örder');
   });
 
   it('given a route without a title, when navigating to it, then the tab shows the name of the shop', async () => {
@@ -40,7 +40,7 @@ describe('TranslatedTitleStrategy', () => {
 
     const title = TestBed.inject(Title).getTitle();
 
-    expect(title).toBe('Eurder');
+    expect(title).toBe('Örder');
   });
 
   it('given the catalog, when the language changes, then the tab title follows without navigating', async () => {
@@ -48,6 +48,6 @@ describe('TranslatedTitleStrategy', () => {
 
     TestBed.inject(LanguageService).choose('nl');
 
-    await vi.waitFor(() => expect(TestBed.inject(Title).getTitle()).toBe('Catalogus · Eurder'));
+    await vi.waitFor(() => expect(TestBed.inject(Title).getTitle()).toBe('Catalogus · Örder'));
   });
 });

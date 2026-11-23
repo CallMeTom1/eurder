@@ -55,21 +55,22 @@ describe('FrontOfficeLayout', () => {
 
     const header = page.querySelector('header');
 
-    expect(header?.querySelector('a[href="/"]')?.textContent?.trim()).toBe('Eurder');
+    expect(header?.querySelector('a[href="/"] img')?.getAttribute('alt')).toBe('Örder');
     expect(linksOf(header)).toContainEqual(['Log in', '/login']);
     expect(header?.querySelector('app-language-switcher')).not.toBeNull();
     expect(header?.querySelector('app-theme-toggle')).not.toBeNull();
   });
 
-  it('given the shop, when rendered, then the pages go in its main area and the footer shows the year', async () => {
+  it('given the shop, when rendered, then the pages go in its main area and the footer shows the logo and the year', async () => {
     const page = await layout();
 
     const main = page.querySelector('main');
 
     expect(main?.querySelector('router-outlet')).not.toBeNull();
     expect(page.querySelector('footer')?.textContent).toContain(
-      `© ${new Date().getFullYear()} Eurder`,
+      `© ${new Date().getFullYear()} Örder`,
     );
+    expect(page.querySelector('footer img')?.getAttribute('alt')).toBe('Örder');
   });
 
   it('given items in the basket, when rendered, then the basket link shows how many', async () => {

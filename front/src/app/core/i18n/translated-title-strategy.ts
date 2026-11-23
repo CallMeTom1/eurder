@@ -4,7 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 
-const SHOP = 'Eurder';
+const SHOP = 'Örder';
 
 @Injectable()
 export class TranslatedTitleStrategy extends TitleStrategy {

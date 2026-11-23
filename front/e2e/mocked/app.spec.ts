@@ -8,7 +8,7 @@ test('given the shop, when opening the root, then it shows the catalog with a tr
   await page.goto('/');
 
   await expect(page).toHaveURL('/catalog');
-  await expect(page).toHaveTitle('Catalog · Eurder');
+  await expect(page).toHaveTitle('Catalog · Örder');
   await expect(page.getByRole('heading', { level: 1, name: 'Catalog' })).toBeVisible();
 });
 
@@ -36,7 +36,7 @@ test('given an admin, when opening the back office, then it shows the items in t
   await page.goto('/admin');
 
   await expect(page).toHaveURL('/admin/items');
-  await expect(page).toHaveTitle('Items · Eurder');
+  await expect(page).toHaveTitle('Items · Örder');
   const navigation = page.getByRole('navigation', { name: 'Back office' });
   await navigation.getByRole('link', { name: 'Customers' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Customers' })).toBeVisible();
@@ -61,6 +61,6 @@ test.describe('in Dutch', () => {
   }) => {
     await page.goto('/catalog');
 
-    await expect(page).toHaveTitle('Catalogus · Eurder');
+    await expect(page).toHaveTitle('Catalogus · Örder');
   });
 });
