@@ -1,0 +1,42 @@
+<app-page-header [title]="'nav.catalog' | translate">
+  <mat-form-field actions subscriptSizing="dynamic" class="w-72">
+    <mat-label>{{ 'catalog.search' | translate }}</mat-label>
+    <input matInput type="search" [value]="query()" (input)="search($event)" />
+  </mat-form-field>
+</app-page-header>
+
+@if (items.isLoading()) {
+  <app-loading-state />
+} @else if (items.error()) {
+  <app-error-state
+    [message]="problem().code | translate: problem().params"
+    [retryable]="true"
+    (retry)="items.reload()"
+  />
+} @else if (items.value().length === 0) {
+  <app-empty-state [message]="'catalog.empty' | translate" />
+} @else if (visibleItems().length === 0) {
+  <app-empty-state
+    icon="search_off"
+    [message]="'catalog.noMatch' | translate: { query: query().trim() }"
+  />
+} @else {
+  <ul class="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-4">
+    @for (item of visibleItems(); track item.id) {
+      <li data-testid="catalog-item">
+        <mat-card appearance="outlined" class="h-full">
+          <a [routerLink]="['/catalog', item.id]" class="flex flex-col gap-3 p-4">
+            <span
+              aria-hidden="true"
+              class="flex aspect-[4/3] items-center justify-center rounded-md bg-surface-container text-on-surface-variant"
+            >
+              <mat-icon>image</mat-icon>
+            </span>
+            <h2 class="[font:var(--mat-sys-title-medium)]">{{ item.name }}</h2>
+            <span class="text-on-surface-variant">{{ item.priceInCents | price }}</span>
+          </a>
+        </mat-card>
+      </li>
+    }
+  </ul>
+}

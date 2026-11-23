@@ -115,5 +115,12 @@
     "BELGIUM": "België",
     "FRANCE": "Frankrijk",
     "GERMANY": "Duitsland"
+  },
+  "catalog": {
+    "search": "Een artikel zoeken",
+    "empty": "Nog geen artikels te koop.",
+    "noMatch": "Geen artikel begint met “{{query}}”.",
+    "back": "Terug naar de catalogus",
+    "item": "Artikel"
   }
 }

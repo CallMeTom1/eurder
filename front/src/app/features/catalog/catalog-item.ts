@@ -1,0 +1,19 @@
+import type { CatalogItemDto } from '@core/api/eurder-api';
+
+export interface CatalogItem {
+  id: string;
+  name: string;
+  description: string;
+  priceInCents: number;
+}
+
+const CENTS_PER_EURO = 100;
+
+export function toCatalogItem(dto: CatalogItemDto): CatalogItem {
+  return {
+    id: dto.id,
+    name: dto.name,
+    description: dto.description,
+    priceInCents: Math.round(dto.price * CENTS_PER_EURO),
+  };
+}

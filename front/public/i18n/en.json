@@ -115,5 +115,12 @@
     "BELGIUM": "Belgium",
     "FRANCE": "France",
     "GERMANY": "Germany"
+  },
+  "catalog": {
+    "search": "Search an item",
+    "empty": "No item for sale yet.",
+    "noMatch": "No item starts with “{{query}}”.",
+    "back": "Back to the catalog",
+    "item": "Item"
   }
 }

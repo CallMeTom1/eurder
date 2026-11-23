@@ -9,6 +9,7 @@ export const test = base.extend<{ anonymousVisitor: void }>({
           json: { status: 401, code: 'error.security.authentication-required', params: {} },
         }),
       );
+      await page.route('**/api/catalog', (route) => route.fulfill({ json: [] }));
       await use();
     },
     { auto: true },

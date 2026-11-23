@@ -36,6 +36,14 @@ export function isApiProblem(value: unknown): value is ApiProblem {
   );
 }
 
+export function problemOf(error: unknown): ApiProblem {
+  if (isApiProblem(error)) {
+    return error;
+  }
+  const cause = error instanceof Error ? error.cause : undefined;
+  return isApiProblem(cause) ? cause : { status: 0, code: UNEXPECTED, params: {}, errors: [] };
+}
+
 function isProblemDetail(body: unknown): body is ProblemDetail {
   return (
     typeof body === 'object' && body !== null && typeof (body as ProblemDetail).code === 'string'

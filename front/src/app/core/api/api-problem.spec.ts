@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { isApiProblem, toApiProblem } from './api-problem';
+import { isApiProblem, problemOf, toApiProblem } from './api-problem';
 
 describe('toApiProblem', () => {
   it('given a ProblemDetail of the API, when converting, then keeps its status, code and params', () => {
@@ -63,5 +63,29 @@ describe('isApiProblem', () => {
     const answers = [isApiProblem(problem), isApiProblem(new Error('boom')), isApiProblem(null)];
 
     expect(answers).toEqual([true, false, false]);
+  });
+});
+
+describe('problemOf', () => {
+  const notFound = toApiProblem(
+    new HttpErrorResponse({
+      status: 404,
+      error: { status: 404, code: 'error.item.not-found', params: { id: 'i1' } },
+    }),
+  );
+
+  it.each([
+    ['the problem itself', notFound],
+    ['a problem wrapped by a resource', new Error('Resource failed', { cause: notFound })],
+  ])('given %s, when reading it, then it is the problem of the API', (_, error) => {
+    const problem = problemOf(error);
+
+    expect(problem).toBe(notFound);
+  });
+
+  it('given anything else, when reading it, then the problem is unexpected', () => {
+    const problem = problemOf(new TypeError('boom'));
+
+    expect(problem).toEqual({ status: 0, code: 'error.common.unexpected', params: {}, errors: [] });
   });
 });

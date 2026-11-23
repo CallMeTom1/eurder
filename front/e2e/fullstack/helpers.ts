@@ -38,3 +38,36 @@ export async function logIn(page: Page, email: string, password: string): Promis
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Log in' }).click();
 }
+
+export async function createItem(
+  playwright: {
+    request: { newContext: (options: { baseURL: string }) => Promise<APIRequestContext> };
+  },
+  baseURL: string,
+  item: { name: string; description: string; price: number; units: number },
+): Promise<string> {
+  const admin = await playwright.request.newContext({ baseURL });
+  const headers = { Cookie: `XSRF-TOKEN=${CSRF_TOKEN}`, 'X-XSRF-TOKEN': CSRF_TOKEN };
+  const login = await admin.post('/api/auth/login', { headers, data: ADMIN });
+  expect(login.status()).toBe(200);
+  const accessToken = (await admin.storageState()).cookies.find(
+    (cookie) => cookie.name === 'access_token',
+  );
+  const created = await admin.post('/api/items', {
+    headers: { ...headers, Cookie: `${headers.Cookie}; access_token=${accessToken?.value}` },
+    data: {
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      units: { PRISTINE: item.units },
+    },
+  });
+  expect(created.status()).toBe(201);
+  const id: string = (await created.json()).id;
+  await admin.dispose();
+  return id;
+}
+
+export function uniqueName(name: string): string {
+  return `${name} ${Date.now()}${Math.floor(Math.random() * 1000)}`;
+}
