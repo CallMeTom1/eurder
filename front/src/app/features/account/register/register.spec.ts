@@ -159,4 +159,12 @@ describe('Register', () => {
     expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
     backend.expectOne('/api/customers');
   });
+
+  it('given the form, when giving up, then Cancel leads back to the catalog', () => {
+    const cancel = [...page.querySelectorAll('a')].find(
+      (link) => link.textContent?.trim() === 'Cancel',
+    );
+
+    expect(cancel?.getAttribute('href')).toBe('/catalog');
+  });
 });
