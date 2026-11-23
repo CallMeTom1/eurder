@@ -35,6 +35,17 @@
     </p>
   </section>
 
+  <section class="flex flex-col gap-4" aria-labelledby="states-title">
+    <h2 id="states-title" class="[font:var(--mat-sys-title-large)]">Page states</h2>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <app-loading-state />
+      <app-empty-state message="No item yet">
+        <button mat-stroked-button actions>Add an item</button>
+      </app-empty-state>
+      <app-error-state message="This item does not exist." [retryable]="true" />
+    </div>
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="buttons-title">
     <h2 id="buttons-title" class="[font:var(--mat-sys-title-large)]">Buttons</h2>
     <div class="flex flex-wrap gap-4">

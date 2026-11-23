@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { PricePipe } from '@shared/pipes/price-pipe';
+import { EmptyState } from '@shared/ui/empty-state/empty-state';
+import { ErrorState } from '@shared/ui/error-state/error-state';
+import { LoadingState } from '@shared/ui/loading-state/loading-state';
 import { Logo } from '@shared/ui/logo/logo';
 import { PageHeader } from '@shared/ui/page-header/page-header';
 import { LanguageSwitcher } from '@shared/ui/language-switcher/language-switcher';
@@ -13,7 +16,17 @@ interface Swatch {
 
 @Component({
   selector: 'app-design-system',
-  imports: [MatButtonModule, LanguageSwitcher, Logo, PageHeader, PricePipe, ThemeToggle],
+  imports: [
+    MatButtonModule,
+    EmptyState,
+    ErrorState,
+    LanguageSwitcher,
+    LoadingState,
+    Logo,
+    PageHeader,
+    PricePipe,
+    ThemeToggle,
+  ],
   templateUrl: './design-system.html',
 })
 export class DesignSystem {

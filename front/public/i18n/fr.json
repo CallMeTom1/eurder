@@ -6,7 +6,9 @@
       "light": "Clair",
       "dark": "Sombre",
       "system": "Système"
-    }
+    },
+    "loading": "Chargement…",
+    "retry": "Réessayer"
   },
   "error": {
     "common": {

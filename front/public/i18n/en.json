@@ -6,7 +6,9 @@
       "light": "Light",
       "dark": "Dark",
       "system": "System"
-    }
+    },
+    "loading": "Loading…",
+    "retry": "Try again"
   },
   "error": {
     "common": {
