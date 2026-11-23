@@ -31,6 +31,7 @@
                 #amount
                 type="number"
                 min="1"
+                [max]="maxAmount"
                 step="1"
                 class="w-20 rounded-md border border-outline bg-surface px-2 py-1"
                 [attr.aria-label]="'basket.amountOf' | translate: { name: line.name }"

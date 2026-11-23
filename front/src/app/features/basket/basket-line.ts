@@ -18,6 +18,8 @@ export function isBasketLine(value: unknown): value is BasketLine {
   );
 }
 
+export const MAX_AMOUNT = 1000;
+
 export function isAmount(amount: unknown): amount is number {
-  return Number.isInteger(amount) && (amount as number) >= 1;
+  return Number.isInteger(amount) && (amount as number) >= 1 && (amount as number) <= MAX_AMOUNT;
 }

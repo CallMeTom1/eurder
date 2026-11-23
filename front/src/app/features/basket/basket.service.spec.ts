@@ -62,6 +62,7 @@ describe('BasketService', () => {
     { amount: 0, why: 'zero' },
     { amount: -2, why: 'negative' },
     { amount: 1.5, why: 'not whole' },
+    { amount: 1001, why: 'more than the API accepts' },
   ])(
     'given a line, when changing its amount to $amount ($why), then the amount is kept',
     ({ amount }) => {
@@ -72,6 +73,23 @@ describe('BasketService', () => {
       expect(basket().lines()[0].amount).toBe(1);
     },
   );
+
+  it('given a line, when changing its amount to 1000, then it is the most the API accepts', () => {
+    basket().add(lamp);
+
+    basket().changeAmount('i2', 1000);
+
+    expect(basket().lines()[0].amount).toBe(1000);
+  });
+
+  it('given 1000 of an item, when adding it again, then the amount stays at 1000', () => {
+    basket().add(lamp);
+    basket().changeAmount('i2', 1000);
+
+    basket().add(lamp);
+
+    expect(basket().lines()[0].amount).toBe(1000);
+  });
 
   it('given two lines, when removing one, then only the other stays', () => {
     basket().add(chair);

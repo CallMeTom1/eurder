@@ -6,7 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
-import { BasketLine } from '../basket-line';
+import { BasketLine, MAX_AMOUNT } from '../basket-line';
 import { BasketService } from '../basket.service';
 
 @Component({
@@ -25,6 +25,7 @@ import { BasketService } from '../basket.service';
 })
 export class BasketPage {
   protected readonly basket = inject(BasketService);
+  protected readonly maxAmount = MAX_AMOUNT;
 
   protected changeAmount(line: BasketLine, input: HTMLInputElement): void {
     this.basket.changeAmount(line.itemId, Number(input.value));
