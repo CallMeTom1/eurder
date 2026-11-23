@@ -1,11 +1,11 @@
 <app-page-header [title]="'nav.register' | translate" />
 
-<form [formRoot]="registerForm" class="grid w-full max-w-3xl gap-x-4 gap-y-1 sm:grid-cols-6">
+<form [formRoot]="registerForm" class="grid w-full max-w-2xl gap-x-4 gap-y-1 sm:grid-cols-2">
   @if (problem(); as problem) {
-    <app-error-state class="sm:col-span-6" [message]="problem.code | translate: problem.params" />
+    <app-error-state class="sm:col-span-2" [message]="problem.code | translate: problem.params" />
   }
 
-  <mat-form-field class="sm:col-span-3">
+  <mat-form-field>
     <mat-label>{{ 'account.firstName' | translate }}</mat-label>
     <input matInput autocomplete="given-name" [formField]="registerForm.firstName" />
     <mat-error>
@@ -15,7 +15,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="sm:col-span-3">
+  <mat-form-field>
     <mat-label>{{ 'account.lastName' | translate }}</mat-label>
     <input matInput autocomplete="family-name" [formField]="registerForm.lastName" />
     <mat-error>
@@ -25,7 +25,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="sm:col-span-6">
+  <mat-form-field>
     <mat-label>{{ 'account.email' | translate }}</mat-label>
     <input matInput type="email" autocomplete="email" [formField]="registerForm.email" />
     <mat-error>
@@ -35,7 +35,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="sm:col-span-6">
+  <mat-form-field>
     <mat-label>{{ 'account.password' | translate }}</mat-label>
     <input
       matInput
@@ -51,7 +51,7 @@
     </mat-error>
   </mat-form-field>
 
-  <mat-form-field class="sm:col-span-6">
+  <mat-form-field>
     <mat-label>{{ 'account.phoneNumber' | translate }}</mat-label>
     <input matInput type="tel" autocomplete="tel" [formField]="registerForm.phoneNumber" />
     <mat-error>
@@ -61,10 +61,12 @@
     </mat-error>
   </mat-form-field>
 
-  <fieldset class="contents">
-    <legend class="sr-only">{{ 'account.address' | translate }}</legend>
+  <fieldset class="mt-4 grid gap-x-4 gap-y-1 sm:col-span-2 sm:grid-cols-[1fr_8rem]">
+    <legend class="mb-2 [font:var(--mat-sys-title-medium)]">
+      {{ 'account.address' | translate }}
+    </legend>
 
-    <mat-form-field class="sm:col-span-5">
+    <mat-form-field>
       <mat-label>{{ 'account.street' | translate }}</mat-label>
       <input matInput autocomplete="address-line1" [formField]="registerForm.address.street" />
       <mat-error>
@@ -74,7 +76,7 @@
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field class="sm:col-span-1">
+    <mat-form-field>
       <mat-label>{{ 'account.houseNumber' | translate }}</mat-label>
       <input matInput [formField]="registerForm.address.houseNumber" />
       <mat-error>
@@ -84,21 +86,21 @@
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field class="sm:col-span-2">
-      <mat-label>{{ 'account.postalCode' | translate }}</mat-label>
-      <input matInput autocomplete="postal-code" [formField]="registerForm.address.postalCode" />
+    <mat-form-field>
+      <mat-label>{{ 'account.city' | translate }}</mat-label>
+      <input matInput autocomplete="address-level2" [formField]="registerForm.address.city" />
       <mat-error>
-        @if (registerForm.address.postalCode().errors() | fieldError; as error) {
+        @if (registerForm.address.city().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field class="sm:col-span-2">
-      <mat-label>{{ 'account.city' | translate }}</mat-label>
-      <input matInput autocomplete="address-level2" [formField]="registerForm.address.city" />
+    <mat-form-field>
+      <mat-label>{{ 'account.postalCode' | translate }}</mat-label>
+      <input matInput autocomplete="postal-code" [formField]="registerForm.address.postalCode" />
       <mat-error>
-        @if (registerForm.address.city().errors() | fieldError; as error) {
+        @if (registerForm.address.postalCode().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
@@ -114,19 +116,13 @@
     </mat-form-field>
   </fieldset>
 
-  <div class="mt-4 flex gap-3 sm:col-span-6">
-    <button
-      matButton="filled"
-      type="submit"
-      class="flex-1"
-      [disabled]="registerForm().submitting()"
-    >
+  <div class="mt-4 flex flex-col items-start gap-4 sm:col-span-2">
+    <button matButton="filled" type="submit" [disabled]="registerForm().submitting()">
       {{ 'account.createAccount' | translate }}
     </button>
-    <a matButton="outlined" routerLink="/catalog">{{ 'common.cancel' | translate }}</a>
+    <p class="text-on-surface-variant">
+      {{ 'account.alreadyCustomer' | translate }}
+      <a routerLink="/login" class="text-primary underline">{{ 'nav.login' | translate }}</a>
+    </p>
   </div>
-  <p class="mt-2 text-on-surface-variant sm:col-span-6">
-    {{ 'account.alreadyCustomer' | translate }}
-    <a routerLink="/login" class="text-primary underline">{{ 'nav.login' | translate }}</a>
-  </p>
 </form>
