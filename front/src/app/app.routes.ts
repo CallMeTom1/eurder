@@ -30,6 +30,7 @@ export const routes: Routes = [
       {
         path: 'my-orders',
         canActivate: [customerGuard],
+        runGuardsAndResolvers: 'always',
         component: ComingSoon,
         title: 'nav.myOrders',
       },

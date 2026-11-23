@@ -12,6 +12,7 @@ import { DEFAULT_LANGUAGE, LanguageService } from '@core/i18n/language.service';
 import { TranslatedTitleStrategy } from '@core/i18n/translated-title-strategy';
 import { authInterceptor } from '@core/security/auth.interceptor';
 import { SecurityService } from '@core/security/security.service';
+import { SessionWatcher } from '@core/security/session-watcher';
 import { ThemeService } from '@core/theme/theme.service';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -33,6 +34,7 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       inject(ThemeService);
+      inject(SessionWatcher);
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
       const language = inject(LanguageService);
       const security = inject(SecurityService);

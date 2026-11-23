@@ -132,6 +132,22 @@ describe('authInterceptor', () => {
     backend.expectNone('/api/auth/refresh');
   });
 
+  it('given a user the front believes logged in, when the API says nobody is logged in, then the session is over', async () => {
+    const me = firstValueFrom(security.loadCurrentUser());
+    backend.expectOne('/api/auth/me').flush(admin);
+    await me;
+    const expired = vi.fn();
+    security.sessionExpired.subscribe(expired);
+
+    const customers = call();
+    unauthorized(backend.expectOne('/api/customers'), 'error.security.authentication-required');
+    await customers;
+
+    expect(security.isAuthenticated()).toBe(false);
+    expect(expired).toHaveBeenCalledOnce();
+    backend.expectNone('/api/auth/refresh');
+  });
+
   it('given a failed login, when it answers 401, then no refresh is sent', async () => {
     const login = firstValueFrom(http.post('/api/auth/login', {})).catch((error: unknown) => error);
 

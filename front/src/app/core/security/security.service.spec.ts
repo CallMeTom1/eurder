@@ -144,6 +144,26 @@ describe('SecurityService', () => {
     expect(security.isAuthenticated()).toBe(false);
   });
 
+  it('given a refused refresh, when renewing the session, then the service announces that the session expired', async () => {
+    const loading = firstValueFrom(security.loadCurrentUser());
+    backend.expectOne('/api/auth/me').flush(jane);
+    await loading;
+    const expired = vi.fn();
+    security.sessionExpired.subscribe(expired);
+
+    const refresh = firstValueFrom(security.refreshSession()).catch(() => undefined);
+    backend
+      .expectOne('/api/auth/refresh')
+      .flush(
+        { status: 401, code: 'error.security.invalid-refresh-token', params: {} },
+        { status: 401, statusText: 'Unauthorized' },
+      );
+    await refresh;
+
+    expect(expired).toHaveBeenCalledOnce();
+    expect(security.isAuthenticated()).toBe(false);
+  });
+
   it('given the API never answers, when 5 seconds pass, then loading gives up with nobody logged in', async () => {
     vi.useFakeTimers();
     const loading = firstValueFrom(security.loadCurrentUser());

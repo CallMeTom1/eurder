@@ -2,7 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Service, signal } from '@angular/core';
 import type { CurrentUserDto } from '@core/api/eurder-api';
 import { ApiRoutes } from '@core/api/api-routes';
-import { catchError, finalize, map, Observable, of, shareReplay, tap, timeout } from 'rxjs';
+import {
+  catchError,
+  finalize,
+  map,
+  Observable,
+  of,
+  shareReplay,
+  Subject,
+  tap,
+  timeout,
+} from 'rxjs';
 import { CurrentUser, toCurrentUser } from './current-user';
 
 const STARTUP_TIMEOUT_MS = 5000;
@@ -12,11 +22,13 @@ export class SecurityService {
   private readonly http = inject(HttpClient);
   private readonly user = signal<CurrentUser | null>(null);
   private refreshing: Observable<CurrentUser> | null = null;
+  private readonly expired = new Subject<void>();
 
   readonly currentUser = this.user.asReadonly();
   readonly isAuthenticated = computed(() => this.user() !== null);
   readonly isAdmin = computed(() => this.user()?.role === 'ADMIN');
   readonly isCustomer = computed(() => this.user()?.role === 'CUSTOMER');
+  readonly sessionExpired = this.expired.asObservable();
 
   loadCurrentUser(): Observable<void> {
     return this.http.get<CurrentUserDto>(ApiRoutes.auth.me).pipe(
@@ -44,10 +56,21 @@ export class SecurityService {
     );
   }
 
+  sessionLost(): void {
+    if (this.user() === null) {
+      return;
+    }
+    this.user.set(null);
+    this.expired.next();
+  }
+
   refreshSession(): Observable<CurrentUser> {
     this.refreshing ??= this.http.post<CurrentUserDto>(ApiRoutes.auth.refresh, null).pipe(
       map(toCurrentUser),
-      tap({ next: (user) => this.user.set(user), error: () => this.user.set(null) }),
+      tap({
+        next: (user) => this.user.set(user),
+        error: () => this.sessionLost(),
+      }),
       finalize(() => (this.refreshing = null)),
       shareReplay({ bufferSize: 1, refCount: false }),
     );

@@ -17,6 +17,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const security = inject(SecurityService);
   return next(request).pipe(
     catchError((error: unknown) => {
+      if (isMissingSession(error)) {
+        security.sessionLost();
+      }
       if (!isExpiredAccessToken(error)) {
         return throwError(() => error);
       }
@@ -29,9 +32,17 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 function isExpiredAccessToken(error: unknown): boolean {
+  return isUnauthorizedWith(error, 'error.security.access-token-expired');
+}
+
+function isMissingSession(error: unknown): boolean {
+  return isUnauthorizedWith(error, 'error.security.authentication-required');
+}
+
+function isUnauthorizedWith(error: unknown, code: string): boolean {
   return (
     error instanceof HttpErrorResponse &&
     error.status === 401 &&
-    (error.error as { code?: unknown } | null)?.code === 'error.security.access-token-expired'
+    (error.error as { code?: unknown } | null)?.code === code
   );
 }
