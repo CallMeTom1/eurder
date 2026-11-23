@@ -1,65 +1,64 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { ApiProblem } from '@core/api/api-problem';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { Observable, of, throwError } from 'rxjs';
-import { CatalogItem } from '../catalog-item';
-import { CatalogService } from '../catalog.service';
-import { CatalogItemPage } from './catalog-item-page';
+import { routes } from '../../../app.routes';
 
 describe('CatalogItemPage', () => {
-  let fixture: ComponentFixture<CatalogItemPage>;
-  let page: HTMLElement;
-  let getItem: ReturnType<typeof vi.fn>;
+  let harness: RouterTestingHarness;
+  let backend: HttpTestingController;
 
-  async function open(id: string, answer: Observable<CatalogItem>): Promise<void> {
+  beforeEach(async () => {
     localStorage.clear();
-    getItem = vi.fn().mockReturnValue(answer);
     TestBed.configureTestingModule({
       providers: [
         provideTestTranslations(),
-        provideRouter([]),
-        { provide: CatalogService, useValue: { getItem } },
+        provideRouter(routes, withComponentInputBinding()),
+        provideApiTesting(),
       ],
     });
-    fixture = TestBed.createComponent(CatalogItemPage);
-    fixture.componentRef.setInput('id', id);
-    await fixture.whenStable();
-    page = fixture.nativeElement as HTMLElement;
+    backend = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  afterEach(() => backend.verify());
+
+  function page(): HTMLElement {
+    return harness.routeNativeElement as HTMLElement;
   }
 
   it('given an item, when opening its page, then it shows its name, description and price and leads back to the catalog', async () => {
-    await open(
-      'i1',
-      of({ id: 'i1', name: 'Chair', description: 'Wooden chair', priceInCents: 4999 }),
-    );
+    await harness.navigateByUrl('/catalog/i1');
 
-    const heading = page.querySelector('h1');
+    backend
+      .expectOne({ method: 'GET', url: '/api/catalog/i1' })
+      .flush({ id: 'i1', name: 'Chair', description: 'Wooden chair', price: 49.99 });
+    await harness.fixture.whenStable();
 
-    expect(getItem).toHaveBeenCalledWith('i1');
-    expect(heading?.textContent?.trim()).toBe('Chair');
-    expect(page.textContent).toContain('Wooden chair');
-    expect(page.textContent).toContain('€49.99');
-    expect(page.querySelector('a[href="/catalog"]')?.textContent?.trim()).toBe(
+    expect(page().querySelector('h1')?.textContent?.trim()).toBe('Chair');
+    expect(page().textContent).toContain('Wooden chair');
+    expect(page().textContent).toContain('€49.99');
+    expect(page().querySelector('main a[href="/catalog"]')?.textContent?.trim()).toBe(
       'Back to the catalog',
     );
   });
 
   it('given an unknown item, when opening its page, then it says the item does not exist and leads back', async () => {
-    const missing: ApiProblem = {
-      status: 404,
-      code: 'error.item.not-found',
-      params: { id: 'nope' },
-      errors: [],
-    };
-    await open(
-      'nope',
-      throwError(() => missing),
+    await harness.navigateByUrl('/catalog/nope');
+
+    backend
+      .expectOne('/api/catalog/nope')
+      .flush(
+        { status: 404, code: 'error.item.not-found', params: { id: 'nope' } },
+        { status: 404, statusText: 'Not Found' },
+      );
+    await harness.fixture.whenStable();
+
+    expect(page().querySelector('[role="alert"]')?.textContent).toContain(
+      'This item does not exist.',
     );
-
-    const alert = page.querySelector('[role="alert"]');
-
-    expect(alert?.textContent).toContain('This item does not exist.');
-    expect(page.querySelector('a[href="/catalog"]')).not.toBeNull();
+    expect(page().querySelector('main a[href="/catalog"]')).not.toBeNull();
   });
 });

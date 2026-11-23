@@ -1,35 +1,42 @@
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatSelectHarness } from '@angular/material/select/testing';
 import { provideRouter, Router } from '@angular/router';
-import { ApiProblem } from '@core/api/api-problem';
-import type { CustomerDto } from '@core/api/eurder-api';
+import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { Observable, of, Subject, throwError } from 'rxjs';
-import { AccountService } from '../account.service';
 import { Register } from './register';
 
 describe('Register', () => {
   let fixture: ComponentFixture<Register>;
   let page: HTMLElement;
-  let addCustomer: ReturnType<typeof vi.fn>;
+  let backend: HttpTestingController;
   let navigate: ReturnType<typeof vi.spyOn>;
 
-  async function open(answer: Observable<CustomerDto>): Promise<void> {
-    addCustomer = vi.fn().mockReturnValue(answer);
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [Register],
       providers: [
         provideTestTranslations(),
         provideRouter([]),
-        { provide: AccountService, useValue: { addCustomer } },
+        provideApiTesting(),
         { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
       ],
-    });
+    }).compileComponents();
     navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    backend = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(Register);
     await fixture.whenStable();
     page = fixture.nativeElement as HTMLElement;
+  });
+
+  afterEach(() => backend.verify());
+
+  async function refuse(status: number, body: object): Promise<void> {
+    backend.expectOne('/api/customers').flush(body, { status, statusText: 'Refused' });
+    await new Promise((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
   }
 
   function type(control: string, value: string): void {
@@ -64,17 +71,14 @@ describe('Register', () => {
   }
 
   it('given an empty form, when submitting, then every required field says so and nothing is sent', async () => {
-    await open(of({} as CustomerDto));
-
     await submit();
 
     expect(errorOf('firstName')).toBe('This field is required.');
     expect(errorOf('city')).toBe('This field is required.');
-    expect(addCustomer).not.toHaveBeenCalled();
+    backend.expectNone('/api/customers');
   });
 
   it('given a short password and a wrong phone number, when submitting, then the same rules as the API apply', async () => {
-    await open(of({} as CustomerDto));
     fillIn();
     type('password', 'short');
     type('phoneNumber', 'call me');
@@ -83,18 +87,20 @@ describe('Register', () => {
 
     expect(errorOf('password')).toBe('At least 8 characters.');
     expect(errorOf('phoneNumber')).toBe('The format is not valid.');
-    expect(addCustomer).not.toHaveBeenCalled();
+    backend.expectNone('/api/customers');
   });
 
   it('given a complete form in France, when submitting, then the customer is registered and asked to log in', async () => {
-    await open(of({} as CustomerDto));
     fillIn();
     const country = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
     await country.clickOptions({ text: 'France' });
 
     await submit();
+    const request = backend.expectOne({ method: 'POST', url: '/api/customers' });
+    request.flush({});
+    await fixture.whenStable();
 
-    expect(addCustomer).toHaveBeenCalledWith({
+    expect(request.request.body).toEqual({
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'jane@doe.be',
@@ -112,50 +118,45 @@ describe('Register', () => {
   });
 
   it('given nothing chosen, when reading the country, then it is Belgium', async () => {
-    await open(of({} as CustomerDto));
-
     const country = await TestbedHarnessEnvironment.loader(fixture).getHarness(MatSelectHarness);
 
     expect(await country.getValueText()).toBe('Belgium');
   });
 
   it('given an email already used, when submitting, then the email field says so', async () => {
-    const used: ApiProblem = {
-      status: 409,
-      code: 'error.security.email-already-used',
-      params: { email: 'jane@doe.be' },
-      errors: [],
-    };
-    await open(throwError(() => used));
     fillIn();
 
     await submit();
+    await refuse(409, {
+      status: 409,
+      code: 'error.security.email-already-used',
+      params: { email: 'jane@doe.be' },
+    });
 
     expect(errorOf('email')).toBe('An account already exists for jane@doe.be.');
     expect(navigate).not.toHaveBeenCalled();
   });
 
   it('given a field refused by the API, when submitting, then that field shows the reason of the API', async () => {
-    const refused: ApiProblem = {
+    fillIn();
+
+    await submit();
+    await refuse(400, {
       status: 400,
       code: 'error.common.validation-failed',
       params: {},
       errors: [{ field: 'address.city', code: 'validation.too-long', params: { max: 255 } }],
-    };
-    await open(throwError(() => refused));
-    fillIn();
-
-    await submit();
+    });
 
     expect(errorOf('city')).toBe('At most 255 characters.');
   });
 
   it('given a registration on its way, when waiting, then the button cannot be pressed again', async () => {
-    await open(new Subject<CustomerDto>());
     fillIn();
 
     await submit();
 
     expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+    backend.expectOne('/api/customers');
   });
 });

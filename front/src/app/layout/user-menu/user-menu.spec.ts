@@ -1,43 +1,60 @@
 import { HarnessLoader } from '@angular/cdk/testing';
 import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
-import { computed, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { HttpTestingController } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatMenuHarness } from '@angular/material/menu/testing';
 import { provideRouter, Router } from '@angular/router';
+import type { CurrentUserDto } from '@core/api/eurder-api';
+import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { CurrentUser } from '@core/security/current-user';
 import { SecurityService } from '@core/security/security.service';
-import { of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { UserMenu } from './user-menu';
 
 describe('UserMenu', () => {
+  let fixture: ComponentFixture<UserMenu>;
   let loader: HarnessLoader;
   let element: HTMLElement;
-  let logout: ReturnType<typeof vi.fn>;
+  let backend: HttpTestingController;
 
-  async function menuFor(user: CurrentUser | null): Promise<void> {
-    const current = signal(user);
-    logout = vi.fn().mockReturnValue(of(undefined));
-    TestBed.configureTestingModule({
-      providers: [
-        provideTestTranslations(),
-        provideRouter([]),
-        {
-          provide: SecurityService,
-          useValue: {
-            currentUser: current,
-            isAuthenticated: computed(() => current() !== null),
-            isAdmin: computed(() => current()?.role === 'ADMIN'),
-            isCustomer: computed(() => current()?.role === 'CUSTOMER'),
-            logout,
-          },
-        },
-      ],
-    });
-    const fixture = TestBed.createComponent(UserMenu);
-    await fixture.whenStable();
+  const customer: CurrentUserDto = {
+    id: 'c',
+    role: 'CUSTOMER',
+    email: 'jane@doe.be',
+    firstName: 'Jane',
+    lastName: 'Doe',
+  };
+  const admin: CurrentUserDto = {
+    id: 'a',
+    role: 'ADMIN',
+    email: 'admin@eurder.be',
+    firstName: null,
+    lastName: null,
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [UserMenu],
+      providers: [provideTestTranslations(), provideRouter([]), provideApiTesting()],
+    }).compileComponents();
+    backend = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(UserMenu);
     element = fixture.nativeElement as HTMLElement;
     loader = TestbedHarnessEnvironment.loader(fixture);
+  });
+
+  afterEach(() => backend.verify());
+
+  async function menuFor(user: CurrentUserDto | null): Promise<void> {
+    const loaded = firstValueFrom(TestBed.inject(SecurityService).loadCurrentUser());
+    const me = backend.expectOne('/api/auth/me');
+    if (user) {
+      me.flush(user);
+    } else {
+      me.flush({}, { status: 401, statusText: 'Unauthorized' });
+    }
+    await loaded;
+    await fixture.whenStable();
   }
 
   async function itemTexts(menu: MatMenuHarness): Promise<string[]> {
@@ -55,7 +72,7 @@ describe('UserMenu', () => {
   });
 
   it('given a customer, when opening the menu, then it shows their name, their orders and the logout', async () => {
-    await menuFor({ id: 'c', role: 'CUSTOMER', email: 'jane@doe.be', displayName: 'Jane Doe' });
+    await menuFor(customer);
     const menu = await loader.getHarness(MatMenuHarness);
 
     const items = await itemTexts(menu);
@@ -68,12 +85,7 @@ describe('UserMenu', () => {
   });
 
   it('given an admin, when opening the menu, then it leads to the back office', async () => {
-    await menuFor({
-      id: 'a',
-      role: 'ADMIN',
-      email: 'admin@eurder.be',
-      displayName: 'admin@eurder.be',
-    });
+    await menuFor(admin);
     const menu = await loader.getHarness(MatMenuHarness);
 
     const items = await itemTexts(menu);
@@ -85,13 +97,15 @@ describe('UserMenu', () => {
   });
 
   it('given a logged-in user, when logging out, then the session ends and they go home', async () => {
-    await menuFor({ id: 'c', role: 'CUSTOMER', email: 'jane@doe.be', displayName: 'Jane Doe' });
+    await menuFor(customer);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const menu = await loader.getHarness(MatMenuHarness);
 
     await menu.clickItem({ text: /Log out/ });
+    backend.expectOne({ method: 'POST', url: '/api/auth/logout' }).flush(null);
+    await fixture.whenStable();
 
-    expect(logout).toHaveBeenCalledOnce();
+    expect(TestBed.inject(SecurityService).isAuthenticated()).toBe(false);
     expect(navigate).toHaveBeenCalledWith('/');
   });
 });

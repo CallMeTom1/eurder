@@ -1,59 +1,47 @@
+import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { ApiProblem } from '@core/api/api-problem';
+import type { CatalogItemDto } from '@core/api/eurder-api';
+import { provideApiTesting } from '@core/api/testing';
 import { provideTestTranslations } from '@core/i18n/testing';
-import { Observable, of, Subject, throwError } from 'rxjs';
-import { CatalogItem } from '../catalog-item';
-import { CatalogService } from '../catalog.service';
 import { CatalogPage } from './catalog-page';
 
 describe('CatalogPage', () => {
   let fixture: ComponentFixture<CatalogPage>;
   let page: HTMLElement;
-  let getItems: ReturnType<typeof vi.fn>;
+  let backend: HttpTestingController;
 
-  const chair: CatalogItem = {
+  const chair: CatalogItemDto = {
     id: 'i1',
     name: 'Chair',
     description: 'Wooden chair',
-    priceInCents: 4999,
+    price: 49.99,
   };
-  const lamp: CatalogItem = {
-    id: 'i2',
-    name: 'Lamp',
-    description: 'Desk lamp',
-    priceInCents: 2900,
-  };
-  const armchair: CatalogItem = {
+  const lamp: CatalogItemDto = { id: 'i2', name: 'Lamp', description: 'Desk lamp', price: 29 };
+  const armchair: CatalogItemDto = {
     id: 'i3',
     name: 'armchair',
     description: 'Leather',
-    priceInCents: 15000,
+    price: 150,
   };
 
-  async function open(...answers: Observable<CatalogItem[]>[]): Promise<void> {
-    create(answers);
-    await fixture.whenStable();
-  }
-
-  function openWhileLoading(): void {
-    create([new Subject<CatalogItem[]>()]);
-    fixture.detectChanges();
-  }
-
-  function create(answers: Observable<CatalogItem[]>[]): void {
+  beforeEach(async () => {
     localStorage.clear();
-    getItems = vi.fn();
-    answers.forEach((answer) => getItems.mockReturnValueOnce(answer));
-    TestBed.configureTestingModule({
-      providers: [
-        provideTestTranslations(),
-        provideRouter([]),
-        { provide: CatalogService, useValue: { getItems } },
-      ],
-    });
+    await TestBed.configureTestingModule({
+      imports: [CatalogPage],
+      providers: [provideTestTranslations(), provideRouter([]), provideApiTesting()],
+    }).compileComponents();
     fixture = TestBed.createComponent(CatalogPage);
     page = fixture.nativeElement as HTMLElement;
+    backend = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+  });
+
+  afterEach(() => backend.verify());
+
+  async function answer(items: CatalogItemDto[]): Promise<void> {
+    backend.expectOne({ method: 'GET', url: '/api/catalog' }).flush(items);
+    await fixture.whenStable();
   }
 
   function names(): string[] {
@@ -69,16 +57,15 @@ describe('CatalogPage', () => {
     await fixture.whenStable();
   }
 
-  it('given the catalog is loading, when the page opens, then it says so', async () => {
-    openWhileLoading();
-
+  it('given the catalog is loading, when the page opens, then it says so', () => {
     const status = page.querySelector('[role="status"]');
 
     expect(status?.textContent).toContain('Loading…');
+    backend.expectOne('/api/catalog');
   });
 
   it('given items for sale, when the page opens, then each one shows its name, its price and a link to its detail', async () => {
-    await open(of([chair, lamp]));
+    await answer([chair, lamp]);
 
     const firstCard = page.querySelector('[data-testid="catalog-item"]');
 
@@ -88,7 +75,7 @@ describe('CatalogPage', () => {
   });
 
   it('given items for sale, when searching, then only the names starting with the search stay, whatever the case', async () => {
-    await open(of([chair, lamp, armchair]));
+    await answer([chair, lamp, armchair]);
 
     await search('  AR ');
 
@@ -96,7 +83,7 @@ describe('CatalogPage', () => {
   });
 
   it('given items for sale, when searching a word in the middle of a name, then nothing matches', async () => {
-    await open(of([chair, lamp, armchair]));
+    await answer([chair, lamp, armchair]);
 
     await search('chair');
 
@@ -104,7 +91,7 @@ describe('CatalogPage', () => {
   });
 
   it('given a search without match, when filtering, then the page says no item starts with it', async () => {
-    await open(of([chair, lamp]));
+    await answer([chair, lamp]);
 
     await search('sofa');
 
@@ -112,7 +99,7 @@ describe('CatalogPage', () => {
   });
 
   it('given an empty catalog, when the page opens, then it says nothing is for sale yet', async () => {
-    await open(of([]));
+    await answer([]);
 
     const text = page.textContent;
 
@@ -120,22 +107,20 @@ describe('CatalogPage', () => {
   });
 
   it('given the API fails, when trying again, then the catalog loads', async () => {
-    const down: ApiProblem = {
-      status: 404,
-      code: 'error.common.route-not-found',
-      params: {},
-      errors: [],
-    };
-    await open(
-      throwError(() => down),
-      of([chair]),
-    );
+    backend
+      .expectOne('/api/catalog')
+      .flush(
+        { status: 404, code: 'error.common.route-not-found', params: {} },
+        { status: 404, statusText: 'Not Found' },
+      );
+    await fixture.whenStable();
     expect(page.querySelector('[role="alert"]')?.textContent).toContain(
       'This page does not exist.',
     );
 
     page.querySelector<HTMLButtonElement>('[role="alert"] button')!.click();
-    await fixture.whenStable();
+    TestBed.tick();
+    await answer([chair]);
 
     expect(names()).toEqual(['Chair']);
   });
