@@ -1,5 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { TranslatePipe } from '@ngx-translate/core';
+import { CharCounter } from '@shared/directives/char-counter';
 import { PricePipe } from '@shared/pipes/price-pipe';
 import { ConfirmationService } from '@shared/ui/confirm-dialog/confirmation.service';
 import { EmptyState } from '@shared/ui/empty-state/empty-state';
@@ -19,7 +24,12 @@ interface Swatch {
 @Component({
   selector: 'app-design-system',
   imports: [
+    ReactiveFormsModule,
     MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslatePipe,
+    CharCounter,
     EmptyState,
     ErrorState,
     LanguageSwitcher,
@@ -36,6 +46,7 @@ export class DesignSystem {
   private readonly confirmation = inject(ConfirmationService);
 
   protected readonly answer = signal('');
+  protected readonly description = new FormControl('', { nonNullable: true });
 
   protected readonly swatches: Swatch[] = [
     { name: 'primary', colors: 'bg-primary text-on-primary' },

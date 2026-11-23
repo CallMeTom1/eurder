@@ -10,7 +10,8 @@
     "loading": "Laden…",
     "retry": "Opnieuw proberen",
     "cancel": "Annuleren",
-    "confirm": "Bevestigen"
+    "confirm": "Bevestigen",
+    "charactersLeft": "Nog {{count}} tekens"
   },
   "error": {
     "common": {

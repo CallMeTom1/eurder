@@ -10,7 +10,8 @@
     "loading": "Loading…",
     "retry": "Try again",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "charactersLeft": "{{count}} characters left"
   },
   "error": {
     "common": {

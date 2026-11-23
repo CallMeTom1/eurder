@@ -55,6 +55,25 @@
     </div>
   </section>
 
+  <section class="flex flex-col gap-4" aria-labelledby="fields-title">
+    <h2 id="fields-title" class="[font:var(--mat-sys-title-large)]">Fields</h2>
+    <mat-form-field class="w-full max-w-xl">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        [formControl]="description"
+        [appCharCounter]="255"
+        #counter="charCounter"
+      ></textarea>
+      <mat-hint align="end">
+        <span data-testid="description-counter" [class.text-error]="counter.exceeded()">
+          {{ 'common.charactersLeft' | translate: { count: counter.remaining() } }}
+        </span>
+      </mat-hint>
+    </mat-form-field>
+  </section>
+
   <section class="flex flex-col gap-4" aria-labelledby="dialog-title">
     <h2 id="dialog-title" class="[font:var(--mat-sys-title-large)]">Confirmation</h2>
     <div class="flex items-center gap-4">

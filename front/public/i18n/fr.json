@@ -10,7 +10,8 @@
     "loading": "Chargement…",
     "retry": "Réessayer",
     "cancel": "Annuler",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "charactersLeft": "{{count}} caractères restants"
   },
   "error": {
     "common": {
