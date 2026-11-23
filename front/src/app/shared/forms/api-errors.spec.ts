@@ -1,14 +1,20 @@
-import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
+import { signal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { form } from '@angular/forms/signals';
 import { ApiProblem } from '@core/api/api-problem';
-import { applyApiErrors } from './api-errors';
+import { apiErrorsOf } from './api-errors';
 
-describe('applyApiErrors', () => {
+describe('apiErrorsOf', () => {
   function orderForm() {
-    return new FormGroup({
-      name: new FormControl('', Validators.maxLength(100)),
-      address: new FormGroup({ city: new FormControl('') }),
-      itemGroups: new FormArray([new FormGroup({ amount: new FormControl(0) })]),
-    });
+    return TestBed.runInInjectionContext(() =>
+      form(
+        signal({
+          name: '',
+          address: { city: '' },
+          itemGroups: [{ amount: 0 }],
+        }),
+      ),
+    );
   }
 
   const problem: ApiProblem = {
@@ -23,45 +29,35 @@ describe('applyApiErrors', () => {
     ],
   };
 
-  it('given a validation problem, when applying it, then each error lands on its field, nested ones included', () => {
-    const form = orderForm();
+  it('given a validation problem, when reading it for a form, then each error points at its field, nested ones included', () => {
+    const order = orderForm();
 
-    applyApiErrors(form, problem);
+    const { onFields } = apiErrorsOf(order, problem);
 
-    expect(form.get('name')?.errors).toEqual({ api: { code: 'validation.required', params: {} } });
-    expect(form.get('address.city')?.errors).toEqual({
-      api: { code: 'validation.too-long', params: { max: 50 } },
-    });
-    expect(form.get('itemGroups.0.amount')?.errors).toEqual({
-      api: { code: 'validation.must-be-positive', params: {} },
-    });
-    expect(form.get('address.city')?.touched).toBe(true);
+    expect(onFields).toEqual([
+      { kind: 'api', code: 'validation.required', params: {}, fieldTree: order.name },
+      {
+        kind: 'api',
+        code: 'validation.too-long',
+        params: { max: 50 },
+        fieldTree: order.address.city,
+      },
+      {
+        kind: 'api',
+        code: 'validation.must-be-positive',
+        params: {},
+        fieldTree: order.itemGroups[0].amount,
+      },
+    ]);
   });
 
-  it('given a field that already has an error of its own, when applying, then the error of the API is shown first', () => {
-    const form = new FormGroup({ name: new FormControl('', Validators.required) });
+  it('given an error on a field the form does not have, when reading it, then it is left to show elsewhere', () => {
+    const order = orderForm();
 
-    applyApiErrors(form, problem);
-
-    expect(Object.keys(form.get('name')?.errors ?? {})).toEqual(['api', 'required']);
-  });
-
-  it('given an error on a field the form does not have, when applying, then it is returned to be shown elsewhere', () => {
-    const form = orderForm();
-
-    const unmatched = applyApiErrors(form, problem);
+    const { unmatched } = apiErrorsOf(order, problem);
 
     expect(unmatched).toEqual([
       { field: 'password', code: 'validation.too-short', params: { min: 8 } },
     ]);
-  });
-
-  it('given an error of the API on a field, when the user changes the field, then the error goes away', () => {
-    const form = orderForm();
-    applyApiErrors(form, problem);
-
-    form.get('name')?.setValue('Chair');
-
-    expect(form.get('name')?.errors).toBeNull();
   });
 });

@@ -1,11 +1,6 @@
 <app-page-header [title]="'nav.login' | translate" />
 
-<form
-  [formGroup]="form"
-  (ngSubmit)="submit()"
-  class="flex w-full max-w-sm flex-col gap-2"
-  novalidate
->
+<form [formRoot]="loginForm" class="flex w-full max-w-sm flex-col gap-2">
   @if (registered() && !problem()) {
     <p
       role="status"
@@ -20,9 +15,9 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.email' | translate }}</mat-label>
-    <input matInput type="email" autocomplete="username" formControlName="email" />
+    <input matInput type="email" autocomplete="username" [formField]="loginForm.email" />
     <mat-error>
-      @if (form.controls.email.errors | fieldError; as error) {
+      @if (loginForm.email().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
@@ -30,15 +25,20 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.password' | translate }}</mat-label>
-    <input matInput type="password" autocomplete="current-password" formControlName="password" />
+    <input
+      matInput
+      type="password"
+      autocomplete="current-password"
+      [formField]="loginForm.password"
+    />
     <mat-error>
-      @if (form.controls.password.errors | fieldError; as error) {
+      @if (loginForm.password().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
   </mat-form-field>
 
-  <button matButton="filled" type="submit" [disabled]="submitting()">
+  <button matButton="filled" type="submit" [disabled]="loginForm().submitting()">
     {{ 'nav.login' | translate }}
   </button>
 

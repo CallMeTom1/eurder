@@ -1,18 +1,45 @@
-import { AbstractControl } from '@angular/forms';
+import { FieldTree, ReadonlyFieldTree, ValidationError } from '@angular/forms/signals';
 import { ApiFieldError, ApiProblem } from '@core/api/api-problem';
 
-export function applyApiErrors(form: AbstractControl, problem: ApiProblem): ApiFieldError[] {
-  return problem.errors.filter((error) => {
-    const control = form.get(controlPath(error.field));
-    if (!control) {
-      return true;
-    }
-    control.setErrors({ api: { code: error.code, params: error.params }, ...control.errors });
-    control.markAsTouched();
-    return false;
-  });
+export interface ApiValidationError extends ValidationError.WithOptionalFieldTree {
+  readonly kind: 'api';
+  readonly code: string;
+  readonly params: Record<string, unknown>;
 }
 
-function controlPath(field: string): string {
-  return field.replace(/\[(\d+)\]/g, '.$1');
+export interface ApiErrors {
+  onFields: ApiValidationError[];
+  unmatched: ApiFieldError[];
+}
+
+export function apiErrorsOf(form: FieldTree<unknown>, problem: ApiProblem): ApiErrors {
+  const onFields: ApiValidationError[] = [];
+  const unmatched: ApiFieldError[] = [];
+  for (const error of problem.errors) {
+    const fieldTree = fieldAt(form, error.field);
+    if (fieldTree) {
+      onFields.push({ kind: 'api', code: error.code, params: error.params, fieldTree });
+    } else {
+      unmatched.push(error);
+    }
+  }
+  return { onFields, unmatched };
+}
+
+export function apiErrorOn(
+  fieldTree: ReadonlyFieldTree<unknown>,
+  problem: ApiProblem,
+): ApiValidationError {
+  return { kind: 'api', code: problem.code, params: problem.params, fieldTree };
+}
+
+function fieldAt(form: FieldTree<unknown>, path: string): ReadonlyFieldTree<unknown> | undefined {
+  let node: unknown = form;
+  for (const segment of path.replace(/\[(\d+)\]/g, '.$1').split('.')) {
+    node =
+      typeof node === 'function'
+        ? (node as unknown as Record<string, unknown>)[segment]
+        : undefined;
+  }
+  return typeof node === 'function' ? (node as ReadonlyFieldTree<unknown>) : undefined;
 }

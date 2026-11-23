@@ -33,7 +33,7 @@ describe('Register', () => {
   }
 
   function type(control: string, value: string): void {
-    const input = page.querySelector<HTMLInputElement>(`[formcontrolname="${control}"]`)!;
+    const input = page.querySelector<HTMLInputElement>(`[name$=".${control}"]`)!;
     input.value = value;
     input.dispatchEvent(new Event('input'));
   }
@@ -57,7 +57,7 @@ describe('Register', () => {
 
   function errorOf(control: string): string | undefined {
     return page
-      .querySelector(`[formcontrolname="${control}"]`)
+      .querySelector(`[name$=".${control}"]`)
       ?.closest('mat-form-field')
       ?.querySelector('mat-error')
       ?.textContent?.trim();

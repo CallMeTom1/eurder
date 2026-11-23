@@ -1,11 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+  email,
+  form,
+  FormField,
+  FormRoot,
+  maxLength,
+  minLength,
+  pattern,
+  required,
+  SchemaPath,
+  TreeValidationResult,
+} from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -13,30 +18,28 @@ import { MatOption, MatSelect } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { isGlobalProblem } from '@core/api/api-error.interceptor';
 import { ApiProblem, isApiProblem } from '@core/api/api-problem';
-import { addressDtoCountryValues, type AddressDto } from '@core/api/eurder-api';
+import { addressDtoCountryValues, type CreateCustomerDto } from '@core/api/eurder-api';
 import { TranslatePipe } from '@ngx-translate/core';
-import { applyApiErrors } from '@shared/forms/api-errors';
+import { apiErrorOn, apiErrorsOf } from '@shared/forms/api-errors';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../account.service';
-
-type Country = AddressDto['country'];
 
 const PHONE_NUMBER = /^\+?[0-9 ./-]{6,20}$/;
 
-function requiredText(maxLength: number, ...validators: ValidatorFn[]): FormControl<string> {
-  return new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(maxLength), ...validators],
-  });
+function requiredText(path: SchemaPath<string>, length: number): void {
+  required(path);
+  maxLength(path, length);
 }
 
 @Component({
   imports: [
     ErrorState,
     FieldErrorPipe,
+    FormField,
+    FormRoot,
     MatButton,
     MatError,
     MatFormField,
@@ -46,7 +49,6 @@ function requiredText(maxLength: number, ...validators: ValidatorFn[]): FormCont
     MatOption,
     MatSelect,
     PageHeader,
-    ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
   ],
@@ -58,58 +60,58 @@ export class Register {
   private readonly router = inject(Router);
 
   protected readonly countries = addressDtoCountryValues;
-  protected readonly form = new FormGroup({
-    firstName: requiredText(255),
-    lastName: requiredText(255),
-    email: requiredText(255, Validators.email),
-    password: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.minLength(8), Validators.maxLength(72)],
-    }),
-    phoneNumber: requiredText(20, Validators.pattern(PHONE_NUMBER)),
-    address: new FormGroup({
-      street: requiredText(255),
-      houseNumber: requiredText(20),
-      postalCode: requiredText(20),
-      city: requiredText(255),
-      country: new FormControl<Country>('BELGIUM', {
-        nonNullable: true,
-        validators: Validators.required,
-      }),
-    }),
+  protected readonly registration = signal<CreateCustomerDto>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phoneNumber: '',
+    address: { street: '', houseNumber: '', postalCode: '', city: '', country: 'BELGIUM' },
   });
-  protected readonly submitting = signal(false);
   protected readonly problem = signal<ApiProblem | null>(null);
+  protected readonly registerForm = form(
+    this.registration,
+    (path) => {
+      requiredText(path.firstName, 255);
+      requiredText(path.lastName, 255);
+      requiredText(path.email, 255);
+      email(path.email);
+      required(path.password);
+      minLength(path.password, 8);
+      maxLength(path.password, 72);
+      required(path.phoneNumber);
+      pattern(path.phoneNumber, PHONE_NUMBER);
+      requiredText(path.address.street, 255);
+      requiredText(path.address.houseNumber, 20);
+      requiredText(path.address.postalCode, 20);
+      requiredText(path.address.city, 255);
+      required(path.address.country);
+    },
+    { submission: { action: () => this.register() } },
+  );
 
-  protected submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.submitting.set(true);
+  private async register(): Promise<TreeValidationResult> {
     this.problem.set(null);
-    this.accounts
-      .addCustomer(this.form.getRawValue())
-      .pipe(finalize(() => this.submitting.set(false)))
-      .subscribe({
-        next: () => this.router.navigate(['/login'], { queryParams: { registered: true } }),
-        error: (error: unknown) => this.show(error),
-      });
+    try {
+      await firstValueFrom(this.accounts.addCustomer(this.registration()));
+      await this.router.navigate(['/login'], { queryParams: { registered: true } });
+      return undefined;
+    } catch (error) {
+      return this.errorsOf(error);
+    }
   }
 
-  private show(error: unknown): void {
+  private errorsOf(error: unknown): TreeValidationResult {
     if (!isApiProblem(error) || isGlobalProblem(error)) {
-      return;
+      return undefined;
     }
     if (error.code === 'error.security.email-already-used') {
-      const email = this.form.controls.email;
-      email.setErrors({ api: { code: error.code, params: error.params } });
-      email.markAsTouched();
-      return;
+      return apiErrorOn(this.registerForm.email, error);
     }
-    const unmatched = applyApiErrors(this.form, error);
+    const { onFields, unmatched } = apiErrorsOf(this.registerForm, error);
     if (error.errors.length === 0 || unmatched.length > 0) {
       this.problem.set(error);
     }
+    return onFields;
   }
 }

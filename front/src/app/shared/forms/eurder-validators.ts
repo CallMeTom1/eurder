@@ -1,31 +1,36 @@
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { SchemaPath, validate, ValidationError } from '@angular/forms/signals';
 
-function numberOf(control: AbstractControl): number | null {
-  const value: unknown = control.value;
-  return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+export interface DigitsValidationError extends ValidationError {
+  readonly kind: 'digits';
+  readonly integer: number;
+  readonly fraction: number;
 }
 
-export const EurderValidators = {
-  positive(control: AbstractControl): ValidationErrors | null {
-    const value = numberOf(control);
-    return value !== null && value <= 0 ? { positive: true } : null;
-  },
+export function positive(path: SchemaPath<number | null>): void {
+  validate(path, ({ value }) => {
+    const number = value();
+    return number !== null && number <= 0 ? { kind: 'positive' } : undefined;
+  });
+}
 
-  notNegative(control: AbstractControl): ValidationErrors | null {
-    const value = numberOf(control);
-    return value !== null && value < 0 ? { notNegative: true } : null;
-  },
+export function notNegative(path: SchemaPath<number | null>): void {
+  validate(path, ({ value }) => {
+    const number = value();
+    return number !== null && number < 0 ? { kind: 'notNegative' } : undefined;
+  });
+}
 
-  digits(integer: number, fraction: number): ValidatorFn {
-    return (control) => {
-      const value = numberOf(control);
-      if (value === null) {
-        return null;
-      }
-      const [integerPart, fractionPart = ''] = Math.abs(value).toString().split('.');
-      return integerPart.length > integer || fractionPart.length > fraction
-        ? { digits: { integer, fraction } }
-        : null;
-    };
-  },
-};
+export function digits(path: SchemaPath<number | null>, integer: number, fraction: number): void {
+  validate(path, ({ value }) => {
+    const number = value();
+    if (number === null) {
+      return undefined;
+    }
+    const [integerPart, fractionPart = ''] = Math.abs(number).toString().split('.');
+    if (integerPart.length <= integer && fractionPart.length <= fraction) {
+      return undefined;
+    }
+    const error: DigitsValidationError = { kind: 'digits', integer, fraction };
+    return error;
+  });
+}

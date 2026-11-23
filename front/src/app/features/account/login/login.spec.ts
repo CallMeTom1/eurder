@@ -136,16 +136,23 @@ describe('Login', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('given a login on its way, when waiting for the answer, then the button cannot be pressed again', async () => {
+  it('given a login on its way, when waiting for a refusal, then the button waits too and is usable again afterwards', async () => {
     const answer = new Subject<CurrentUser>();
     await open(answer);
+    const button = () => page.querySelector<HTMLButtonElement>('button[type="submit"]')!;
 
     await logInWithTheRightCredentials();
 
-    expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
-    answer.next(customer);
-    answer.complete();
-    await fixture.whenStable();
-    expect(page.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(false);
+    expect(button().disabled).toBe(true);
+    answer.error({
+      status: 401,
+      code: 'error.security.invalid-credentials',
+      params: {},
+      errors: [],
+    });
+    await vi.waitFor(async () => {
+      await fixture.whenStable();
+      expect(button().disabled).toBe(false);
+    });
   });
 });

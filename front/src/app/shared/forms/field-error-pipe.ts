@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
+import { ValidationError } from '@angular/forms/signals';
 
 export interface FieldError {
   key: string;
@@ -11,13 +11,13 @@ type ErrorTranslation = (error: Record<string, unknown>) => FieldError;
 const TRANSLATIONS: Record<string, ErrorTranslation> = {
   api: (error) => ({
     key: String(error['code']),
-    params: (error['params'] as Record<string, unknown>) ?? {},
+    params: (error['params'] as Record<string, unknown> | undefined) ?? {},
   }),
   required: () => ({ key: 'validation.required', params: {} }),
   email: () => ({ key: 'validation.invalid-format', params: {} }),
   pattern: () => ({ key: 'validation.invalid-format', params: {} }),
-  minlength: (error) => ({ key: 'validation.too-short', params: { min: error['requiredLength'] } }),
-  maxlength: (error) => ({ key: 'validation.too-long', params: { max: error['requiredLength'] } }),
+  minLength: (error) => ({ key: 'validation.too-short', params: { min: error['minLength'] } }),
+  maxLength: (error) => ({ key: 'validation.too-long', params: { max: error['maxLength'] } }),
   max: (error) => ({ key: 'validation.too-large', params: { max: error['max'] } }),
   positive: () => ({ key: 'validation.must-be-positive', params: {} }),
   notNegative: () => ({ key: 'validation.must-not-be-negative', params: {} }),
@@ -29,15 +29,14 @@ const TRANSLATIONS: Record<string, ErrorTranslation> = {
 
 @Pipe({ name: 'fieldError' })
 export class FieldErrorPipe implements PipeTransform {
-  transform(errors: ValidationErrors | null): FieldError | null {
-    const first = errors ? Object.entries(errors)[0] : undefined;
+  transform(errors: readonly ValidationError[]): FieldError | null {
+    const [first] = errors;
     if (!first) {
       return null;
     }
-    const [name, error] = first;
-    const translation = TRANSLATIONS[name];
+    const translation = TRANSLATIONS[first.kind];
     return translation
-      ? translation(typeof error === 'object' && error !== null ? error : {})
+      ? translation(first as unknown as Record<string, unknown>)
       : { key: 'validation.invalid', params: {} };
   }
 }

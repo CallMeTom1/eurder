@@ -1,5 +1,12 @@
 import { booleanAttribute, Component, inject, input, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  email,
+  form,
+  FormField,
+  FormRoot,
+  required,
+  TreeValidationResult,
+} from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -10,23 +17,24 @@ import { CurrentUser } from '@core/security/current-user';
 import { safeReturnUrl } from '@core/security/return-url';
 import { SecurityService } from '@core/security/security.service';
 import { TranslatePipe } from '@ngx-translate/core';
-import { applyApiErrors } from '@shared/forms/api-errors';
+import { apiErrorsOf } from '@shared/forms/api-errors';
 import { FieldErrorPipe } from '@shared/forms/field-error-pipe';
 import { ErrorState } from '@shared/ui/error-state/error-state';
 import { PageHeader } from '@shared/ui/page-header/page-header';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   imports: [
     ErrorState,
     FieldErrorPipe,
+    FormField,
+    FormRoot,
     MatButton,
     MatError,
     MatFormField,
     MatInput,
     MatLabel,
     PageHeader,
-    ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
   ],
@@ -40,44 +48,42 @@ export class Login {
   private readonly security = inject(SecurityService);
   private readonly router = inject(Router);
 
-  protected readonly form = new FormGroup({
-    email: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.email],
-    }),
-    password: new FormControl('', { nonNullable: true, validators: Validators.required }),
-  });
-  protected readonly submitting = signal(false);
+  protected readonly credentials = signal({ email: '', password: '' });
   protected readonly problem = signal<ApiProblem | null>(null);
+  protected readonly loginForm = form(
+    this.credentials,
+    (path) => {
+      required(path.email);
+      email(path.email);
+      required(path.password);
+    },
+    { submission: { action: () => this.logIn() } },
+  );
 
-  protected submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-    const { email, password } = this.form.getRawValue();
-    this.submitting.set(true);
+  private async logIn(): Promise<TreeValidationResult> {
     this.problem.set(null);
-    this.security
-      .login(email, password)
-      .pipe(finalize(() => this.submitting.set(false)))
-      .subscribe({
-        next: (user) => this.router.navigateByUrl(this.landingOf(user)),
-        error: (error: unknown) => this.show(error),
-      });
+    const { email, password } = this.credentials();
+    try {
+      const user = await firstValueFrom(this.security.login(email, password));
+      await this.router.navigateByUrl(this.landingOf(user));
+      return undefined;
+    } catch (error) {
+      return this.errorsOf(error);
+    }
   }
 
   private landingOf(user: CurrentUser): string {
     return safeReturnUrl(this.returnUrl()) ?? (user.role === 'ADMIN' ? '/admin' : '/catalog');
   }
 
-  private show(error: unknown): void {
+  private errorsOf(error: unknown): TreeValidationResult {
     if (!isApiProblem(error) || isGlobalProblem(error)) {
-      return;
+      return undefined;
     }
-    const unmatched = applyApiErrors(this.form, error);
+    const { onFields, unmatched } = apiErrorsOf(this.loginForm, error);
     if (error.errors.length === 0 || unmatched.length > 0) {
       this.problem.set(error);
     }
+    return onFields;
   }
 }

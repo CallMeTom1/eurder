@@ -1,20 +1,15 @@
 <app-page-header [title]="'nav.register' | translate" />
 
-<form
-  [formGroup]="form"
-  (ngSubmit)="submit()"
-  class="grid w-full max-w-2xl gap-x-4 gap-y-1 sm:grid-cols-2"
-  novalidate
->
+<form [formRoot]="registerForm" class="grid w-full max-w-2xl gap-x-4 gap-y-1 sm:grid-cols-2">
   @if (problem(); as problem) {
     <app-error-state class="sm:col-span-2" [message]="problem.code | translate: problem.params" />
   }
 
   <mat-form-field>
     <mat-label>{{ 'account.firstName' | translate }}</mat-label>
-    <input matInput autocomplete="given-name" formControlName="firstName" />
+    <input matInput autocomplete="given-name" [formField]="registerForm.firstName" />
     <mat-error>
-      @if (form.controls.firstName.errors | fieldError; as error) {
+      @if (registerForm.firstName().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
@@ -22,9 +17,9 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.lastName' | translate }}</mat-label>
-    <input matInput autocomplete="family-name" formControlName="lastName" />
+    <input matInput autocomplete="family-name" [formField]="registerForm.lastName" />
     <mat-error>
-      @if (form.controls.lastName.errors | fieldError; as error) {
+      @if (registerForm.lastName().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
@@ -32,9 +27,9 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.email' | translate }}</mat-label>
-    <input matInput type="email" autocomplete="email" formControlName="email" />
+    <input matInput type="email" autocomplete="email" [formField]="registerForm.email" />
     <mat-error>
-      @if (form.controls.email.errors | fieldError; as error) {
+      @if (registerForm.email().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
@@ -42,10 +37,15 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.password' | translate }}</mat-label>
-    <input matInput type="password" autocomplete="new-password" formControlName="password" />
+    <input
+      matInput
+      type="password"
+      autocomplete="new-password"
+      [formField]="registerForm.password"
+    />
     <mat-hint>{{ 'account.passwordHint' | translate }}</mat-hint>
     <mat-error>
-      @if (form.controls.password.errors | fieldError; as error) {
+      @if (registerForm.password().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
@@ -53,27 +53,24 @@
 
   <mat-form-field>
     <mat-label>{{ 'account.phoneNumber' | translate }}</mat-label>
-    <input matInput type="tel" autocomplete="tel" formControlName="phoneNumber" />
+    <input matInput type="tel" autocomplete="tel" [formField]="registerForm.phoneNumber" />
     <mat-error>
-      @if (form.controls.phoneNumber.errors | fieldError; as error) {
+      @if (registerForm.phoneNumber().errors() | fieldError; as error) {
         {{ error.key | translate: error.params }}
       }
     </mat-error>
   </mat-form-field>
 
-  <fieldset
-    formGroupName="address"
-    class="mt-4 grid gap-x-4 gap-y-1 sm:col-span-2 sm:grid-cols-[1fr_8rem]"
-  >
+  <fieldset class="mt-4 grid gap-x-4 gap-y-1 sm:col-span-2 sm:grid-cols-[1fr_8rem]">
     <legend class="mb-2 [font:var(--mat-sys-title-medium)]">
       {{ 'account.address' | translate }}
     </legend>
 
     <mat-form-field>
       <mat-label>{{ 'account.street' | translate }}</mat-label>
-      <input matInput autocomplete="address-line1" formControlName="street" />
+      <input matInput autocomplete="address-line1" [formField]="registerForm.address.street" />
       <mat-error>
-        @if (form.controls.address.controls.street.errors | fieldError; as error) {
+        @if (registerForm.address.street().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
@@ -81,9 +78,9 @@
 
     <mat-form-field>
       <mat-label>{{ 'account.houseNumber' | translate }}</mat-label>
-      <input matInput formControlName="houseNumber" />
+      <input matInput [formField]="registerForm.address.houseNumber" />
       <mat-error>
-        @if (form.controls.address.controls.houseNumber.errors | fieldError; as error) {
+        @if (registerForm.address.houseNumber().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
@@ -91,9 +88,9 @@
 
     <mat-form-field>
       <mat-label>{{ 'account.city' | translate }}</mat-label>
-      <input matInput autocomplete="address-level2" formControlName="city" />
+      <input matInput autocomplete="address-level2" [formField]="registerForm.address.city" />
       <mat-error>
-        @if (form.controls.address.controls.city.errors | fieldError; as error) {
+        @if (registerForm.address.city().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
@@ -101,9 +98,9 @@
 
     <mat-form-field>
       <mat-label>{{ 'account.postalCode' | translate }}</mat-label>
-      <input matInput autocomplete="postal-code" formControlName="postalCode" />
+      <input matInput autocomplete="postal-code" [formField]="registerForm.address.postalCode" />
       <mat-error>
-        @if (form.controls.address.controls.postalCode.errors | fieldError; as error) {
+        @if (registerForm.address.postalCode().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
       </mat-error>
@@ -111,7 +108,7 @@
 
     <mat-form-field class="sm:col-span-2">
       <mat-label>{{ 'account.country' | translate }}</mat-label>
-      <mat-select formControlName="country">
+      <mat-select [formField]="registerForm.address.country">
         @for (country of countries; track country) {
           <mat-option [value]="country">{{ 'country.' + country | translate }}</mat-option>
         }
@@ -120,7 +117,7 @@
   </fieldset>
 
   <div class="mt-4 flex flex-col items-start gap-4 sm:col-span-2">
-    <button matButton="filled" type="submit" [disabled]="submitting()">
+    <button matButton="filled" type="submit" [disabled]="registerForm().submitting()">
       {{ 'account.createAccount' | translate }}
     </button>
     <p class="text-on-surface-variant">

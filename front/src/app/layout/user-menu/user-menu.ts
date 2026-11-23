@@ -6,6 +6,7 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { Router, RouterLink } from '@angular/router';
 import { SecurityService } from '@core/security/security.service';
 import { TranslatePipe } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   imports: [
@@ -25,7 +26,8 @@ export class UserMenu {
   protected readonly security = inject(SecurityService);
   private readonly router = inject(Router);
 
-  protected logout(): void {
-    this.security.logout().subscribe(() => this.router.navigateByUrl('/'));
+  protected async logout(): Promise<void> {
+    await firstValueFrom(this.security.logout());
+    await this.router.navigateByUrl('/');
   }
 }

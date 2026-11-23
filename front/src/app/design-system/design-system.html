@@ -63,18 +63,18 @@
     <div class="flex max-w-xl flex-wrap gap-4">
       <mat-form-field class="grow">
         <mat-label>Name</mat-label>
-        <input matInput [formControl]="name" />
+        <input matInput [formField]="itemForm.name" />
         <mat-error>
-          @if (name.errors | fieldError; as error) {
+          @if (itemForm.name().errors() | fieldError; as error) {
             {{ error.key | translate: error.params }}
           }
         </mat-error>
       </mat-form-field>
       <mat-form-field class="w-40">
         <mat-label>Price</mat-label>
-        <input matInput type="number" step="0.01" [formControl]="price" />
+        <input matInput type="number" step="0.01" [formField]="itemForm.price" />
         <mat-error>
-          @if (price.errors | fieldError; as error) {
+          @if (itemForm.price().errors() | fieldError; as error) {
             {{ error.key | translate: error.params }}
           }
         </mat-error>
@@ -82,25 +82,19 @@
     </div>
     <mat-form-field class="w-full max-w-xl">
       <mat-label>Description</mat-label>
-      <textarea
-        matInput
-        rows="3"
-        [formControl]="description"
-        [appCharCounter]="255"
-        #counter="charCounter"
-      ></textarea>
+      <textarea matInput rows="3" [formField]="itemForm.description"></textarea>
       <mat-hint align="end">
-        <span data-testid="description-counter" [class.text-error]="counter.exceeded()">
-          {{ 'common.charactersLeft' | translate: { count: counter.remaining() } }}
-        </span>
+        <app-char-counter data-testid="description-counter" [field]="itemForm.description" />
       </mat-hint>
       <mat-error>
-        @if (description.errors | fieldError; as error) {
+        @if (itemForm.description().errors() | fieldError; as error) {
           {{ error.key | translate: error.params }}
         }
-        <span data-testid="description-counter" class="float-end">
-          {{ 'common.charactersLeft' | translate: { count: counter.remaining() } }}
-        </span>
+        <app-char-counter
+          data-testid="description-counter"
+          class="float-end"
+          [field]="itemForm.description"
+        />
       </mat-error>
     </mat-form-field>
   </section>
