@@ -30,7 +30,7 @@ class CatalogEndToEndTest {
     private final String suffix = UUID.randomUUID().toString();
 
     @Test
-    void givenAnItem_whenAnAnonymousVisitorReadsTheCatalog_thenListsItWithoutAnyStockInformation() {
+    void givenAnItem_whenAnAnonymousVisitorReadsTheCatalog_thenListsItWithItsStockAndItsUrgency() {
         String chairId = createItem("Chair " + suffix, "49.99", 3);
 
         Response response = anonymous().get("/catalog");
@@ -39,10 +39,12 @@ class CatalogEndToEndTest {
         Map<String, Object> chair = itemsOfThisTest(response).stream()
                 .filter(item -> item.get("id").equals(chairId))
                 .findFirst().orElseThrow();
-        assertThat(chair).containsOnlyKeys("id", "name", "description", "price")
+        assertThat(chair).containsOnlyKeys("id", "name", "description", "price", "stock", "urgency")
                 .containsEntry("name", "Chair " + suffix)
                 .containsEntry("description", "Wooden chair")
-                .containsEntry("price", new BigDecimal("49.99"));
+                .containsEntry("price", new BigDecimal("49.99"))
+                .containsEntry("stock", 3)
+                .containsEntry("urgency", "STOCK_LOW");
     }
 
     @Test
@@ -58,7 +60,7 @@ class CatalogEndToEndTest {
     }
 
     @Test
-    void givenAnItem_whenAnAnonymousVisitorReadsItsDetail_thenReturnsItWithoutAnyStockInformation() {
+    void givenAnItem_whenAnAnonymousVisitorReadsItsDetail_thenReturnsItWithItsStockAndItsUrgency() {
         String lampId = createItem("Lamp " + suffix, "35.00", 8);
 
         Response response = anonymous().get("/catalog/{id}", lampId);
@@ -67,8 +69,9 @@ class CatalogEndToEndTest {
                 .statusCode(HttpStatus.OK.value())
                 .body("id", equalTo(lampId))
                 .body("name", equalTo("Lamp " + suffix))
-                .body("price", equalTo(new BigDecimal("35.00")));
-        assertThat(response.jsonPath().getMap("$")).containsOnlyKeys("id", "name", "description", "price");
+                .body("price", equalTo(new BigDecimal("35.00")))
+                .body("stock", equalTo(8))
+                .body("urgency", equalTo("STOCK_MEDIUM"));
     }
 
     @Test

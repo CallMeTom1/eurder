@@ -116,22 +116,23 @@ class ItemServiceTest {
     }
 
     @Test
-    void givenItemsSortedByTheRepository_whenFindingTheCatalog_thenReturnsThemInThatOrderWithoutCountingTheUnits() {
-        when(itemRepository.findAllByOrderByNameAsc()).thenReturn(List.of(
-                new Item("Armchair", "Leather armchair", new BigDecimal("150")),
-                new Item("Lamp", "Desk lamp", new BigDecimal("29"))));
+    void givenItemsSortedByTheRepository_whenFindingTheCatalog_thenReturnsThemInThatOrderWithTheirStockWithoutCountingTheUnitsByState() {
+        when(itemRepository.findStockOrderedByName()).thenReturn(List.of(
+                new ItemStock(new Item("Armchair", "Leather armchair", new BigDecimal("150")), 2),
+                new ItemStock(new Item("Lamp", "Desk lamp", new BigDecimal("29")), 12)));
 
         List<CatalogItemDto> catalog = itemService.findCatalog();
 
-        assertThat(catalog).extracting(CatalogItemDto::name, CatalogItemDto::price)
-                .containsExactly(tuple("Armchair", new BigDecimal("150.00")), tuple("Lamp", new BigDecimal("29.00")));
+        assertThat(catalog).extracting(CatalogItemDto::name, CatalogItemDto::price, CatalogItemDto::stock, CatalogItemDto::urgency)
+                .containsExactly(tuple("Armchair", new BigDecimal("150.00"), 2L, StockUrgency.STOCK_LOW),
+                        tuple("Lamp", new BigDecimal("29.00"), 12L, StockUrgency.STOCK_HIGH));
         verify(itemUnitRepository, never()).countAvailableUnits(any());
     }
 
     @Test
     void givenUnknownItemId_whenFindingACatalogItem_thenThrowsItemNotFoundWithTheId() {
         UUID unknownId = UUID.randomUUID();
-        when(itemRepository.findById(unknownId)).thenReturn(Optional.empty());
+        when(itemRepository.findStockById(unknownId)).thenReturn(Optional.empty());
 
         Throwable thrown = catchThrowable(() -> itemService.findCatalogItem(unknownId));
 

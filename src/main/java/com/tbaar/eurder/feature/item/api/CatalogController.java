@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/catalog")
-@Tag(name = "Catalog", description = "What anybody can browse and order: the items, without their stock")
+@Tag(name = "Catalog", description = "What anybody can browse and order: the items, with their stock and its urgency")
 public class CatalogController {
 
     private final ItemService itemService;
@@ -27,14 +27,14 @@ public class CatalogController {
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "List the items of the catalog, sorted by name")
-    @ApiResponse(responseCode = "200", description = "The items, without stock nor urgency", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "200", description = "The items, with their stock and its urgency", useReturnTypeSchema = true)
     public List<CatalogItemDto> findAll() {
         return itemService.findCatalog();
     }
 
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Get one item of the catalog")
-    @ApiResponse(responseCode = "200", description = "The item, without stock nor urgency", useReturnTypeSchema = true)
+    @ApiResponse(responseCode = "200", description = "The item, with its stock and its urgency", useReturnTypeSchema = true)
     public CatalogItemDto findById(@PathVariable UUID id) {
         return itemService.findCatalogItem(id);
     }

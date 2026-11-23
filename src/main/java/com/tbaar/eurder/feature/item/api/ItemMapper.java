@@ -34,8 +34,10 @@ public class ItemMapper {
                 StockUrgency.from(Math.toIntExact(stock.availableUnits())));
     }
 
-    public CatalogItemDto toCatalogDto(Item item) {
-        return new CatalogItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice());
+    public CatalogItemDto toCatalogDto(ItemStock stock) {
+        Item item = stock.item();
+        return new CatalogItemDto(item.getId(), item.getName(), item.getDescription(), item.getPrice(),
+                stock.availableUnits(), StockUrgency.from(Math.toIntExact(stock.availableUnits())));
     }
 
     public ItemUnitDto toUnitDto(ItemUnit unit) {

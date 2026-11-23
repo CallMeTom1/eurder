@@ -64,11 +64,11 @@ class ItemMapperTest {
     }
 
     @Test
-    void givenItem_whenMappingToCatalogDto_thenCopiesTheProductFieldsOnly() {
+    void givenItemStock_whenMappingToCatalogDto_thenCopiesTheProductFieldsWithTheStockAndItsUrgency() {
         Item item = new Item("Chair", "Wooden chair", new BigDecimal("49.99"));
 
-        CatalogItemDto dto = itemMapper.toCatalogDto(item);
+        CatalogItemDto dto = itemMapper.toCatalogDto(new ItemStock(item, 7));
 
-        assertThat(dto).isEqualTo(new CatalogItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99")));
+        assertThat(dto).isEqualTo(new CatalogItemDto(item.getId(), "Chair", "Wooden chair", new BigDecimal("49.99"), 7, StockUrgency.STOCK_MEDIUM));
     }
 }

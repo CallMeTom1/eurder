@@ -61,14 +61,14 @@ public class ItemService {
 
     @Transactional(readOnly = true)
     public List<CatalogItemDto> findCatalog() {
-        return itemRepository.findAllByOrderByNameAsc().stream()
+        return itemRepository.findStockOrderedByName().stream()
                 .map(itemMapper::toCatalogDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public CatalogItemDto findCatalogItem(UUID id) {
-        return itemRepository.findById(id)
+        return itemRepository.findStockById(id)
                 .map(itemMapper::toCatalogDto)
                 .orElseThrow(() -> new ItemNotFoundException(id));
     }
