@@ -138,14 +138,14 @@
     "view": "View basket",
     "empty": "Your basket is empty.",
     "browse": "Browse the catalog",
-    "item": "Item",
     "amount": "Amount",
-    "unitPrice": "Unit price",
     "price": "Price",
     "total": "Total",
     "remove": "Remove {{name}}",
     "placeOrder": "Place order",
     "withCount": "Basket, {{count}} items",
-    "amountOf": "Amount of {{name}}"
+    "amountOf": "Amount of {{name}}",
+    "title": "Your shopping basket",
+    "product": "Product"
   }
 }

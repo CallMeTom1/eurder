@@ -138,14 +138,14 @@
     "view": "Winkelmandje bekijken",
     "empty": "Je winkelmandje is leeg.",
     "browse": "Naar de catalogus",
-    "item": "Artikel",
     "amount": "Aantal",
-    "unitPrice": "Eenheidsprijs",
     "price": "Prijs",
     "total": "Totaal",
     "remove": "{{name}} verwijderen",
     "placeOrder": "Bestelling plaatsen",
     "withCount": "Winkelmandje, {{count}} artikels",
-    "amountOf": "Aantal {{name}}"
+    "amountOf": "Aantal {{name}}",
+    "title": "Je winkelmandje",
+    "product": "Product"
   }
 }

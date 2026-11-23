@@ -138,14 +138,14 @@
     "view": "Voir le panier",
     "empty": "Votre panier est vide.",
     "browse": "Parcourir le catalogue",
-    "item": "Article",
     "amount": "Quantité",
-    "unitPrice": "Prix unitaire",
     "price": "Prix",
     "total": "Total",
     "remove": "Retirer {{name}}",
     "placeOrder": "Passer la commande",
     "withCount": "Panier, {{count}} articles",
-    "amountOf": "Quantité de {{name}}"
+    "amountOf": "Quantité de {{name}}",
+    "title": "Votre panier",
+    "product": "Produit"
   }
 }

@@ -92,10 +92,10 @@ test('given items in the basket, when changing an amount and removing a line, th
   await page.getByLabel('Amount of Lamp').fill('3');
   await page.getByLabel('Amount of Lamp').press('Tab');
   await expect(page.getByRole('row', { name: /Lamp/ })).toContainText('€87.00');
-  await expect(page.getByRole('row', { name: /Total/ })).toContainText('€136.99');
+  await expect(page.getByTestId('basket-total')).toContainText('€136.99');
   await page.getByRole('button', { name: 'Remove Chair' }).click();
 
-  await expect(page.getByRole('row', { name: /Total/ })).toContainText('€87.00');
+  await expect(page.getByTestId('basket-total')).toContainText('€87.00');
   await expect(page.getByRole('link', { name: 'Basket, 3 items' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Place order' })).toBeVisible();
 });

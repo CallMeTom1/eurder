@@ -33,9 +33,13 @@ describe('BasketPage', () => {
   function rows(): string[][] {
     return [...page.querySelectorAll('tbody tr')].map((row) =>
       [...row.querySelectorAll('th, td')]
-        .slice(0, 4)
+        .slice(0, 3)
         .map((cell) => cell.querySelector('input')?.value ?? cell.textContent!.trim()),
     );
+  }
+
+  function total(): string | undefined {
+    return page.querySelector('[data-testid="basket-total"]')?.textContent?.trim();
   }
 
   function amountOf(name: string): HTMLInputElement {
@@ -59,16 +63,20 @@ describe('BasketPage', () => {
     expect(page.querySelector('table')).toBeNull();
   });
 
-  it('given a filled basket, when opening it, then each line shows its name, amount, unit price and price, and the total', async () => {
+  it('given a filled basket, when opening it, then each line shows its product, its amount and its price, and the total', async () => {
     fill();
 
     await open();
 
+    expect(page.querySelector('h1')?.textContent?.trim()).toBe('Your shopping basket');
+    expect(
+      [...page.querySelectorAll('thead th')].map((header) => header.textContent?.trim()),
+    ).toEqual(['Product', 'Amount', 'Price']);
     expect(rows()).toEqual([
-      ['Chair', '1', '€49.99', '€49.99'],
-      ['Lamp', '3', '€29.00', '€87.00'],
+      ['Chair', '1', '€49.99'],
+      ['Lamp', '3', '€87.00'],
     ]);
-    expect(page.querySelector('tfoot')?.textContent).toContain('€136.99');
+    expect(total()).toContain('€136.99');
     expect(page.querySelector('tbody a')?.getAttribute('href')).toBe('/catalog/i1');
   });
 
@@ -78,8 +86,8 @@ describe('BasketPage', () => {
 
     await changeAmount('Chair', '2');
 
-    expect(rows()[0]).toEqual(['Chair', '2', '€49.99', '€99.98']);
-    expect(page.querySelector('tfoot')?.textContent).toContain('€186.98');
+    expect(rows()[0]).toEqual(['Chair', '2', '€99.98']);
+    expect(total()).toContain('€186.98');
   });
 
   it.each([{ value: '0' }, { value: '-1' }, { value: '' }, { value: '1.5' }])(
@@ -103,7 +111,7 @@ describe('BasketPage', () => {
     await fixture.whenStable();
 
     expect(rows().map(([name]) => name)).toEqual(['Lamp']);
-    expect(page.querySelector('tfoot')?.textContent).toContain('€87.00');
+    expect(total()).toContain('€87.00');
   });
 
   it('given the last line, when removing it, then the basket says it is empty', async () => {
@@ -121,7 +129,7 @@ describe('BasketPage', () => {
 
     await open();
 
-    expect(page.querySelector('button[type="button"]:not([aria-label])')?.textContent?.trim()).toBe(
+    expect(page.querySelector('[data-testid="place-order"]')?.textContent?.trim()).toBe(
       'Place order',
     );
   });
